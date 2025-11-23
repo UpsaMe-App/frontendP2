@@ -1,0 +1,5 @@
+Image.asset(
+  'lib/assets/gifs/buho.gif',
+  width: 200,
+  height: 200,
+)
