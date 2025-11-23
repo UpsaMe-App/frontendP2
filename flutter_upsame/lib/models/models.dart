@@ -63,7 +63,7 @@ class User {
   final String? fullName;
   final String? avatarUrl;
   final String? profilePhotoUrl;
-  final String careerId;
+  final String? careerId;
   final String? career;
   final int semester;
   final String? phone;
@@ -77,7 +77,7 @@ class User {
     this.fullName,
     this.avatarUrl,
     this.profilePhotoUrl,
-    required this.careerId,
+    this.careerId,
     this.career,
     required this.semester,
     this.phone,
@@ -93,7 +93,7 @@ class User {
       fullName: json['fullName'],
       avatarUrl: json['avatarUrl'],
       profilePhotoUrl: json['profilePhotoUrl'],
-      careerId: json['careerId'] ?? '',
+      careerId: json['careerId'],
       career: json['career'],
       semester: json['semester'] ?? 1,
       phone: json['phone'],

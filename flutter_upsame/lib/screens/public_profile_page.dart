@@ -37,6 +37,17 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
         _user = user;
         _isLoading = false;
       });
+      
+      // Debug: Verificar los datos del usuario
+      print('Datos del usuario cargados:');
+      print('Nombre: ${user.displayName}');
+      print('Email: ${user.email}');
+      print('Teléfono: ${user.phone}');
+      print('Teléfono es null: ${user.phone == null}');
+      print('Teléfono está vacío: ${user.phone?.isEmpty ?? true}');
+      print('Career: ${user.career}');
+      print('Semestre: ${user.semester}');
+      
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -50,6 +61,22 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
         );
       }
     }
+  }
+
+  // Función para formatear el número de teléfono
+  String _formatPhoneNumber(String phone) {
+    // Limpiar el número (quitar espacios, guiones, etc.)
+    final cleaned = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    
+    // Formatear según la longitud
+    if (cleaned.length == 10) {
+      return '(${cleaned.substring(0, 3)}) ${cleaned.substring(3, 6)}-${cleaned.substring(6)}';
+    } else if (cleaned.length == 11 && cleaned.startsWith('1')) {
+      return '+1 (${cleaned.substring(1, 4)}) ${cleaned.substring(4, 7)}-${cleaned.substring(7)}';
+    }
+    
+    // Si no coincide con formatos comunes, devolver el original
+    return phone;
   }
 
   @override
@@ -136,6 +163,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
+                              textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -144,6 +172,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                                 fontSize: 14,
                                 color: Colors.white70,
                               ),
+                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
@@ -157,29 +186,24 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                             _buildInfoCard(
                               icon: Icons.school,
                               title: 'Semestre',
-                              value: '${_user!.semester}',
+                              value: '${_user!.semester}° Semestre',
                             ),
                             const SizedBox(height: 12),
-                            _buildInfoCard(
-                              icon: Icons.business_center,
-                              title: 'Carrera',
-                              value: _user!.career ?? 'No especificada',
-                            ),
-                            const SizedBox(height: 12),
-                            _buildInfoCard(
-                              icon: Icons.phone,
-                              title: 'Teléfono de contacto',
-                              value: _user!.phone != null && _user!.phone!.isNotEmpty
-                                  ? _user!.phone!
-                                  : 'No proporcionado',
-                            ),
+                            if (_user!.career != null && _user!.career!.isNotEmpty)
+                              _buildInfoCard(
+                                icon: Icons.business_center,
+                                title: 'Carrera',
+                                value: _user!.career!,
+                              ),
+                            if (_user!.career != null && _user!.career!.isNotEmpty)
+                              const SizedBox(height: 12),
+                            _buildPhoneCard(),
                           ],
                         ),
                       ),
 
                       // Calendly Widget
-                      if (_user!.calendlyUrl != null &&
-                          _user!.calendlyUrl!.isNotEmpty)
+                      if (_user!.calendlyUrl != null && _user!.calendlyUrl!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
@@ -251,6 +275,61 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhoneCard() {
+    final hasPhone = _user!.phone != null && _user!.phone!.isNotEmpty;
+    final phoneText = hasPhone ? _formatPhoneNumber(_user!.phone!) : 'No proporcionado';
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: hasPhone ? Colors.green[100] : Colors.grey[300],
+              child: Icon(
+                Icons.phone,
+                color: hasPhone ? Colors.green[700] : Colors.grey[600],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Teléfono de contacto',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: hasPhone ? Colors.green[600] : Colors.grey[600],
+                    ),
+                  ),
+                  Text(
+                    phoneText,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: hasPhone ? Colors.green[800] : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (hasPhone)
+              Icon(
+                Icons.check_circle,
+                color: Colors.green[600],
+                size: 20,
+              ),
           ],
         ),
       ),
