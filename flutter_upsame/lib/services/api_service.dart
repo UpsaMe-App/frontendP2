@@ -345,6 +345,23 @@ class ApiService {
     }
   }
 
+  static Future<Reply> createReply({
+    required String postId,
+    required String content,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/posts/$postId/replies'),
+      headers: _getHeaders(),
+      body: json.encode({'content': content}),
+    );
+
+    if (response.statusCode == 200) {
+      return Reply.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Error al crear respuesta');
+    }
+  }
+
   // Public Users
   static Future<User> getPublicUser(String userId) async {
     final response = await http.get(
