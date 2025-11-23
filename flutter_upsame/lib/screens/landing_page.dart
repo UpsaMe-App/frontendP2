@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -39,9 +40,10 @@ class _LandingPageState extends State<LandingPage>
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -69,10 +71,7 @@ class _LandingPageState extends State<LandingPage>
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 
@@ -148,28 +147,40 @@ class _LandingPageState extends State<LandingPage>
                   Positioned(
                     left: -50 + _floatingAnimation.value,
                     top: 100,
-                    child: _buildFloatingCircle(150, Colors.white.withOpacity(0.05)),
+                    child: _buildFloatingCircle(
+                      150,
+                      Colors.white.withOpacity(0.05),
+                    ),
                   ),
                   Positioned(
                     right: -80 + _floatingAnimation.value * -1,
                     top: 200,
-                    child: _buildFloatingCircle(200, Colors.white.withOpacity(0.08)),
+                    child: _buildFloatingCircle(
+                      200,
+                      Colors.white.withOpacity(0.08),
+                    ),
                   ),
                   Positioned(
                     left: 100 + _floatingAnimation.value * 0.5,
                     bottom: 50,
-                    child: _buildFloatingCircle(120, Colors.white.withOpacity(0.06)),
+                    child: _buildFloatingCircle(
+                      120,
+                      Colors.white.withOpacity(0.06),
+                    ),
                   ),
                   Positioned(
                     right: 150 + _floatingAnimation.value * -0.7,
                     bottom: 150,
-                    child: _buildFloatingCircle(180, Colors.white.withOpacity(0.07)),
+                    child: _buildFloatingCircle(
+                      180,
+                      Colors.white.withOpacity(0.07),
+                    ),
                   ),
                 ],
               );
             },
           ),
-          
+
           // Animated decorative leaves
           AnimatedBuilder(
             animation: _floatingController,
@@ -204,7 +215,7 @@ class _LandingPageState extends State<LandingPage>
               );
             },
           ),
-          
+
           // Animated Header with buttons
           Positioned(
             top: 20,
@@ -225,7 +236,10 @@ class _LandingPageState extends State<LandingPage>
                         return Transform.scale(
                           scale: value,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
@@ -234,7 +248,10 @@ class _LandingPageState extends State<LandingPage>
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(15),
-                              border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 2,
+                              ),
                             ),
                             child: Text(
                               'UpsaMe',
@@ -264,7 +281,10 @@ class _LandingPageState extends State<LandingPage>
                             onPressed: _scrollToTutorial,
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
                               backgroundColor: Colors.white.withOpacity(0.1),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -291,7 +311,9 @@ class _LandingPageState extends State<LandingPage>
                                 vertical: 14,
                               ),
                               elevation: 8,
-                              shadowColor: const Color(0xFFE85D75).withOpacity(0.5),
+                              shadowColor: const Color(
+                                0xFFE85D75,
+                              ).withOpacity(0.5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -383,9 +405,12 @@ class _LandingPageState extends State<LandingPage>
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: Image.network(
-                          'https://images.unsplash.com/photo-1580982324927-c05278e6a607?w=400&h=400&fit=crop',
-                          fit: BoxFit.cover,
+                        child: Lottie.network(
+                          'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
+                          fit: BoxFit.contain,
+                          repeat: true,
+                          animate: true,
+                          // Provide a simple error fallback matching previous behavior
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               color: Colors.amber.shade700,
@@ -413,9 +438,7 @@ class _LandingPageState extends State<LandingPage>
     return SizedBox(
       width: 100,
       height: 100,
-      child: CustomPaint(
-        painter: LeafPainter(),
-      ),
+      child: CustomPaint(painter: LeafPainter()),
     );
   }
 
@@ -427,10 +450,7 @@ class _LandingPageState extends State<LandingPage>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFF66B2A8),
-            const Color(0xFF4A8B82),
-          ],
+          colors: [const Color(0xFF66B2A8), const Color(0xFF4A8B82)],
         ),
       ),
       padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 60),
@@ -458,7 +478,8 @@ class _LandingPageState extends State<LandingPage>
           _buildStep(
             number: '1',
             title: 'REGÍSTRATE',
-            description: 'Crea tu cuenta con tu correo universitario y completa tu perfil.',
+            description:
+                'Crea tu cuenta con tu correo universitario y completa tu perfil.',
           ),
           const SizedBox(height: 30),
           _buildStep(
@@ -510,10 +531,7 @@ class _LandingPageState extends State<LandingPage>
       decoration: BoxDecoration(
         color: const Color(0xFF5A9A91).withOpacity(0.7),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 2,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -548,10 +566,7 @@ class _LandingPageState extends State<LandingPage>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF4A8B82),
-            Color(0xFF3A6B62),
-          ],
+          colors: [Color(0xFF4A8B82), Color(0xFF3A6B62)],
         ),
       ),
       child: Row(
@@ -559,17 +574,11 @@ class _LandingPageState extends State<LandingPage>
         children: [
           Text(
             'Creado por estudiantes de la UPSA ❤️',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.white,
-            ),
+            style: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
           ),
           Text(
             '© 2025 UpsaMe — Todos los derechos reservados.',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.white,
-            ),
+            style: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
           ),
         ],
       ),
@@ -585,7 +594,7 @@ class LeafPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final path = Path();
-    
+
     // Leaf shape
     path.moveTo(size.width * 0.5, 0);
     path.quadraticBezierTo(
