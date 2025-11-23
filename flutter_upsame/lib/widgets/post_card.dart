@@ -36,22 +36,16 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
+      elevation: 4,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: _getRoleColor().withOpacity(0.3),
-          width: 2,
-        ),
+        side: BorderSide(color: _getRoleColor().withOpacity(0.3), width: 2),
       ),
       child: InkWell(
         onTap: () {
           // Navegar al detalle del post
-          Navigator.pushNamed(
-            context,
-            '/post-detail',
-            arguments: post,
-          );
+          Navigator.pushNamed(context, '/post-detail', arguments: post);
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -76,14 +70,17 @@ class PostCard extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 20,
                       backgroundColor: _getRoleColor().withOpacity(0.2),
-                      backgroundImage: post.user?.photoUrl != null && post.user!.photoUrl.isNotEmpty
-                          ? NetworkImage('${ApiService.baseUrl}${post.user!.photoUrl}')
-                          : null,
-                      child: post.user?.photoUrl == null || post.user!.photoUrl.isEmpty
-                          ? Icon(
-                              Icons.person,
-                              color: _getRoleColor(),
+                      backgroundImage:
+                          post.user?.photoUrl != null &&
+                              post.user!.photoUrl.isNotEmpty
+                          ? NetworkImage(
+                              '${ApiService.baseUrl}${post.user!.photoUrl}',
                             )
+                          : null,
+                      child:
+                          post.user?.photoUrl == null ||
+                              post.user!.photoUrl.isEmpty
+                          ? Icon(Icons.person, color: _getRoleColor())
                           : null,
                     ),
                   ),
@@ -172,7 +169,10 @@ class PostCard extends StatelessWidget {
                             children: [
                               Icon(Icons.delete, color: Colors.red, size: 20),
                               SizedBox(width: 8),
-                              Text('Eliminar', style: TextStyle(color: Colors.red)),
+                              Text(
+                                'Eliminar',
+                                style: TextStyle(color: Colors.red),
+                              ),
                             ],
                           ),
                         ),
@@ -208,11 +208,7 @@ class PostCard extends StatelessWidget {
               if (post.role == 1 && post.maxCapacity != null) ...[
                 Row(
                   children: [
-                    Icon(
-                      Icons.people,
-                      size: 16,
-                      color: Colors.grey[600],
-                    ),
+                    Icon(Icons.people, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
                     Text(
                       'Capacidad: ${post.capacity ?? 0}/${post.maxCapacity}',
@@ -273,11 +269,7 @@ class PostCard extends StatelessWidget {
   }
 
   void _editPost(BuildContext context) {
-    Navigator.pushNamed(
-      context,
-      '/edit-post',
-      arguments: post,
-    ).then((_) {
+    Navigator.pushNamed(context, '/edit-post', arguments: post).then((_) {
       if (onUpdated != null) onUpdated!();
     });
   }
@@ -297,10 +289,7 @@ class PostCard extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancelar',
-              style: GoogleFonts.poppins(),
-            ),
+            child: Text('Cancelar', style: GoogleFonts.poppins()),
           ),
           TextButton(
             onPressed: () async {
