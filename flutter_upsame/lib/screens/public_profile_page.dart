@@ -55,7 +55,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.green[50],
       appBar: AppBar(
         title: Text(
           'Perfil',
@@ -64,12 +64,16 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
             fontSize: 24,
           ),
         ),
-        backgroundColor: const Color(0xFF66B2A8),
+        backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green[700]!),
+              ),
+            )
           : _user == null
               ? Center(
                   child: Column(
@@ -78,14 +82,14 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                       Icon(
                         Icons.person_off,
                         size: 80,
-                        color: Colors.grey[400],
+                        color: Colors.green[400],
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'Usuario no encontrado',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
-                          color: Colors.grey[600],
+                          color: Colors.green[600],
                         ),
                       ),
                     ],
@@ -98,13 +102,13 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(32),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Color(0xFF66B2A8),
-                              Color(0xFF4A8B82),
+                              Colors.green[600]!,
+                              Colors.green[800]!,
                             ],
                           ),
                         ),
@@ -117,10 +121,10 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                                   ? NetworkImage('${ApiService.baseUrl}${_user!.photoUrl}')
                                   : null,
                               child: _user!.photoUrl.isEmpty
-                                  ? const Icon(
+                                  ? Icon(
                                       Icons.person,
                                       size: 60,
-                                      color: Color(0xFF66B2A8),
+                                      color: Colors.green[600],
                                     )
                                   : null,
                             ),
@@ -156,12 +160,19 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                               value: '${_user!.semester}',
                             ),
                             const SizedBox(height: 12),
-                            if (_user!.phone != null && _user!.phone!.isNotEmpty)
-                              _buildInfoCard(
-                                icon: Icons.phone,
-                                title: 'Teléfono',
-                                value: _user!.phone!,
-                              ),
+                            _buildInfoCard(
+                              icon: Icons.business_center,
+                              title: 'Carrera',
+                              value: _user!.career ?? 'No especificada',
+                            ),
+                            const SizedBox(height: 12),
+                            _buildInfoCard(
+                              icon: Icons.phone,
+                              title: 'Teléfono de contacto',
+                              value: _user!.phone != null && _user!.phone!.isNotEmpty
+                                  ? _user!.phone!
+                                  : 'No proporcionado',
+                            ),
                           ],
                         ),
                       ),
@@ -179,7 +190,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF357067),
+                                  color: Colors.green[800],
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -211,31 +222,34 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: const Color(0xFF66B2A8).withOpacity(0.2),
+              backgroundColor: Colors.green[100],
               child: Icon(
                 icon,
-                color: const Color(0xFF66B2A8),
+                color: Colors.green[700],
               ),
             ),
             const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.green[600],
+                    ),
                   ),
-                ),
-                Text(
-                  value,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  Text(
+                    value,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green[800],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
