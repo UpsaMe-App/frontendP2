@@ -12,6 +12,7 @@ dependencies:
   http: ^1.2.0
   google_fonts: ^6.1.0
   image_picker: ^1.0.7
+  lottie: ^3.3.2
 
 dev_dependencies:
   flutter_test:
