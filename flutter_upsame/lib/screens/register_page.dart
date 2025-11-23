@@ -142,7 +142,7 @@ class _RegisterPageState extends State<RegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('¡Registro exitoso! Ahora puedes iniciar sesión'),
-          backgroundColor: Colors.green,
+          backgroundColor: Color.fromARGB(255, 64, 199, 68),
         ),
       );
 
@@ -171,14 +171,18 @@ class _RegisterPageState extends State<RegisterPage> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF66B2A8),
-              const Color(0xFF4A8B82),
+              Color(0xFF0A5C36),      // Verde oscuro profundo
+              Color(0xFF1E8449),      // Verde bosque
+              Color.fromARGB(255, 36, 222, 85),      // Verde esmeralda
+              Color.fromARGB(255, 5, 118, 48),      // Verde vibrante
+              Color.fromARGB(255, 45, 145, 66),      // Verde claro
             ],
+            stops: [0.0, 0.3, 0.6, 0.8, 1.0],
           ),
         ),
         child: Center(
@@ -188,28 +192,45 @@ class _RegisterPageState extends State<RegisterPage> {
               width: 600,
               padding: const EdgeInsets.all(40),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white.withOpacity(0.95),
+                borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 25,
+                    offset: const Offset(0, 15),
                   ),
                 ],
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.5),
+                  width: 1,
+                ),
               ),
               child: Form(
                 key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Title
-                    Text(
-                      'Registro',
-                      style: GoogleFonts.poppins(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF4A8B82),
+                    // Title with beautiful gradient
+                    ShaderMask(
+                      shaderCallback: (bounds) {
+                        return const LinearGradient(
+                          colors: [
+                            Color(0xFF0A5C36),
+                            Color.fromARGB(255, 33, 149, 81),
+                            Color.fromARGB(255, 32, 221, 101),
+                          ],
+                          stops: [0.0, 0.5, 1.0],
+                        ).createShader(bounds);
+                      },
+                      child: Text(
+                        'Registro',
+                        style: GoogleFonts.poppins(
+                          fontSize: 42,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -217,7 +238,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       'Crea tu cuenta en UpsaMe',
                       style: GoogleFonts.poppins(
                         fontSize: 16,
-                        color: Colors.grey[600],
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -296,6 +318,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           _obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
+                          color: const Color(0xFF1E8449),
                         ),
                         onPressed: () {
                           setState(() {
@@ -327,6 +350,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           _obscureConfirmPassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
+                          color: const Color(0xFF1E8449),
                         ),
                         onPressed: () {
                           setState(() {
@@ -417,38 +441,43 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 35),
 
                     // Register button
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: 55,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _register,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFE85D75),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(15),
                           ),
-                          textStyle: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          elevation: 8,
+                          shadowColor: const Color(0xFFE85D75).withOpacity(0.5),
                         ),
                         child: _isLoading
                             ? const SizedBox(
-                                height: 20,
-                                width: 20,
+                                height: 22,
+                                width: 22,
                                 child: CircularProgressIndicator(
                                   color: Colors.white,
-                                  strokeWidth: 2,
+                                  strokeWidth: 2.5,
                                 ),
                               )
-                            : const Text('REGISTRARSE'),
+                            : Text(
+                                'REGISTRARSE',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 25),
 
                     // Login link
                     Row(
@@ -457,18 +486,25 @@ class _RegisterPageState extends State<RegisterPage> {
                         Text(
                           '¿Ya tienes cuenta? ',
                           style: GoogleFonts.poppins(
-                            color: Colors.grey[600],
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         TextButton(
                           onPressed: () {
                             Navigator.pushReplacementNamed(context, '/login');
                           },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
                           child: Text(
                             'Inicia sesión',
                             style: GoogleFonts.poppins(
-                              color: const Color(0xFF66B2A8),
+                              color: const Color(0xFF1E8449),
                               fontWeight: FontWeight.bold,
+                              fontSize: 14,
                             ),
                           ),
                         ),
@@ -476,6 +512,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
 
                     // Back to home
+                    const SizedBox(height: 15),
                     TextButton.icon(
                       onPressed: () {
                         Navigator.pushNamedAndRemoveUntil(
@@ -484,11 +521,15 @@ class _RegisterPageState extends State<RegisterPage> {
                           (route) => false,
                         );
                       },
-                      icon: const Icon(Icons.arrow_back),
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: const Color(0xFF1E8449),
+                      ),
                       label: Text(
                         'Volver al inicio',
                         style: GoogleFonts.poppins(
-                          color: const Color(0xFF4A8B82),
+                          color: const Color(0xFF1E8449),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -519,40 +560,51 @@ class _RegisterPageState extends State<RegisterPage> {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       onFieldSubmitted: onFieldSubmitted,
+      style: GoogleFonts.poppins(),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        labelStyle: GoogleFonts.poppins(
+          color: Colors.grey[600],
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: Colors.grey[600],
+        ),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xFFE8F5F3),
+        fillColor: Colors.grey[50],
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(15),
           borderSide: const BorderSide(
-            color: Color(0xFF66B2A8),
+            color: Color.fromARGB(255, 20, 163, 79),
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(15),
           borderSide: const BorderSide(
             color: Colors.red,
             width: 1,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(15),
           borderSide: const BorderSide(
             color: Colors.red,
             width: 2,
           ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
         ),
       ),
       validator: validator,
@@ -570,30 +622,47 @@ class _RegisterPageState extends State<RegisterPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F5F3),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: DropdownButtonFormField<T>(
         value: value,
+        style: GoogleFonts.poppins(),
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: const Icon(Icons.arrow_drop_down_circle_outlined),
+          labelStyle: GoogleFonts.poppins(
+            color: Colors.grey[600],
+          ),
+          prefixIcon: Icon(
+            Icons.arrow_drop_down_circle_outlined,
+            color: Colors.grey[600],
+          ),
           filled: true,
-          fillColor: Colors.transparent,
+          fillColor: Colors.grey[50],
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(15),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(15),
             borderSide: BorderSide.none,
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(15),
             borderSide: const BorderSide(
-              color: Color(0xFF66B2A8),
+              color: Color.fromARGB(255, 30, 138, 52),
               width: 2,
             ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 8,
           ),
         ),
         items: isLoading
@@ -601,7 +670,10 @@ class _RegisterPageState extends State<RegisterPage> {
             : items.map((item) {
                 return DropdownMenuItem<T>(
                   value: item,
-                  child: Text(itemLabel(item)),
+                  child: Text(
+                    itemLabel(item),
+                    style: GoogleFonts.poppins(),
+                  ),
                 );
               }).toList(),
         onChanged: enabled && !isLoading ? onChanged : null,
@@ -615,6 +687,12 @@ class _RegisterPageState extends State<RegisterPage> {
           }
           return null;
         },
+        dropdownColor: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        icon: Icon(
+          Icons.arrow_drop_down,
+          color: const Color.fromARGB(255, 9, 189, 84),
+        ),
       ),
     );
   }
