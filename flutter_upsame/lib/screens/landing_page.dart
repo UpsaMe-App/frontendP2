@@ -1763,7 +1763,7 @@ class AboutUsPage extends StatelessWidget {
         isMobile: isMobile,
       ),
       _buildTeamMemberCard(
-        name: 'Eirver Romero',
+        name: 'Eiver David Romero Justiniano',
         role: 'Full Stack Developer',
         career: 'Ingeniería de Sistemas, Cuarto semestre',
         isFemale: false,
