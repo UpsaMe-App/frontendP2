@@ -6,10 +6,7 @@ import '../services/api_service.dart';
 class EditProfilePage extends StatefulWidget {
   final Map<String, dynamic> userData;
 
-  const EditProfilePage({
-    super.key,
-    required this.userData,
-  });
+  const EditProfilePage({super.key, required this.userData});
 
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
@@ -21,7 +18,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _lastNameController;
   late TextEditingController _phoneController;
   late TextEditingController _semesterController;
-  
+  late TextEditingController _calendlyUrlController;
+
   List<Career> _careers = [];
   List<Avatar> _avatars = [];
   String? _selectedCareerId;
@@ -32,25 +30,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void initState() {
     super.initState();
-    
+
     // Split fullName into firstName and lastName if available
     String fullName = widget.userData['fullName'] ?? '';
     List<String> nameParts = fullName.split(' ');
     String firstName = nameParts.isNotEmpty ? nameParts[0] : '';
-    String lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-    
+    String lastName = nameParts.length > 1
+        ? nameParts.sublist(1).join(' ')
+        : '';
+
     _firstNameController = TextEditingController(text: firstName);
     _lastNameController = TextEditingController(text: lastName);
-    _phoneController = TextEditingController(text: widget.userData['phone'] ?? '');
-    _semesterController = TextEditingController(text: widget.userData['semester'].toString());
+    _phoneController = TextEditingController(
+      text: widget.userData['phone'] ?? '',
+    );
+    _semesterController = TextEditingController(
+      text: widget.userData['semester'].toString(),
+    );
+    _calendlyUrlController = TextEditingController(
+      text: widget.userData['calendlyUrl'] ?? '',
+    );
     _selectedCareerId = widget.userData['careerId'];
-    
+
     // Extract avatar ID from profilePhotoUrl if it exists
     String? photoUrl = widget.userData['profilePhotoUrl'];
     if (photoUrl != null && photoUrl.startsWith('/avatars/')) {
-      _selectedAvatarId = photoUrl.replaceAll('/avatars/', '').replaceAll('.png', '');
+      _selectedAvatarId = photoUrl
+          .replaceAll('/avatars/', '')
+          .replaceAll('.png', '');
     }
-    
+
     _loadData();
   }
 
@@ -58,14 +67,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     try {
       final faculties = await ApiService.getFaculties();
       final avatars = await ApiService.getAvatarOptions();
-      
+
       // Load all careers from all faculties
       List<Career> allCareers = [];
       for (var faculty in faculties) {
         final careers = await ApiService.getCareersByFaculty(faculty.id);
         allCareers.addAll(careers);
       }
-      
+
       setState(() {
         _careers = allCareers;
         _avatars = avatars;
@@ -97,10 +106,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
       await ApiService.updateUser(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
-        phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+        phone: _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : null,
         semester: int.parse(_semesterController.text),
         careerId: _selectedCareerId!,
         avatarId: _selectedAvatarId,
+        calendlyUrl: _calendlyUrlController.text.trim().isNotEmpty
+            ? _calendlyUrlController.text.trim()
+            : null,
       );
 
       if (mounted) {
@@ -133,6 +147,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _lastNameController.dispose();
     _phoneController.dispose();
     _semesterController.dispose();
+    _calendlyUrlController.dispose();
     super.dispose();
   }
 
@@ -143,10 +158,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         title: Text(
           'Editar Perfil',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 24),
         ),
         backgroundColor: const Color(0xFF66B2A8),
         foregroundColor: Colors.white,
@@ -326,6 +338,45 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                       const SizedBox(height: 16),
 
+                      // Calendly URL
+                      Text(
+                        'Calendly URL',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _calendlyUrlController,
+                        decoration: InputDecoration(
+                          hintText: 'https://calendly.com/tu-usuario',
+                          hintStyle: GoogleFonts.poppins(
+                            color: Colors.grey[400],
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFE8F5F3),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                        ),
+                        style: GoogleFonts.poppins(),
+                        validator: (value) {
+                          if (value != null && value.isNotEmpty) {
+                            if (!value.startsWith('http')) {
+                              return 'Ingresa una URL válida';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
                       // Semester
                       Text(
                         'Semestre',
@@ -360,7 +411,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             return 'Por favor ingresa tu semestre';
                           }
                           final semester = int.tryParse(value);
-                          if (semester == null || semester < 1 || semester > 12) {
+                          if (semester == null ||
+                              semester < 1 ||
+                              semester > 12) {
                             return 'Ingresa un semestre válido (1-12)';
                           }
                           return null;
@@ -395,9 +448,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             vertical: 16,
                           ),
                         ),
-                        style: GoogleFonts.poppins(
-                          color: Colors.black,
-                        ),
+                        style: GoogleFonts.poppins(color: Colors.black),
                         items: _careers.map((career) {
                           return DropdownMenuItem(
                             value: career.id,
@@ -492,7 +543,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   itemBuilder: (context, index) {
                     final avatar = _avatars[index];
                     final isSelected = _selectedAvatarId == avatar.id;
-                    
+
                     return GestureDetector(
                       onTap: () {
                         setState(() {

@@ -34,7 +34,9 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
     } else {
-      throw Exception(json.decode(response.body)['message'] ?? 'Error al registrar');
+      throw Exception(
+        json.decode(response.body)['message'] ?? 'Error al registrar',
+      );
     }
   }
 
@@ -45,10 +47,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'email': email,
-        'password': password,
-      }),
+      body: json.encode({'email': email, 'password': password}),
     );
 
     if (response.statusCode == 200) {
@@ -57,7 +56,9 @@ class ApiService {
       _refreshToken = data['refreshToken'];
       return data;
     } else {
-      throw Exception(json.decode(response.body)['message'] ?? 'Error al iniciar sesión');
+      throw Exception(
+        json.decode(response.body)['message'] ?? 'Error al iniciar sesión',
+      );
     }
   }
 
@@ -69,9 +70,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/refresh'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'refreshToken': _refreshToken,
-      }),
+      body: json.encode({'refreshToken': _refreshToken}),
     );
 
     if (response.statusCode == 200) {
@@ -168,7 +167,7 @@ class ApiService {
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       final subjects = data.map((json) => Subject.fromJson(json)).toList();
-      
+
       // Eliminar duplicados por nombre
       final seen = <String>{};
       return subjects.where((subject) => seen.add(subject.name)).toList();
@@ -183,13 +182,10 @@ class ApiService {
     if (role != null) {
       url += '?role=$role';
     }
-    
+
     print('GET request to: $url');
-    
-    final response = await http.get(
-      Uri.parse(url),
-      headers: _getHeaders(),
-    );
+
+    final response = await http.get(Uri.parse(url), headers: _getHeaders());
 
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');
@@ -199,7 +195,9 @@ class ApiService {
       print('Posts decoded: ${data.length} posts');
       return data.map((json) => Post.fromJson(json)).toList();
     } else {
-      throw Exception('Error al cargar posts: ${response.statusCode} - ${response.body}');
+      throw Exception(
+        'Error al cargar posts: ${response.statusCode} - ${response.body}',
+      );
     }
   }
 
@@ -260,10 +258,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/posts/comment'),
       headers: _getHeaders(),
-      body: json.encode({
-        'title': title,
-        'content': content,
-      }),
+      body: json.encode({'title': title, 'content': content}),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -273,7 +268,10 @@ class ApiService {
     }
   }
 
-  static Future<Post> updatePost(String postId, Map<String, dynamic> data) async {
+  static Future<Post> updatePost(
+    String postId,
+    Map<String, dynamic> data,
+  ) async {
     final response = await http.put(
       Uri.parse('$baseUrl/posts/$postId'),
       headers: _getHeaders(),
@@ -326,7 +324,9 @@ class ApiService {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Post.fromJson(json)).toList();
     } else {
-      throw Exception('Error al buscar posts por materia: ${response.statusCode}');
+      throw Exception(
+        'Error al buscar posts por materia: ${response.statusCode}',
+      );
     }
   }
 
@@ -381,6 +381,7 @@ class ApiService {
     required int semester,
     required String careerId,
     String? avatarId,
+    String? calendlyUrl,
   }) async {
     final body = {
       'firstName': firstName,
@@ -393,6 +394,9 @@ class ApiService {
     if (avatarId != null) {
       body['avatarId'] = avatarId;
     }
+    if (calendlyUrl != null) {
+      body['calendlyUrl'] = calendlyUrl;
+    }
 
     final response = await http.put(
       Uri.parse('$baseUrl/users/me'),
@@ -403,7 +407,9 @@ class ApiService {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception(json.decode(response.body)['message'] ?? 'Error al actualizar perfil');
+      throw Exception(
+        json.decode(response.body)['message'] ?? 'Error al actualizar perfil',
+      );
     }
   }
 
@@ -448,7 +454,7 @@ class ApiService {
   // Getters para tokens
   static String? get accessToken => _accessToken;
   static String? get getRefreshToken => _refreshToken;
-  
+
   // Limpiar tokens (para logout)
   static void clearTokens() {
     _accessToken = null;
