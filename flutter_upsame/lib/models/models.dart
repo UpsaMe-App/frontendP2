@@ -67,6 +67,7 @@ class User {
   final String? career;
   final int semester;
   final String? phone;
+  final String? calendlyUrl;
 
   User({
     required this.id,
@@ -80,6 +81,7 @@ class User {
     this.career,
     required this.semester,
     this.phone,
+    this.calendlyUrl,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -95,6 +97,7 @@ class User {
       career: json['career'],
       semester: json['semester'] ?? 1,
       phone: json['phone'],
+      calendlyUrl: json['calendlyUrl'],
     );
   }
 

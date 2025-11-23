@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../widgets/post_card.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../utils/token_manager.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -404,6 +405,99 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
+
+                  /// CALENDLY WIDGET
+                  if (_userData?['calendlyUrl'] != null &&
+                      _userData!['calendlyUrl'].isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Agenda una cita',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF357067),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Center(
+                              child: SizedBox(
+                                width: 180,
+                                child: Card(
+                                  color: const Color(0xFFF6F0FB),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(32),
+                                  ),
+                                  elevation: 0,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        final url =
+                                            _userData!['calendlyUrl'] as String;
+                                        try {
+                                          final uri = Uri.tryParse(url);
+                                          if (uri != null) {
+                                            await launchUrl(
+                                              uri,
+                                              mode: LaunchMode
+                                                  .externalApplication,
+                                            );
+                                          } else {
+                                            throw 'URL inválida';
+                                          }
+                                        } catch (e) {
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'No se pudo abrir Calendly: $e',
+                                                ),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF66B2A8,
+                                        ),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            28,
+                                          ),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      child: Text(
+                                        'Abrir Calendly',
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
 
                   /// POSTS
                   if (_isLoading)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
+import '../widgets/calendly_inline_widget.dart';
 
 class PublicProfilePage extends StatefulWidget {
   final String userId;
@@ -164,6 +165,31 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                           ],
                         ),
                       ),
+
+                      // Calendly Widget
+                      if (_user!.calendlyUrl != null &&
+                          _user!.calendlyUrl!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Agenda una cita',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF357067),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              CalendlyInlineWidget(
+                                calendlyUrl: _user!.calendlyUrl!,
+                                height: 650,
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
