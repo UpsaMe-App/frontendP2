@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://upsameapi.azurewebsites.net';
+  static const String baseUrl = 'http://localhost:5034';
   static String? _accessToken;
   static String? _refreshToken;
 
@@ -352,8 +352,13 @@ class ApiService {
       headers: _getHeaders(),
     );
 
+    print('Public User Response: ${response.statusCode}');
+    print('Public User Body: ${response.body}');
+
     if (response.statusCode == 200) {
-      return User.fromJson(json.decode(response.body));
+      final user = User.fromJson(json.decode(response.body));
+      print('User phone: ${user.phone}');
+      return user;
     } else {
       throw Exception('Error al cargar usuario público');
     }
