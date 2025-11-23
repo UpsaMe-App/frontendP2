@@ -16,20 +16,132 @@ class SearchPage extends StatefulWidget {
   State<SearchPage> createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchPageState extends State<SearchPage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final _searchController = TextEditingController();
+  
+  // Subject search
   List<Subject> _subjects = [];
   List<Post> _posts = [];
   bool _isLoadingSubjects = false;
   bool _isLoadingPosts = false;
   Subject? _selectedSubject;
+  
+  // Faculty search
+  List<Faculty> _faculties = [];
+  List<Career> _careers = [];
+  List<User> _users = [];
+  bool _isLoadingFaculties = false;
+  bool _isLoadingCareers = false;
+  bool _isLoadingUsers = false;
+  Faculty? _selectedFaculty;
+  Career? _selectedCareer;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) {
+        _searchController.clear();
+        setState(() {
+          _subjects = [];
+          _posts = [];
+          _selectedSubject = null;
+          _faculties = [];
+          _careers = [];
+          _users = [];
+          _selectedFaculty = null;
+          _selectedCareer = null;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
+  // Faculty search methods
+  Future<void> _loadFaculties() async {
+    setState(() {
+      _isLoadingFaculties = true;
+    });
+
+    try {
+      final faculties = await ApiService.getFaculties();
+      setState(() {
+        _faculties = faculties;
+        _isLoadingFaculties = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingFaculties = false;
+      });
+    }
+  }
+
+  Future<void> _loadCareersByFaculty(Faculty faculty) async {
+    setState(() {
+      _isLoadingCareers = true;
+      _selectedFaculty = faculty;
+      _careers = [];
+      _users = [];
+      _selectedCareer = null;
+    });
+
+    try {
+      final careers = await ApiService.getCareersByFaculty(faculty.id);
+      setState(() {
+        _careers = careers;
+        _isLoadingCareers = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingCareers = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar carreras: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadUsersByCareer(Career career) async {
+    setState(() {
+      _isLoadingUsers = true;
+      _selectedCareer = career;
+    });
+
+    try {
+      final users = await ApiService.getUsersByCareer(career.id);
+      setState(() {
+        _users = users;
+        _isLoadingUsers = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingUsers = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar usuarios: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Subject search methods
   Future<void> _searchSubjects(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -97,8 +209,33 @@ class _SearchPageState extends State<SearchPage> {
         backgroundColor: const Color(0xFF66B2A8),
         foregroundColor: Colors.white,
         elevation: 0,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14),
+          unselectedLabelStyle: GoogleFonts.poppins(fontSize: 14),
+          tabs: const [
+            Tab(text: 'Materia', icon: Icon(Icons.book, size: 20)),
+            Tab(text: 'Facultad', icon: Icon(Icons.school, size: 20)),
+            Tab(text: 'Carrera', icon: Icon(Icons.business_center, size: 20)),
+          ],
+        ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildSubjectSearch(),
+          _buildFacultySearch(),
+          _buildCareerSearch(),
+        ],
+      ),
+    );
+  }
+
+  // Subject search tab
+  Widget _buildSubjectSearch() {
+    return Column(
         children: [
           // Search bar
           Container(
@@ -321,7 +458,16 @@ class _SearchPageState extends State<SearchPage> {
                       ),
           ),
         ],
-      ),
-    );
+      );
+  }
+
+  // Faculty search tab
+  Widget _buildFacultySearch() {
+    return const Center(child: Text('Búsqueda por Facultad - En construcción'));
+  }
+
+  // Career search tab
+  Widget _buildCareerSearch() {
+    return const Center(child: Text('Búsqueda por Carrera - En construcción'));
   }
 }
