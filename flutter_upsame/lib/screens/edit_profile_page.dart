@@ -14,6 +14,7 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
+
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
   late TextEditingController _phoneController;
@@ -27,7 +28,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _isLoading = false;
   bool _isLoadingData = true;
 
-  // 🎨 UPSA vibes – verde verde
   final Color primaryDark = const Color(0xFF2E7D32);
   final Color primary = const Color(0xFF388E3C);
   final Color primaryLight = const Color(0xFFC8E6C9);
@@ -37,46 +37,51 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void initState() {
     super.initState();
 
-    // Split fullName into firstName and lastName if available
-    String fullName = widget.userData['fullName'] ?? '';
-    List<String> nameParts = fullName.split(' ');
-    String firstName = nameParts.isNotEmpty ? nameParts[0] : '';
-    String lastName =
-        nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+    // Initialize controllers with empty values first
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _phoneController = TextEditingController();
+    _semesterController = TextEditingController();
+    _calendlyUrlController = TextEditingController();
 
-    _firstNameController = TextEditingController(text: firstName);
-    _lastNameController = TextEditingController(text: lastName);
-    _phoneController = TextEditingController(
-      text: widget.userData['phone'] ?? '',
-    );
-    _semesterController = TextEditingController(
-      text: widget.userData['semester'].toString(),
-    );
-    _calendlyUrlController = TextEditingController(
-      text: widget.userData['calendlyUrl'] ?? '',
-    );
-    _selectedCareerId = widget.userData['careerId'];
-
-    // Extract avatar ID from profilePhotoUrl if it exists
-    String? photoUrl = widget.userData['profilePhotoUrl'];
-    if (photoUrl != null && photoUrl.startsWith('/avatars/')) {
-      _selectedAvatarId =
-          photoUrl.replaceAll('/avatars/', '').replaceAll('.png', '');
-    }
-
+    // Load fresh data from backend
     _loadData();
   }
 
   Future<void> _loadData() async {
     try {
+      // IMPORTANTE: Obtener datos frescos del backend en lugar de usar widget.userData
+      // que puede estar desactualizado
+      print('Cargando datos frescos del perfil desde el backend...');
+      final userData = await ApiService.getMe();
+      print('Datos del perfil recibidos: $userData');
+      
       final faculties = await ApiService.getFaculties();
       final avatars = await ApiService.getAvatarOptions();
 
-      // Load all careers from all faculties
       List<Career> allCareers = [];
       for (var faculty in faculties) {
         final careers = await ApiService.getCareersByFaculty(faculty.id);
         allCareers.addAll(careers);
+      }
+
+      // Parse user data and populate controllers with FRESH data
+      final String firstName = userData['firstName'] ?? '';
+      final String lastName = userData['lastName'] ?? '';
+      
+      _firstNameController.text = firstName;
+      _lastNameController.text = lastName;
+      _phoneController.text = userData['phone'] ?? '';
+      _semesterController.text = userData['semester'] != null 
+          ? userData['semester'].toString() 
+          : '';
+      _calendlyUrlController.text = userData['calendlyUrl'] ?? '';
+
+      _selectedCareerId = userData['careerId'];
+
+      final String? photoUrl = userData['profilePhotoUrl'];
+      if (photoUrl != null && photoUrl.startsWith('/avatars/')) {
+        _selectedAvatarId = photoUrl.replaceAll('/avatars/', '').replaceAll('.png', '');
       }
 
       setState(() {
@@ -84,84 +89,113 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _avatars = avatars;
         _isLoadingData = false;
       });
+
+      print('Datos del perfil cargados y aplicados a los campos');
     } catch (e) {
+      print('Error al cargar datos: $e');
       setState(() {
         _isLoadingData = false;
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar datos: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar datos: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      print('🔄 Guardando cambios del perfil...');
-      
-      // Update user profile
-      final updatedData = await ApiService.updateUser(
-        firstName: _firstNameController.text.trim(),
-        lastName: _lastNameController.text.trim(),
-        phone: _phoneController.text.trim().isNotEmpty
-            ? _phoneController.text.trim()
-            : null,
-        semester: int.parse(_semesterController.text),
-        careerId: _selectedCareerId!,
-        avatarId: _selectedAvatarId,
-        calendlyUrl: _calendlyUrlController.text.trim().isNotEmpty
-            ? _calendlyUrlController.text.trim()
-            : null,
+    if (_selectedCareerId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor selecciona tu carrera'),
+          backgroundColor: Colors.red,
+        ),
       );
-      
-      print('✅ Perfil actualizado exitosamente en el servidor');
-      print('📦 Datos retornados: $updatedData');
+      return;
+    }
 
-      // Reload fresh data from server to confirm changes were saved
-      final freshUserData = await ApiService.getMe();
-      print('🔄 Datos frescos recargados del servidor');
-      print('📦 Datos actualizados: $freshUserData');
+    final int? semesterParsed = int.tryParse(_semesterController.text.trim());
+    if (semesterParsed == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Semestre inválido'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        
+    String? calendlyUrl;
+    final rawCalendly = _calendlyUrlController.text.trim();
+    if (rawCalendly.isNotEmpty) {
+      final uri = Uri.tryParse(rawCalendly);
+      if (uri == null || (!uri.isAbsolute)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Perfil actualizado exitosamente'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-        
-        // Return the fresh data to the profile page
-        Navigator.pop(context, freshUserData);
-      }
-    } catch (e) {
-      print('❌ Error al actualizar perfil: $e');
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al actualizar perfil: $e'),
+            content: Text('Ingresa una URL válida de Calendly'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
           ),
         );
+        return;
       }
+      calendlyUrl = rawCalendly;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Prepare phone - send null if empty instead of empty string
+      final String? phone = _phoneController.text.trim().isEmpty 
+          ? null 
+          : _phoneController.text.trim();
+
+      // Debug logging
+      print('Guardando perfil con los siguientes datos:');
+      print('  - Nombre: ${_firstNameController.text.trim()}');
+      print('  - Apellido: ${_lastNameController.text.trim()}');
+      print('  - Telefono: $phone');
+      print('  - Semestre: $semesterParsed');
+      print('  - CarreraId: $_selectedCareerId');
+      print('  - AvatarId: $_selectedAvatarId');
+      print('  - Calendly: $calendlyUrl');
+
+      await ApiService.updateUser(
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        phone: phone,
+        semester: semesterParsed,
+        careerId: _selectedCareerId!,
+        avatarId: _selectedAvatarId,  // Send null instead of empty string
+        calendlyUrl: calendlyUrl,      // Already null if empty
+      );
+
+      print('Perfil actualizado exitosamente en el backend');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Perfil actualizado exitosamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      print('Error al actualizar perfil: $e');
+      setState(() => _isLoading = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al actualizar perfil: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -227,8 +261,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         centerTitle: true,
         backgroundColor: primaryDark,
         foregroundColor: Colors.white,
-        elevation: 4,
-        shadowColor: primary.withOpacity(0.4),
       ),
       body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())
@@ -240,7 +272,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Avatar Selection
                       Center(
                         child: Column(
                           children: [
@@ -257,34 +288,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               onTap: _showAvatarPicker,
                               child: Stack(
                                 children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: primary.withOpacity(0.25),
-                                          blurRadius: 16,
-                                          offset: const Offset(0, 6),
-                                        ),
-                                      ],
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: 60,
-                                      backgroundColor:
-                                          primaryLight.withOpacity(0.7),
-                                      backgroundImage: _selectedAvatarId != null
-                                          ? NetworkImage(
-                                              '${ApiService.baseUrl}/avatars/$_selectedAvatarId.png',
-                                            )
-                                          : null,
-                                      child: _selectedAvatarId == null
-                                          ? Icon(
-                                              Icons.person,
-                                              size: 60,
-                                              color: primaryDark,
-                                            )
-                                          : null,
-                                    ),
+                                  CircleAvatar(
+                                    radius: 60,
+                                    backgroundColor: primaryLight.withOpacity(0.7),
+                                    backgroundImage: _selectedAvatarId != null
+                                        ? NetworkImage(
+                                            '${ApiService.baseUrl}/avatars/$_selectedAvatarId.png',
+                                          )
+                                        : null,
+                                    child: _selectedAvatarId == null
+                                        ? Icon(Icons.person, size: 60, color: primaryDark)
+                                        : null,
                                   ),
                                   Positioned(
                                     bottom: 4,
@@ -294,20 +308,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                       decoration: BoxDecoration(
                                         color: primary,
                                         shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color:
-                                                primaryDark.withOpacity(0.4),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 3),
-                                          ),
-                                        ],
                                       ),
-                                      child: const Icon(
-                                        Icons.camera_alt,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
+                                      child: const Icon(Icons.camera_alt, color: Colors.white),
                                     ),
                                   ),
                                 ],
@@ -316,211 +318,88 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           ],
                         ),
                       ),
+
                       const SizedBox(height: 28),
 
-                      // First Name
-                      Text(
-                        'Nombre',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: primaryDark,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      /// NOMBRE
+                      Text('Nombre', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                       TextFormField(
                         controller: _firstNameController,
                         decoration: _inputDecoration('Ingresa tu nombre'),
-                        style: GoogleFonts.poppins(fontSize: 14),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Por favor ingresa tu nombre';
-                          }
-                          return null;
-                        },
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Campo requerido' : null,
                       ),
+
                       const SizedBox(height: 16),
 
-                      // Last Name
-                      Text(
-                        'Apellido',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: primaryDark,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      /// APELLIDO
+                      Text('Apellido', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                       TextFormField(
                         controller: _lastNameController,
                         decoration: _inputDecoration('Ingresa tu apellido'),
-                        style: GoogleFonts.poppins(fontSize: 14),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Por favor ingresa tu apellido';
-                          }
-                          return null;
-                        },
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Campo requerido' : null,
                       ),
+
                       const SizedBox(height: 16),
 
-                      // Phone
-                      Text(
-                        'Teléfono',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: primaryDark,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      /// TELÉFONO
+                      Text('Teléfono', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                       TextFormField(
                         controller: _phoneController,
-                        decoration: _inputDecoration(
-                          'Ingresa tu teléfono (opcional)',
-                        ),
-                        style: GoogleFonts.poppins(fontSize: 14),
+                        decoration: _inputDecoration('Teléfono'),
                         keyboardType: TextInputType.phone,
                       ),
+
                       const SizedBox(height: 16),
 
-                      // Calendly URL
-                      Text(
-                        'Calendly URL',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: primaryDark,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      /// CALENDLY
+                      Text('Calendly URL', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                       TextFormField(
                         controller: _calendlyUrlController,
-                        decoration: _inputDecoration(
-                          'https://calendly.com/tu-usuario',
-                        ),
-                        style: GoogleFonts.poppins(fontSize: 14),
-                        validator: (value) {
-                          if (value != null && value.isNotEmpty) {
-                            if (!value.startsWith('http')) {
-                              return 'Ingresa una URL válida';
-                            }
-                          }
-                          return null;
-                        },
+                        decoration: _inputDecoration('https://calendly.com/tu-usuario'),
                       ),
+
                       const SizedBox(height: 16),
 
-                      // Semester
-                      Text(
-                        'Semestre',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: primaryDark,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      /// SEMESTRE
+                      Text('Semestre', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                       TextFormField(
                         controller: _semesterController,
-                        decoration: _inputDecoration('Ingresa tu semestre'),
-                        style: GoogleFonts.poppins(fontSize: 14),
                         keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Por favor ingresa tu semestre';
-                          }
-                          final semester = int.tryParse(value);
-                          if (semester == null ||
-                              semester < 1 ||
-                              semester > 12) {
-                            return 'Ingresa un semestre válido (1-12)';
-                          }
+                        decoration: _inputDecoration('Ingresa tu semestre'),
+                        validator: (v) {
+                          final n = int.tryParse(v ?? '');
+                          if (n == null || n < 1 || n > 12) return 'Semestre inválido';
                           return null;
                         },
                       ),
+
                       const SizedBox(height: 16),
 
-                      // Career
-                      Text(
-                        'Carrera',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: primaryDark,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      /// CARRERA
+                      Text('Carrera', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                       DropdownButtonFormField<String>(
                         value: _selectedCareerId,
                         decoration: _inputDecoration('Selecciona tu carrera'),
-                        style: GoogleFonts.poppins(
-                          color: Colors.black87,
-                          fontSize: 14,
-                        ),
-                        dropdownColor: Colors.white,
-                        items: _careers.map((career) {
-                          return DropdownMenuItem(
-                            value: career.id,
-                            child: Text(career.name),
-                          );
+                        items: _careers.map((c) {
+                          return DropdownMenuItem(value: c.id, child: Text(c.name));
                         }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCareerId = value;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Por favor selecciona tu carrera';
-                          }
-                          return null;
-                        },
+                        onChanged: (value) => setState(() => _selectedCareerId = value),
+                        validator: (v) => v == null ? 'Campo requerido' : null,
                       ),
-                      const SizedBox(height: 28),
 
-                      // Save Button :
+                      const SizedBox(height: 30),
+
                       SizedBox(
                         width: double.infinity,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: primaryDark.withOpacity(0.35),
-                                blurRadius: 14,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _saveProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryDark,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _saveProfile,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryDark,
-                              foregroundColor: Colors.white,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Text(
-                                    'Guardar cambios',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                          ),
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text('Guardar cambios'),
                         ),
                       ),
                     ],
@@ -541,78 +420,38 @@ class _EditProfilePageState extends State<EditProfilePage> {
       builder: (context) {
         return Container(
           padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: bgSoft,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(20),
+          color: bgSoft,
+          child: GridView.builder(
+            shrinkWrap: true,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Selecciona un avatar',
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: primaryDark,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: _avatars.length,
-                  itemBuilder: (context, index) {
-                    final avatar = _avatars[index];
-                    final isSelected = _selectedAvatarId == avatar.id;
+            itemCount: _avatars.length,
+            itemBuilder: (context, index) {
+              final avatar = _avatars[index];
+              final isSelected = _selectedAvatarId == avatar.id;
 
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedAvatarId = avatar.id;
-                        });
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isSelected
-                                ? primaryDark
-                                : Colors.transparent,
-                            width: 3,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: primary.withOpacity(0.4),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ]
-                              : [],
-                        ),
-                        child: CircleAvatar(
-                          radius: 40,
-                          backgroundColor: primaryLight.withOpacity(0.7),
-                          backgroundImage: NetworkImage(
-                            '${ApiService.baseUrl}${avatar.url}',
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+              return GestureDetector(
+                onTap: () {
+                  setState(() => _selectedAvatarId = avatar.id);
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected ? primaryDark : Colors.transparent,
+                      width: 3,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    backgroundImage: NetworkImage('${ApiService.baseUrl}${avatar.url}'),
+                  ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
         );
       },

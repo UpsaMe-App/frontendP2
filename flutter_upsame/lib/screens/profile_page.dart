@@ -342,21 +342,17 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: () async {
-                              print('🔄 Navegando a editar perfil...');
                               final result = await Navigator.pushNamed(
                                 context, 
                                 '/edit-profile',
                                 arguments: _userData,
                               );
                               
-                              print('✅ Regresado de editar perfil con resultado: $result');
-                              
-                              // Always reload user data after returning from edit profile
-                              // This ensures changes are reflected even if there are timing issues
-                              if (result != null) {
-                                print('🔄 Recargando datos del perfil...');
+                              // Reload user data after returning from edit profile
+                              if (result == true) {
+                                print('Recargando perfil despues de edicion...');
                                 await _loadUserData();
-                                print('✅ Datos del perfil recargados');
+                                print('Perfil recargado');
                               }
                             },
                             style: ElevatedButton.styleFrom(
