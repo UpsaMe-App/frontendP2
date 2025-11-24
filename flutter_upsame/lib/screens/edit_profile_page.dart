@@ -27,6 +27,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _isLoading = false;
   bool _isLoadingData = true;
 
+  // 🎨 UPSA vibes – verde verde
+  final Color primaryDark = const Color(0xFF2E7D32);
+  final Color primary = const Color(0xFF388E3C);
+  final Color primaryLight = const Color(0xFFC8E6C9);
+  final Color bgSoft = const Color(0xFFF1F8E9);
+
   @override
   void initState() {
     super.initState();
@@ -35,9 +41,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     String fullName = widget.userData['fullName'] ?? '';
     List<String> nameParts = fullName.split(' ');
     String firstName = nameParts.isNotEmpty ? nameParts[0] : '';
-    String lastName = nameParts.length > 1
-        ? nameParts.sublist(1).join(' ')
-        : '';
+    String lastName =
+        nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
     _firstNameController = TextEditingController(text: firstName);
     _lastNameController = TextEditingController(text: lastName);
@@ -55,9 +60,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     // Extract avatar ID from profilePhotoUrl if it exists
     String? photoUrl = widget.userData['profilePhotoUrl'];
     if (photoUrl != null && photoUrl.startsWith('/avatars/')) {
-      _selectedAvatarId = photoUrl
-          .replaceAll('/avatars/', '')
-          .replaceAll('.png', '');
+      _selectedAvatarId =
+          photoUrl.replaceAll('/avatars/', '').replaceAll('.png', '');
     }
 
     _loadData();
@@ -151,24 +155,66 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: GoogleFonts.poppins(
+        color: Colors.grey[500],
+        fontSize: 13,
+      ),
+      filled: true,
+      fillColor: primaryLight.withOpacity(0.4),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: primaryLight.withOpacity(0.8),
+          width: 1.2,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: primaryLight.withOpacity(0.8),
+          width: 1.2,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: primary,
+          width: 1.6,
+        ),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 14,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: bgSoft,
       appBar: AppBar(
         title: Text(
           'Editar Perfil',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 24),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
         ),
-        backgroundColor: const Color(0xFF66B2A8),
+        centerTitle: true,
+        backgroundColor: primaryDark,
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 4,
+        shadowColor: primary.withOpacity(0.4),
       ),
       body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(20.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -183,39 +229,59 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               style: GoogleFonts.poppins(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
+                                color: primaryDark,
                               ),
                             ),
                             const SizedBox(height: 16),
                             GestureDetector(
-                              onTap: () {
-                                _showAvatarPicker();
-                              },
+                              onTap: _showAvatarPicker,
                               child: Stack(
                                 children: [
-                                  CircleAvatar(
-                                    radius: 60,
-                                    backgroundColor: const Color(0xFFE8F5F3),
-                                    backgroundImage: _selectedAvatarId != null
-                                        ? NetworkImage(
-                                            '${ApiService.baseUrl}/avatars/$_selectedAvatarId.png',
-                                          )
-                                        : null,
-                                    child: _selectedAvatarId == null
-                                        ? const Icon(
-                                            Icons.person,
-                                            size: 60,
-                                            color: Color(0xFF66B2A8),
-                                          )
-                                        : null,
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: primary.withOpacity(0.25),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 60,
+                                      backgroundColor:
+                                          primaryLight.withOpacity(0.7),
+                                      backgroundImage: _selectedAvatarId != null
+                                          ? NetworkImage(
+                                              '${ApiService.baseUrl}/avatars/$_selectedAvatarId.png',
+                                            )
+                                          : null,
+                                      child: _selectedAvatarId == null
+                                          ? Icon(
+                                              Icons.person,
+                                              size: 60,
+                                              color: primaryDark,
+                                            )
+                                          : null,
+                                    ),
                                   ),
                                   Positioned(
-                                    bottom: 0,
-                                    right: 0,
+                                    bottom: 4,
+                                    right: 4,
                                     child: Container(
                                       padding: const EdgeInsets.all(8),
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFF66B2A8),
+                                      decoration: BoxDecoration(
+                                        color: primary,
                                         shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                primaryDark.withOpacity(0.4),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
                                       ),
                                       child: const Icon(
                                         Icons.camera_alt,
@@ -230,7 +296,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
 
                       // First Name
                       Text(
@@ -238,28 +304,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: primaryDark,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       TextFormField(
                         controller: _firstNameController,
-                        decoration: InputDecoration(
-                          hintText: 'Ingresa tu nombre',
-                          hintStyle: GoogleFonts.poppins(
-                            color: Colors.grey[400],
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFE8F5F3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                        ),
-                        style: GoogleFonts.poppins(),
+                        decoration: _inputDecoration('Ingresa tu nombre'),
+                        style: GoogleFonts.poppins(fontSize: 14),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Por favor ingresa tu nombre';
@@ -275,28 +327,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: primaryDark,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       TextFormField(
                         controller: _lastNameController,
-                        decoration: InputDecoration(
-                          hintText: 'Ingresa tu apellido',
-                          hintStyle: GoogleFonts.poppins(
-                            color: Colors.grey[400],
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFE8F5F3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                        ),
-                        style: GoogleFonts.poppins(),
+                        decoration: _inputDecoration('Ingresa tu apellido'),
+                        style: GoogleFonts.poppins(fontSize: 14),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Por favor ingresa tu apellido';
@@ -312,28 +350,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: primaryDark,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       TextFormField(
                         controller: _phoneController,
-                        decoration: InputDecoration(
-                          hintText: 'Ingresa tu teléfono (opcional)',
-                          hintStyle: GoogleFonts.poppins(
-                            color: Colors.grey[400],
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFE8F5F3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
+                        decoration: _inputDecoration(
+                          'Ingresa tu teléfono (opcional)',
                         ),
-                        style: GoogleFonts.poppins(),
+                        style: GoogleFonts.poppins(fontSize: 14),
                         keyboardType: TextInputType.phone,
                       ),
                       const SizedBox(height: 16),
@@ -344,28 +370,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: primaryDark,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       TextFormField(
                         controller: _calendlyUrlController,
-                        decoration: InputDecoration(
-                          hintText: 'https://calendly.com/tu-usuario',
-                          hintStyle: GoogleFonts.poppins(
-                            color: Colors.grey[400],
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFE8F5F3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
+                        decoration: _inputDecoration(
+                          'https://calendly.com/tu-usuario',
                         ),
-                        style: GoogleFonts.poppins(),
+                        style: GoogleFonts.poppins(fontSize: 14),
                         validator: (value) {
                           if (value != null && value.isNotEmpty) {
                             if (!value.startsWith('http')) {
@@ -383,28 +397,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: primaryDark,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       TextFormField(
                         controller: _semesterController,
-                        decoration: InputDecoration(
-                          hintText: 'Ingresa tu semestre',
-                          hintStyle: GoogleFonts.poppins(
-                            color: Colors.grey[400],
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFE8F5F3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                        ),
-                        style: GoogleFonts.poppins(),
+                        decoration: _inputDecoration('Ingresa tu semestre'),
+                        style: GoogleFonts.poppins(fontSize: 14),
                         keyboardType: TextInputType.number,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -427,28 +427,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: primaryDark,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       DropdownButtonFormField<String>(
                         value: _selectedCareerId,
-                        decoration: InputDecoration(
-                          hintText: 'Selecciona tu carrera',
-                          hintStyle: GoogleFonts.poppins(
-                            color: Colors.grey[400],
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFE8F5F3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
+                        decoration: _inputDecoration('Selecciona tu carrera'),
+                        style: GoogleFonts.poppins(
+                          color: Colors.black87,
+                          fontSize: 14,
                         ),
-                        style: GoogleFonts.poppins(color: Colors.black),
+                        dropdownColor: Colors.white,
                         items: _careers.map((career) {
                           return DropdownMenuItem(
                             value: career.id,
@@ -467,38 +457,50 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
 
                       // Save Button
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _saveProfile,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF66B2A8),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: primaryDark.withOpacity(0.35),
+                                blurRadius: 14,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _saveProfile,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryDark,
+                              foregroundColor: Colors.white,
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    'Guardar cambios',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                )
-                              : Text(
-                                  'Guardar Cambios',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                          ),
                         ),
                       ),
                     ],
@@ -519,6 +521,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       builder: (context) {
         return Container(
           padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: bgSoft,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(20),
+            ),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -528,13 +536,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: primaryDark,
                 ),
               ),
               const SizedBox(height: 16),
               Flexible(
                 child: GridView.builder(
                   shrinkWrap: true,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 4,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
@@ -556,14 +566,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFFE85D75)
+                                ? primaryDark
                                 : Colors.transparent,
                             width: 3,
                           ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: primary.withOpacity(0.4),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  )
+                                ]
+                              : [],
                         ),
                         child: CircleAvatar(
                           radius: 40,
-                          backgroundColor: const Color(0xFFE8F5F3),
+                          backgroundColor: primaryLight.withOpacity(0.7),
                           backgroundImage: NetworkImage(
                             '${ApiService.baseUrl}${avatar.url}',
                           ),

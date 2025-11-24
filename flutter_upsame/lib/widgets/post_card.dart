@@ -19,42 +19,53 @@ class PostCard extends StatelessWidget {
 
   bool get isOwner => currentUserId != null && post.userId == currentUserId;
 
+  // Paleta verde UPSA
+  Color get _greenDark => const Color(0xFF2E7D32);
+  Color get _green => const Color(0xFF388E3C);
+  Color get _greenLight => const Color(0xFFA5D6A7);
+
   Color _getRoleColor() {
+    // Todos verdes, pero con tonos distintos por rol
     switch (post.role) {
-      case 1:
-        return const Color(0xFFE85D75); // Ayudante - Rojo
-      case 2:
-        return const Color(0xFF357067); // Estudiante - Verde oficial
-      case 3:
-        return const Color(0xFF9B7EBD); // Comentario - Morado
+      case 1: // Ayudante
+        return _greenDark;
+      case 2: // Estudiante
+        return _green;
+      case 3: // Comentario
+        return _greenLight;
       default:
-        return Colors.grey;
+        return _green;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final roleColor = _getRoleColor();
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 4,
-      color: Theme.of(context).colorScheme.surface,
+      margin: EdgeInsets.zero, // el margen lo maneja el contenedor padre
+      elevation: 0, // sombra la pone el wrapper en Home/Profile
+      color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: _getRoleColor().withOpacity(0.3), width: 2),
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: roleColor.withOpacity(0.35),
+          width: 1.4,
+        ),
       ),
       child: InkWell(
         onTap: () {
-          // Navegar al detalle del post
           Navigator.pushNamed(context, '/post-detail', arguments: post);
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header con usuario y rol
+              // HEADER: Avatar + Nombre + Rol + Menú
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Avatar
                   GestureDetector(
@@ -68,19 +79,17 @@ class PostCard extends StatelessWidget {
                       }
                     },
                     child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: _getRoleColor().withOpacity(0.2),
-                      backgroundImage:
-                          post.user?.photoUrl != null &&
+                      radius: 22,
+                      backgroundColor: roleColor.withOpacity(0.12),
+                      backgroundImage: post.user?.photoUrl != null &&
                               post.user!.photoUrl.isNotEmpty
                           ? NetworkImage(
                               '${ApiService.baseUrl}${post.user!.photoUrl}',
                             )
                           : null,
-                      child:
-                          post.user?.photoUrl == null ||
-                              post.user!.photoUrl.isEmpty
-                          ? Icon(Icons.person, color: _getRoleColor())
+                      child: (post.user?.photoUrl == null ||
+                              post.user!.photoUrl.isEmpty)
+                          ? Icon(Icons.person, color: roleColor, size: 22)
                           : null,
                     ),
                   ),
@@ -89,6 +98,7 @@ class PostCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Nombre
                         GestureDetector(
                           onTap: () {
                             if (post.user != null) {
@@ -102,38 +112,47 @@ class PostCard extends StatelessWidget {
                           child: Text(
                             post.user?.displayName ?? 'Usuario',
                             style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15.5,
+                              color: _greenDark,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Row(
                           children: [
+                            // Badge de rol
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
+                                horizontal: 10,
+                                vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: _getRoleColor(),
-                                borderRadius: BorderRadius.circular(4),
+                                color: roleColor,
+                                borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
                                 post.roleText,
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                             if (post.subject != null) ...[
                               const SizedBox(width: 8),
-                              Text(
-                                post.subject!.name,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
+                              Flexible(
+                                child: Text(
+                                  post.subject!.name,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11.5,
+                                    color: Colors.grey[600],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -142,9 +161,13 @@ class PostCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Opciones si es el dueño
+
+                  // Menú si es el dueño
                   if (isOwner)
                     PopupMenuButton<String>(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       onSelected: (value) {
                         if (value == 'edit') {
                           _editPost(context);
@@ -153,25 +176,31 @@ class PostCard extends StatelessWidget {
                         }
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'edit',
                           child: Row(
                             children: [
-                              Icon(Icons.edit, size: 20),
-                              SizedBox(width: 8),
-                              Text('Editar'),
+                              Icon(Icons.edit, size: 20, color: _greenDark),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Editar',
+                                style: GoogleFonts.poppins(),
+                              ),
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete, color: Colors.red, size: 20),
-                              SizedBox(width: 8),
+                              const Icon(Icons.delete,
+                                  color: Colors.red, size: 20),
+                              const SizedBox(width: 8),
                               Text(
                                 'Eliminar',
-                                style: TextStyle(color: Colors.red),
+                                style: GoogleFonts.poppins(
+                                  color: Colors.red,
+                                ),
                               ),
                             ],
                           ),
@@ -180,56 +209,63 @@ class PostCard extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
 
-              // Título
+              const SizedBox(height: 14),
+
+              // TÍTULO
               Text(
                 post.title,
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                  color: _greenDark,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
 
-              // Contenido
+              // CONTENIDO
               Text(
                 post.content,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: Colors.grey[700],
+                  color: Colors.grey[800],
+                  height: 1.45,
                 ),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 12),
 
-              // Info adicional para ayudantes
+              // INFO ADICIONAL PARA AYUDANTES
               if (post.role == 1 && post.maxCapacity != null) ...[
                 Row(
                   children: [
-                    Icon(Icons.people, size: 16, color: Colors.grey[600]),
+                    Icon(Icons.people,
+                        size: 16, color: _greenDark.withOpacity(0.7)),
                     const SizedBox(width: 4),
                     Text(
                       'Capacidad: ${post.capacity ?? 0}/${post.maxCapacity}',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: Colors.grey[700],
                       ),
                     ),
-                    if (post.calendlyUrl != null) ...[
+                    if (post.calendlyUrl != null &&
+                        post.calendlyUrl!.isNotEmpty) ...[
                       const SizedBox(width: 16),
                       Icon(
                         Icons.calendar_today,
                         size: 16,
-                        color: Colors.grey[600],
+                        color: _greenDark.withOpacity(0.7),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'Calendly disponible',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: Colors.grey[700],
                         ),
                       ),
                     ],
@@ -238,7 +274,7 @@ class PostCard extends StatelessWidget {
                 const SizedBox(height: 8),
               ],
 
-              // Fecha
+              // FECHA
               Text(
                 _formatDate(post.createdAt),
                 style: GoogleFonts.poppins(
@@ -298,9 +334,9 @@ class PostCard extends StatelessWidget {
                 await ApiService.deletePost(post.id);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Post eliminado exitosamente'),
-                      backgroundColor: Colors.green,
+                    SnackBar(
+                      content: const Text('Post eliminado exitosamente'),
+                      backgroundColor: _greenDark,
                     ),
                   );
                   if (onDeleted != null) onDeleted!();

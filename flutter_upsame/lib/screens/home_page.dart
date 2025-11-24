@@ -21,6 +21,11 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = false;
   int? _selectedRole; // null = todos, 1 = ayudante, 2 = estudiante, 3 = comentario
 
+  // Paleta UPSA vibes (verde, no turquesa)
+  final Color _greenDark = const Color(0xFF2E7D32);
+  final Color _green = const Color(0xFF388E3C);
+  final Color _greenLight = const Color.fromARGB(255, 88, 192, 91);
+
   @override
   void initState() {
     super.initState();
@@ -66,127 +71,112 @@ class _HomePageState extends State<HomePage> {
     _loadPosts();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Text(
-              'UpsaMe',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(width: 8),
-            PopupMenuButton<int?>(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.filter_list, size: 20),
-              ),
-              tooltip: 'Filtrar por tipo',
-              onSelected: _filterByRole,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              itemBuilder: (context) => [
-                PopupMenuItem<int?>(
-                  value: null,
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.all_inclusive,
-                        color: _selectedRole == null ? const Color(0xFF357067) : Colors.grey,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Todos',
-                        style: GoogleFonts.poppins(
-                          fontWeight: _selectedRole == null ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedRole == null ? const Color(0xFF357067) : Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<int?>(
-                  value: 1,
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.school,
-                        color: _selectedRole == 1 ? const Color(0xFFE85D75) : Colors.grey,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Ayudantes',
-                        style: GoogleFonts.poppins(
-                          fontWeight: _selectedRole == 1 ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedRole == 1 ? const Color(0xFFE85D75) : Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<int?>(
-                  value: 2,
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.person,
-                        color: _selectedRole == 2 ? const Color(0xFF357067) : Colors.grey,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Estudiantes',
-                        style: GoogleFonts.poppins(
-                          fontWeight: _selectedRole == 2 ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedRole == 2 ? const Color(0xFF357067) : Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<int?>(
-                  value: 3,
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.comment,
-                        color: _selectedRole == 3 ? const Color(0xFF9B7EBD) : Colors.grey,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Comentarios',
-                        style: GoogleFonts.poppins(
-                          fontWeight: _selectedRole == 3 ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedRole == 3 ? const Color(0xFF9B7EBD) : Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+  Widget _buildFilterChip({
+    required String label,
+    required IconData icon,
+    required int? roleValue,
+  }) {
+    final bool isSelected = _selectedRole == roleValue;
+    return GestureDetector(
+      onTap: () => _filterByRole(roleValue),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        margin: const EdgeInsets.only(right: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? _greenDark : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected ? _greenDark : _greenLight,
+            width: 1.4,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _green.withOpacity(isSelected ? 0.28 : 0.12),
+              blurRadius: isSelected ? 10 : 6,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? Colors.white : _greenDark,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? Colors.white : _greenDark,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFiltersBar() {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            _buildFilterChip(
+              label: 'Todos',
+              icon: Icons.all_inclusive,
+              roleValue: null,
+            ),
+            _buildFilterChip(
+              label: 'Ayudantes',
+              icon: Icons.school,
+              roleValue: 1,
+            ),
+            _buildFilterChip(
+              label: 'Estudiantes',
+              icon: Icons.person,
+              roleValue: 2,
+            ),
+            _buildFilterChip(
+              label: 'Comentarios',
+              icon: Icons.comment,
+              roleValue: 3,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _greenLight.withOpacity(0.18),
+      appBar: AppBar(
+        title: Text(
+          'UpsaMe',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            letterSpacing: 0.5,
+          ),
+        ),
+        centerTitle: false,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFF357067),
-                Color(0xFF2F6159),
+                _greenDark,
+                _green,
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -197,14 +187,18 @@ class _HomePageState extends State<HomePage> {
         foregroundColor: Colors.white,
         elevation: 4,
         shadowColor: Colors.black26,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: _buildFiltersBar(),
+        ),
       ),
       body: RefreshIndicator(
-        color: const Color(0xFF357067),
+        color: _greenDark,
         onRefresh: _loadPosts,
         child: _isLoading
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xFF357067),
+                  color: _greenDark,
                   strokeWidth: 3,
                 ),
               )
@@ -216,13 +210,13 @@ class _HomePageState extends State<HomePage> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF357067).withOpacity(0.1),
+                            color: _greenLight.withOpacity(0.3),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.inbox_outlined,
                             size: 64,
-                            color: Color(0xFF357067),
+                            color: _greenDark,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -246,14 +240,44 @@ class _HomePageState extends State<HomePage> {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.only(top: 8, bottom: 80),
+                    padding: const EdgeInsets.only(
+                        top: 8, bottom: 80, left: 4, right: 4),
                     itemCount: _posts.length,
                     itemBuilder: (context, index) {
-                      return PostCard(
-                        post: _posts[index],
-                        currentUserId: widget.userId,
-                        onDeleted: _loadPosts,
-                        onUpdated: _loadPosts,
+                      final post = _posts[index];
+                      return TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        duration: Duration(milliseconds: 260 + index * 35),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Transform.translate(
+                              offset: Offset(0, (1 - value) * 14),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _green.withOpacity(0.18),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: PostCard(
+                            post: post,
+                            currentUserId: widget.userId,
+                            onDeleted: _loadPosts,
+                            onUpdated: _loadPosts,
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -263,7 +287,7 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFE85D75).withOpacity(0.4),
+              color: _greenDark.withOpacity(0.35),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -276,7 +300,7 @@ class _HomePageState extends State<HomePage> {
               _loadPosts();
             }
           },
-          backgroundColor: const Color(0xFFE85D75),
+          backgroundColor: _greenDark,
           elevation: 0,
           icon: const Icon(Icons.add, size: 24),
           label: Text(

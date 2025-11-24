@@ -29,6 +29,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
   bool _isSearching = false;
   Timer? _debounce;
 
+  // 🎨 UPSA vibes – paleta verde
+  final Color primaryDark = const Color(0xFF2E7D32);
+  final Color primary = const Color(0xFF388E3C);
+  final Color primaryLight = const Color(0xFFC8E6C9);
+  final Color bgSoft = const Color(0xFFF1F8E9);
+
   @override
   void initState() {
     super.initState();
@@ -67,7 +73,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
   }
 
   Future<void> _searchSubjects(String query) async {
-    // Cancelar búsqueda anterior
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
     if (query.isEmpty) {
@@ -77,7 +82,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
       return;
     }
 
-    // Debounce de 500ms para no hacer demasiadas peticiones
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       setState(() {
         _isSearching = true;
@@ -158,7 +162,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
         ),
       );
 
-      Navigator.pop(context, true); // Retornar true para indicar que se creó un post
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -176,309 +180,382 @@ class _CreatePostPageState extends State<CreatePostPage> {
     }
   }
 
+  InputDecoration _inputDecoration(String label, {String? hint}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      labelStyle: GoogleFonts.poppins(
+        fontSize: 13,
+        color: primaryDark.withOpacity(0.9),
+        fontWeight: FontWeight.w500,
+      ),
+      filled: true,
+      fillColor: primaryLight.withOpacity(0.4),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: primaryLight.withOpacity(0.9),
+          width: 1.2,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: primaryLight.withOpacity(0.9),
+          width: 1.2,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: primary,
+          width: 1.6,
+        ),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 14,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: bgSoft,
       appBar: AppBar(
         title: Text(
           'Nueva Publicación',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
-            fontSize: 24,
+            fontSize: 20,
           ),
         ),
-        backgroundColor: const Color(0xFF66B2A8),
+        backgroundColor: primaryDark,
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 4,
+        shadowColor: primary.withOpacity(0.4),
       ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Role selector
-              Text(
-                'Tipo de publicación',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildRoleChip(
-                      role: 1,
-                      label: 'Ayudante',
-                      icon: Icons.school,
-                      color: const Color(0xFFE85D75),
+              // Card grande contenedora del formulario
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primary.withOpacity(0.15),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildRoleChip(
-                      role: 2,
-                      label: 'Estudiante',
-                      icon: Icons.person,
-                      color: const Color(0xFF66B2A8),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildRoleChip(
-                      role: 3,
-                      label: 'Comentario',
-                      icon: Icons.comment,
-                      color: const Color(0xFF9B7EBD),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Title
-              TextFormField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  labelText: 'Título',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  ],
+                  border: Border.all(
+                    color: primaryLight.withOpacity(0.8),
+                    width: 1.2,
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un título';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Content
-              TextFormField(
-                controller: _contentController,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  labelText: 'Contenido',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa el contenido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Subject selector (only for roles 1 and 2)
-              if (_selectedRole != 3) ...[
-                GestureDetector(
-                  onTap: () {
-                    if (_allSubjects.isNotEmpty) {
-                      setState(() {
-                        _searchResults = _allSubjects;
-                      });
-                    }
-                  },
-                  child: TextFormField(
-                    controller: _subjectSearchController,
-                    decoration: InputDecoration(
-                      labelText: 'Materia *',
-                      hintText: 'Toca para ver todas las materias...',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Role selector
+                    Text(
+                      'Tipo de publicación',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: primaryDark,
                       ),
-                      prefixIcon: const Icon(Icons.book, color: Color(0xFF66B2A8)),
-                      suffixIcon: _isSearching
-                          ? const Padding(
-                              padding: EdgeInsets.all(12.0),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                            )
-                          : _selectedSubject != null
-                              ? const Icon(Icons.check_circle, color: Colors.green)
-                              : const Icon(Icons.arrow_drop_down),
                     ),
-                    onChanged: _searchSubjects,
-                    onTap: () {
-                      if (_allSubjects.isNotEmpty) {
-                        setState(() {
-                          _searchResults = _allSubjects;
-                        });
-                      }
-                    },
-                  ),
-                ),
-                if (_searchResults.isNotEmpty && _subjectSearchController.text != _selectedSubject?.name) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 250),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF66B2A8), width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildRoleChip(
+                            role: 1,
+                            label: 'Ayudante',
+                            icon: Icons.school,
+                            color: const Color(0xFFE85D75), // rojo rol
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildRoleChip(
+                            role: 2,
+                            label: 'Estudiante',
+                            icon: Icons.person,
+                            color: primary, // verde UPSA
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildRoleChip(
+                            role: 3,
+                            label: 'Comentario',
+                            icon: Icons.comment,
+                            color: const Color(0xFF9B7EBD),
+                          ),
                         ),
                       ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFE8F5F3),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
+                    const SizedBox(height: 20),
+
+                    // Title
+                    TextFormField(
+                      controller: _titleController,
+                      decoration: _inputDecoration('Título'),
+                      style: GoogleFonts.poppins(fontSize: 14),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa un título';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Content
+                    TextFormField(
+                      controller: _contentController,
+                      maxLines: 5,
+                      decoration: _inputDecoration('Contenido'),
+                      style: GoogleFonts.poppins(fontSize: 14),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa el contenido';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Subject selector (only for roles 1 and 2)
+                    if (_selectedRole != 3) ...[
+                      GestureDetector(
+                        onTap: () {
+                          if (_allSubjects.isNotEmpty) {
+                            setState(() {
+                              _searchResults = _allSubjects;
+                            });
+                          }
+                        },
+                        child: TextFormField(
+                          controller: _subjectSearchController,
+                          decoration: _inputDecoration(
+                            'Materia *',
+                            hint: 'Toca para ver todas las materias...',
+                          ).copyWith(
+                            prefixIcon: Icon(
+                              Icons.book,
+                              color: primaryDark,
                             ),
+                            suffixIcon: _isSearching
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12.0),
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  )
+                                : _selectedSubject != null
+                                    ? const Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                      )
+                                    : const Icon(Icons.arrow_drop_down),
                           ),
-                          child: Row(
+                          onChanged: _searchSubjects,
+                          onTap: () {
+                            if (_allSubjects.isNotEmpty) {
+                              setState(() {
+                                _searchResults = _allSubjects;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      if (_searchResults.isNotEmpty &&
+                          _subjectSearchController.text !=
+                              _selectedSubject?.name) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          constraints: const BoxConstraints(maxHeight: 250),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: primary,
+                              width: 1.6,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: primary.withOpacity(0.18),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.list, color: Color(0xFF66B2A8), size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${_searchResults.length} materias disponibles',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF66B2A8),
-                                  fontSize: 14,
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      primaryLight,
+                                      primary.withOpacity(0.9),
+                                    ],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                  ),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(12),
+                                    topRight: Radius.circular(12),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.list,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${_searchResults.length} materias disponibles',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: _searchResults.length,
+                                  itemBuilder: (context, index) {
+                                    final subject = _searchResults[index];
+                                    final isSelected =
+                                        _selectedSubject?.id == subject.id;
+                                    return ListTile(
+                                      leading: Icon(
+                                        isSelected
+                                            ? Icons.check_circle
+                                            : Icons.book_outlined,
+                                        color: isSelected
+                                            ? primaryDark
+                                            : primary,
+                                      ),
+                                      title: Text(
+                                        subject.name,
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                          color: isSelected
+                                              ? primaryDark
+                                              : Colors.black87,
+                                        ),
+                                      ),
+                                      tileColor: isSelected
+                                          ? primaryLight.withOpacity(0.35)
+                                          : null,
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedSubject = subject;
+                                          _subjectSearchController.text =
+                                              subject.name;
+                                          _searchResults = [];
+                                        });
+                                      },
+                                    );
+                                  },
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Expanded(
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: _searchResults.length,
-                            itemBuilder: (context, index) {
-                              final subject = _searchResults[index];
-                              final isSelected = _selectedSubject?.id == subject.id;
-                              return ListTile(
-                                leading: Icon(
-                                  isSelected ? Icons.check_circle : Icons.book_outlined,
-                                  color: isSelected ? Colors.green : const Color(0xFF66B2A8),
-                                ),
-                                title: Text(
-                                  subject.name,
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected ? Colors.green : Colors.black87,
-                                  ),
-                                ),
-                                tileColor: isSelected ? Colors.green.withOpacity(0.1) : null,
-                                onTap: () {
-                                  setState(() {
-                                    _selectedSubject = subject;
-                                    _subjectSearchController.text = subject.name;
-                                    _searchResults = [];
-                                  });
-                                },
-                              );
-                            },
-                          ),
-                        ),
                       ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-              ],
+                      const SizedBox(height: 16),
+                    ],
 
-              // Helper specific fields
-              if (_selectedRole == 1) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _capacityController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        decoration: InputDecoration(
-                          labelText: 'Capacidad actual',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    // Helper specific fields
+                    if (_selectedRole == 1) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _capacityController,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              decoration: _inputDecoration('Capacidad actual'),
+                              style: GoogleFonts.poppins(fontSize: 14),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Requerido';
+                                }
+                                return null;
+                              },
+                            ),
                           ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _maxCapacityController,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              decoration:
+                                  _inputDecoration('Capacidad máxima'),
+                              style: GoogleFonts.poppins(fontSize: 14),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Requerido';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _calendlyUrlController,
+                        decoration: _inputDecoration(
+                          'URL de Calendly',
+                          hint: 'https://calendly.com/...',
                         ),
+                        style: GoogleFonts.poppins(fontSize: 14),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Requerido';
+                            return 'Por favor ingresa tu URL de Calendly';
+                          }
+                          if (!value.startsWith('http')) {
+                            return 'Ingresa una URL válida';
                           }
                           return null;
                         },
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _maxCapacityController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        decoration: InputDecoration(
-                          labelText: 'Capacidad máxima',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Requerido';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
+                      const SizedBox(height: 16),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _calendlyUrlController,
-                  decoration: InputDecoration(
-                    labelText: 'URL de Calendly',
-                    hintText: 'https://calendly.com/...',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor ingresa tu URL de Calendly';
-                    }
-                    if (!value.startsWith('http')) {
-                      return 'Ingresa una URL válida';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
+              ),
 
               const SizedBox(height: 24),
 
@@ -486,31 +563,45 @@ class _CreatePostPageState extends State<CreatePostPage> {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _createPost,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE85D75),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryDark.withOpacity(0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _createPost,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryDark,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            'PUBLICAR',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        )
-                      : Text(
-                          'PUBLICAR',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                  ),
                 ),
               ),
             ],
@@ -527,6 +618,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
     required Color color,
   }) {
     final isSelected = _selectedRole == role;
+
     return FilterChip(
       selected: isSelected,
       label: Row(
@@ -551,8 +643,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
       backgroundColor: Colors.white,
       selectedColor: color,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: color, width: 2),
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+          color: isSelected ? color : color.withOpacity(0.7),
+          width: 1.8,
+        ),
       ),
       onSelected: (selected) {
         setState(() {

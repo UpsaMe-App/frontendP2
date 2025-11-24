@@ -24,6 +24,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   final double _expandedHeight = 260;
 
+  final Color greenDark = const Color(0xFF2E7D32);
+  final Color green = const Color(0xFF388E3C);
+  final Color greenLight = const Color(0xFFA5D6A7);
+
   @override
   void initState() {
     super.initState();
@@ -32,9 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadUserData() async {
-    setState(() {
-      _isLoadingProfile = true;
-    });
+    setState(() => _isLoadingProfile = true);
 
     try {
       final userData = await ApiService.getMe();
@@ -43,23 +45,17 @@ class _ProfilePageState extends State<ProfilePage> {
         _isLoadingProfile = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoadingProfile = false;
-      });
+      setState(() => _isLoadingProfile = false);
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al cargar perfil: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error al cargar perfil: $e')),
       );
     }
   }
 
   Future<void> _loadMyPosts() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final posts = await ApiService.getMyPosts();
@@ -68,15 +64,11 @@ class _ProfilePageState extends State<ProfilePage> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al cargar posts: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error al cargar posts: $e')),
       );
     }
   }
@@ -89,14 +81,8 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          '¿Cerrar sesión?',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          '¿Estás seguro que deseas cerrar sesión?',
-          style: GoogleFonts.poppins(),
-        ),
+        title: Text('¿Cerrar sesión?', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text('¿Estás seguro que deseas cerrar sesión?', style: GoogleFonts.poppins()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -108,63 +94,52 @@ class _ProfilePageState extends State<ProfilePage> {
               ApiService.clearTokens();
               Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             },
-            child: Text(
-              'Cerrar sesión',
-              style: GoogleFonts.poppins(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text('Cerrar sesión',
+                style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
 
-  /// CARD DE INFORMACIÓN (Carrera, Semestre, Teléfono)
+  // CARD INFO ESTILO ELEGANTE
   Widget _buildInfoCard({
     required IconData icon,
     required String label,
     required String value,
-    Color? bgColor,
-    Color? iconColor,
-    Color? labelColor,
-    Color? valueColor,
   }) {
-    // Estilo tipo “glass” sobre el degradado
-    final Color _bg = bgColor ?? Colors.white.withOpacity(0.10);
-    final Color _icon = iconColor ?? Colors.white;
-    final Color _label = labelColor ?? Colors.white70;
-    final Color _value = valueColor ?? Colors.white;
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: _bg,
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.3),
+        boxShadow: [
+          BoxShadow(
+            color: green.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: _icon, size: 20),
-          const SizedBox(width: 8),
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: GoogleFonts.poppins(fontSize: 11, color: _label),
-                ),
+                Text(label,
+                    style: GoogleFonts.poppins(
+                        fontSize: 11, color: Colors.white70)),
                 const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _value,
-                  ),
-                  maxLines: 1,
-                ),
+                Text(value,
+                    maxLines: 1,
+                    style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white)),
               ],
             ),
           ),
@@ -173,22 +148,19 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Header expandido (avatar grande + nombre + correo)
+  // HEADER EXPANDIDO
   Widget _buildExpandedHeader() {
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         CircleAvatar(
-          radius: 48,
-          backgroundColor: Colors.white,
+          radius: 50,
+          backgroundColor: Colors.white70,
           backgroundImage: _userData?['profilePhotoUrl'] != null
-              ? NetworkImage(
-                  '${ApiService.baseUrl}${_userData!['profilePhotoUrl']}',
-                )
+              ? NetworkImage('${ApiService.baseUrl}${_userData!['profilePhotoUrl']}')
               : null,
           child: _userData?['profilePhotoUrl'] == null
-              ? const Icon(Icons.person, size: 48, color: Color(0xFF66B2A8))
+              ? Icon(Icons.person, size: 52, color: greenDark)
               : null,
         ),
         const SizedBox(height: 12),
@@ -196,53 +168,76 @@ class _ProfilePageState extends State<ProfilePage> {
           _userData?['fullName'] ?? 'Usuario',
           style: GoogleFonts.poppins(
             fontSize: 22,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
           _userData?['email'] ?? '',
           style: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
         ),
-        const SizedBox(height: 8),
       ],
     );
   }
 
-  // Header colapsado (avatar chico + nombre en la barra)
+  // HEADER COLAPSADO
   Widget _buildCollapsedHeader() {
-    return Padding(
-      // para que no choque con el back y logout
-      padding: const EdgeInsets.symmetric(horizontal: 72.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: Colors.white24,
-            backgroundImage: _userData?['profilePhotoUrl'] != null
-                ? NetworkImage(
-                    '${ApiService.baseUrl}${_userData!['profilePhotoUrl']}',
-                  )
-                : null,
-            child: _userData?['profilePhotoUrl'] == null
-                ? const Icon(Icons.person, size: 16, color: Colors.white)
-                : null,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        CircleAvatar(
+          radius: 14,
+          backgroundColor: Colors.white30,
+          backgroundImage: _userData?['profilePhotoUrl'] != null
+              ? NetworkImage('${ApiService.baseUrl}${_userData!['profilePhotoUrl']}')
+              : null,
+          child: _userData?['profilePhotoUrl'] == null
+              ? Icon(Icons.person, size: 16, color: Colors.white)
+              : null,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          _userData?['fullName'] ?? 'Usuario',
+          style: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
+        ),
+      ],
+    );
+  }
+
+  // ANIMACIÓN PARA POSTS
+  Widget _animatedPostCard(Post post, int index) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 250 + index * 40),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, (1 - value) * 18),
+            child: child,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _userData?['fullName'] ?? 'Usuario',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-              maxLines: 1,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: green.withOpacity(0.22),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: PostCard(
+          post: post,
+          currentUserId: widget.userId,
+          onDeleted: _loadMyPosts,
+          onUpdated: _loadMyPosts,
+        ),
       ),
     );
   }
@@ -250,56 +245,52 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: greenLight.withOpacity(0.20),
       body: RefreshIndicator(
         onRefresh: _refreshData,
+        color: greenDark,
         child: _isLoadingProfile
             ? const Center(child: CircularProgressIndicator())
             : CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  /// SLIVER APP BAR (header con animación)
+                  // HEADER SLIVER
                   SliverAppBar(
-                    backgroundColor: const Color(0xFF357067),
+                    backgroundColor: greenDark,
                     elevation: 0,
                     expandedHeight: _expandedHeight,
-                    floating: false,
-                    snap: false,
                     pinned: true,
                     leading: IconButton(
-                      icon: const Icon(Icons.arrow_back),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () => Navigator.pop(context),
                     ),
                     actions: [
                       IconButton(
-                        icon: const Icon(Icons.logout),
+                        icon: const Icon(Icons.logout, color: Colors.white),
                         onPressed: _logout,
-                        tooltip: 'Cerrar sesión',
                       ),
                     ],
                     flexibleSpace: LayoutBuilder(
                       builder: (context, constraints) {
-                        final double currentHeight = constraints.maxHeight;
-                        // cuando la altura está cerca de la toolbar, consideramos colapsado
-                        final bool isCollapsed =
-                            currentHeight <= kToolbarHeight + 40;
-
-                        return Container(
-                          width: double.infinity,
-                          decoration: const BoxDecoration(
+                        final collapsed =
+                            constraints.maxHeight <= kToolbarHeight + 40;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          decoration: BoxDecoration(
                             gradient: LinearGradient(
+                              colors: [
+                                greenDark,
+                                green,
+                              ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Color(0xFF66B2A8), Color(0xFF4A8B82)],
                             ),
                           ),
                           child: SafeArea(
                             child: Center(
                               child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 200),
-                                child: isCollapsed
-                                    ? _buildCollapsedHeader()
-                                    : _buildExpandedHeader(),
+                                duration: const Duration(milliseconds: 250),
+                                child:
+                                    collapsed ? _buildCollapsedHeader() : _buildExpandedHeader(),
                               ),
                             ),
                           ),
@@ -308,22 +299,18 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
 
-                  /// SECCIÓN BAJO EL HEADER (cards + botón + contador)
+                  // INFO CARDS
                   SliverToBoxAdapter(
                     child: Container(
-                      decoration: const BoxDecoration(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
+                          colors: [green, greenDark],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Color(0xFF4A8B82), Color(0xFF4A8B82)],
                         ),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 12.0,
-                      ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Row(
                             children: [
@@ -339,9 +326,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 child: _buildInfoCard(
                                   icon: Icons.calendar_today,
                                   label: 'Semestre',
-                                  value:
-                                      _userData?['semester']?.toString() ??
-                                      'N/A',
+                                  value: _userData?['semester']?.toString() ?? 'N/A',
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -355,49 +340,31 @@ class _ProfilePageState extends State<ProfilePage> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          Center(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                if (_userData != null) {
-                                  final result = await Navigator.pushNamed(
-                                    context,
-                                    '/edit-profile',
-                                    arguments: _userData,
-                                  );
-                                  if (result == true) {
-                                    _loadUserData();
-                                  }
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: const Color(0xFF66B2A8),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 28,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: Text(
-                                'Editar perfil',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              final result = await Navigator.pushNamed(context, '/edit-profile',
+                                  arguments: _userData);
+                              if (result == true) _loadUserData();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: greenDark,
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
                               ),
                             ),
+                            child: Text('Editar perfil',
+                                style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600)),
                           ),
                           const SizedBox(height: 12),
-                          Center(
-                            child: Text(
-                              '${_myPosts.length} publicación${_myPosts.length != 1 ? 'es' : ''}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
+                          Text(
+                            '${_myPosts.length} publicación${_myPosts.length != 1 ? "es" : ""}',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -406,145 +373,26 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
 
-                  /// CALENDLY WIDGET
-                  if (_userData?['calendlyUrl'] != null &&
-                      _userData!['calendlyUrl'].isNotEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Agenda una cita',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF357067),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Center(
-                              child: SizedBox(
-                                width: 180,
-                                child: Card(
-                                  color: const Color(0xFFF6F0FB),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(32),
-                                  ),
-                                  elevation: 0,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    child: ElevatedButton(
-                                      onPressed: () async {
-                                        final url =
-                                            _userData!['calendlyUrl'] as String;
-                                        try {
-                                          final uri = Uri.tryParse(url);
-                                          if (uri != null) {
-                                            await launchUrl(
-                                              uri,
-                                              mode: LaunchMode
-                                                  .externalApplication,
-                                            );
-                                          } else {
-                                            throw 'URL inválida';
-                                          }
-                                        } catch (e) {
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'No se pudo abrir Calendly: $e',
-                                                ),
-                                                backgroundColor: Colors.red,
-                                              ),
-                                            );
-                                          }
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFF66B2A8,
-                                        ),
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 10,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            28,
-                                          ),
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                      child: Text(
-                                        'Abrir Calendly',
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                  /// POSTS
+                  // POSTS
                   if (_isLoading)
                     const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
-                    )
+                        child: Center(child: CircularProgressIndicator()))
                   else if (_myPosts.isEmpty)
                     SliverFillRemaining(
                       child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.post_add,
-                              size: 80,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No tienes publicaciones',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Crea tu primera publicación',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          'No tienes publicaciones',
+                          style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey[600]),
                         ),
                       ),
                     )
                   else
                     SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return PostCard(
-                          post: _myPosts[index],
-                          currentUserId: widget.userId,
-                          onDeleted: _loadMyPosts,
-                          onUpdated: _loadMyPosts,
-                        );
-                      }, childCount: _myPosts.length),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) =>
+                            _animatedPostCard(_myPosts[index], index),
+                        childCount: _myPosts.length,
+                      ),
                     ),
                 ],
               ),
