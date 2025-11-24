@@ -62,6 +62,7 @@ class User {
   final String? lastName;
   final String? fullName;
   final String? avatarUrl;
+  final String? avatarId;
   final String? profilePhotoUrl;
   final String? careerId;
   final String? career;
@@ -77,6 +78,7 @@ class User {
     this.lastName,
     this.fullName,
     this.avatarUrl,
+    this.avatarId,
     this.profilePhotoUrl,
     this.careerId,
     this.career,
@@ -87,15 +89,38 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Construir fullName si no viene en el JSON
+    String? computedFullName = json['fullName'] ?? json['full_name'];
+    
+    if (computedFullName == null || computedFullName.isEmpty) {
+      // Intentar con firstName/lastName (camelCase)
+      String? firstName = json['firstName'];
+      String? lastName = json['lastName'];
+      
+      // Intentar con first_name/last_name (snake_case)
+      firstName ??= json['first_name'];
+      lastName ??= json['last_name'];
+      
+      // Intentar con name/username
+      if (firstName == null && lastName == null) {
+        computedFullName = json['name'] ?? json['username'] ?? json['nombres'];
+      } else if (firstName != null && lastName != null) {
+        computedFullName = '$firstName $lastName';
+      } else if (firstName != null) {
+        computedFullName = firstName;
+      }
+    }
+
     return User(
       id: json['id'] ?? '',
       email: json['email'] ?? '',
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      fullName: json['fullName'],
-      avatarUrl: json['avatarUrl'],
-      profilePhotoUrl: json['profilePhotoUrl'],
-      careerId: json['careerId'],
+      firstName: json['firstName'] ?? json['first_name'],
+      lastName: json['lastName'] ?? json['last_name'],
+      fullName: computedFullName,
+      avatarUrl: json['avatarUrl'] ?? json['avatar_url'],
+      avatarId: json['avatarId'] ?? json['avatar_id'],
+      profilePhotoUrl: json['profilePhotoUrl'] ?? json['profile_photo_url'],
+      careerId: json['careerId'] ?? json['career_id'],
       career: json['career'],
       semester: json['semester'] ?? 1,
       phone: json['phone'],
@@ -103,6 +128,7 @@ class User {
       posts: json['posts'] != null 
           ? (json['posts'] as List).map((p) => Post.fromJson(p)).toList()
           : null,
+      calendlyUrl: json['calendlyUrl'] ?? json['calendly_url'],
     );
   }
 
@@ -113,8 +139,15 @@ class User {
   }
 
   String get photoUrl {
-    if (profilePhotoUrl != null) return profilePhotoUrl!;
-    if (avatarUrl != null) return avatarUrl!;
+    if (profilePhotoUrl != null && profilePhotoUrl!.isNotEmpty) {
+      return profilePhotoUrl!;
+    }
+    if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+      return avatarUrl!;
+    }
+    if (avatarId != null && avatarId!.isNotEmpty) {
+      return '/avatars/$avatarId'; // Path para avatares predefinidos
+    }
     return '';
   }
 }
@@ -196,12 +229,32 @@ class Post {
       }
     }
 
+    // Manejar usuario: puede venir anidado en 'user' o aplanado como 'author...'
+    User? userObj;
+    if (json['user'] != null) {
+      userObj = User.fromJson(json['user']);
+    } else if (json['authorId'] != null || json['author'] != null) {
+      // Construir usuario desde campos aplanados
+      userObj = User(
+        id: json['authorId'] ?? json['userId'] ?? '',
+        email: '', // No viene en el formato aplanado
+        fullName: json['author'],
+        avatarId: json['authorAvatarId'],
+        profilePhotoUrl: json['authorProfilePhotoUrl'],
+        career: json['authorCareer'],
+        semester: 1, // Default
+      );
+    }
+
     return Post(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
       content: json['content'] ?? json['contentPreview'] ?? '',
       contentPreview: json['contentPreview'],
       userId: json['userId'],
+
+      content: json['content'] ?? '',
+      userId: json['userId'] ?? json['authorId'] ?? '',
       subjectId: json['subjectId'],
       subjectName: json['subjectName'],
       role: json['role'] ?? 1,
@@ -218,6 +271,13 @@ class Post {
           ? DateTime.parse(json['updatedAt'])
           : null,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
+          : (json['createdAtUtc'] != null 
+              ? DateTime.parse(json['createdAtUtc']) 
+              : DateTime.now()),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.now(),
+      user: userObj,
       subject: subjectObj,
     );
   }
@@ -254,15 +314,33 @@ class Reply {
   });
 
   factory Reply.fromJson(Map<String, dynamic> json) {
+    // Manejar usuario: puede venir anidado en 'user' o aplanado como 'author...'
+    User? userObj;
+    if (json['user'] != null) {
+      userObj = User.fromJson(json['user']);
+    } else if (json['authorId'] != null || json['author'] != null) {
+      // Construir usuario desde campos aplanados
+      userObj = User(
+        id: json['authorId'] ?? json['userId'] ?? '',
+        email: '', // No viene en el formato aplanado
+        fullName: json['author'],
+        avatarId: json['authorAvatarId'], // Asumiendo que podría venir
+        profilePhotoUrl: json['authorProfilePhotoUrl'], // Asumiendo que podría venir
+        semester: 1, // Default
+      );
+    }
+
     return Reply(
       id: json['id'] ?? '',
       content: json['content'] ?? '',
       postId: json['postId'] ?? '',
-      userId: json['userId'] ?? '',
+      userId: json['userId'] ?? json['authorId'] ?? '',
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
-      user: json['user'] != null ? User.fromJson(json['user']) : null,
+          : (json['createdAtUtc'] != null 
+              ? DateTime.parse(json['createdAtUtc']) 
+              : DateTime.now()),
+      user: userObj,
     );
   }
 }

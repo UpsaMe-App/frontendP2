@@ -24,7 +24,7 @@ class PostCard extends StatelessWidget {
       case 1:
         return const Color(0xFFE85D75); // Ayudante - Rojo
       case 2:
-        return const Color(0xFF66B2A8); // Estudiante - Verde
+        return const Color(0xFF357067); // Estudiante - Verde oficial
       case 3:
         return const Color(0xFF9B7EBD); // Comentario - Morado
       default:
@@ -100,7 +100,7 @@ class PostCard extends StatelessWidget {
                             }
                           },
                           child: Text(
-                            post.user?.fullName ?? 'Usuario',
+                            post.user?.displayName ?? 'Usuario',
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
