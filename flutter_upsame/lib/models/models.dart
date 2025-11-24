@@ -68,6 +68,7 @@ class User {
   final int semester;
   final String? phone;
   final String? calendlyUrl;
+  final List<Post>? posts;
 
   User({
     required this.id,
@@ -82,6 +83,7 @@ class User {
     required this.semester,
     this.phone,
     this.calendlyUrl,
+    this.posts,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -98,6 +100,9 @@ class User {
       semester: json['semester'] ?? 1,
       phone: json['phone'],
       calendlyUrl: json['calendlyUrl'],
+      posts: json['posts'] != null 
+          ? (json['posts'] as List).map((p) => Post.fromJson(p)).toList()
+          : null,
     );
   }
 
@@ -141,14 +146,17 @@ class Post {
   final String id;
   final String title;
   final String content;
-  final String userId;
+  final String? contentPreview;
+  final String? userId;
   final String? subjectId;
-  final int role; // 1=ayudante, 2=estudiante, 3=comentario
+  final String? subjectName;
+  final int role; // 1=ayudante, 2=estudiante, 3=recomendacion
+  final int? status; // 0=activo, 1=en progreso, 2=completado
   final int? capacity;
   final int? maxCapacity;
   final String? calendlyUrl;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
   final User? user;
   final Subject? subject;
 
@@ -156,14 +164,17 @@ class Post {
     required this.id,
     required this.title,
     required this.content,
-    required this.userId,
+    this.contentPreview,
+    this.userId,
     this.subjectId,
+    this.subjectName,
     required this.role,
+    this.status,
     this.capacity,
     this.maxCapacity,
     this.calendlyUrl,
     required this.createdAt,
-    required this.updatedAt,
+    this.updatedAt,
     this.user,
     this.subject,
   });
@@ -188,19 +199,24 @@ class Post {
     return Post(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
-      content: json['content'] ?? '',
-      userId: json['userId'] ?? '',
+      content: json['content'] ?? json['contentPreview'] ?? '',
+      contentPreview: json['contentPreview'],
+      userId: json['userId'],
       subjectId: json['subjectId'],
+      subjectName: json['subjectName'],
       role: json['role'] ?? 1,
+      status: json['status'],
       capacity: json['capacity'],
       maxCapacity: json['maxCapacity'],
       calendlyUrl: json['calendlyUrl'],
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
+          : (json['createdAtUtc'] != null
+              ? DateTime.parse(json['createdAtUtc'])
+              : DateTime.now()),
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'])
-          : DateTime.now(),
+          : null,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       subject: subjectObj,
     );
