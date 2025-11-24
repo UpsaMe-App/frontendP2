@@ -7,7 +7,9 @@ class ApiService {
   static String? _accessToken;
   static String? _refreshToken;
 
-  // Auth endpoints
+  // --------------------------
+  // AUTH
+  // --------------------------
   static Future<Map<String, dynamic>> register({
     required String email,
     required String password,
@@ -83,7 +85,9 @@ class ApiService {
     }
   }
 
-  // Avatars
+  // --------------------------
+  // AVATARS
+  // --------------------------
   static Future<List<Avatar>> getAvatars() async {
     final response = await http.get(
       Uri.parse('$baseUrl/users/avatars'),
@@ -98,7 +102,9 @@ class ApiService {
     }
   }
 
-  // Faculties
+  // --------------------------
+  // FACULTIES / CAREERS
+  // --------------------------
   static Future<List<Faculty>> getFaculties() async {
     final response = await http.get(
       Uri.parse('$baseUrl/directory/faculties'),
@@ -113,7 +119,6 @@ class ApiService {
     }
   }
 
-  // Careers by faculty
   static Future<List<Career>> getCareersByFaculty(String facultyId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/directory/faculties/$facultyId/careers'),
@@ -128,7 +133,6 @@ class ApiService {
     }
   }
 
-  // Users by career
   static Future<List<User>> getUsersByCareer(String careerId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/directory/careers/$careerId/users'),
@@ -143,7 +147,9 @@ class ApiService {
     }
   }
 
-  // Subjects
+  // --------------------------
+  // SUBJECTS
+  // --------------------------
   static Future<List<Subject>> getAllSubjects() async {
     final response = await http.get(
       Uri.parse('$baseUrl/directory/subjects'),
@@ -176,41 +182,20 @@ class ApiService {
     }
   }
 
-  // Posts
+  // --------------------------
+  // POSTS
+  // --------------------------
   static Future<List<Post>> getPosts({int? role}) async {
     String url = '$baseUrl/posts';
-    if (role != null) {
-      url += '?role=$role';
-    }
-
-    print('GET request to: $url');
+    if (role != null) url += '?role=$role';
 
     final response = await http.get(Uri.parse(url), headers: _getHeaders());
 
-    print('Response status: ${response.statusCode}');
-    //print('Response body: ${response.body}');
-
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
-      print('Posts decoded: ${data.length} posts');
-      
-      // Debug: Ver el primer post si existe
-      if (data.isNotEmpty) {
-        print('First post sample:');
-        print('  - userId: ${data[0]['userId']}');
-        print('  - user object: ${data[0]['user']}');
-        if (data[0]['user'] != null) {
-          print('    - user.fullName: ${data[0]['user']['fullName']}');
-          print('    - user.firstName: ${data[0]['user']['firstName']}');
-          print('    - user.lastName: ${data[0]['user']['lastName']}');
-        }
-      }
-      
       return data.map((json) => Post.fromJson(json)).toList();
     } else {
-      throw Exception(
-        'Error al cargar posts: ${response.statusCode} - ${response.body}',
-      );
+      throw Exception('Error al cargar posts');
     }
   }
 
@@ -323,27 +308,37 @@ class ApiService {
     }
   }
 
-  static Future<List<Post>> searchPostsBySubject(String subjectId) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/posts?subjectId=$subjectId'),
-      headers: _getHeaders(),
+  // --------------------------
+  // SEARCH POSTS BY SUBJECT (por NOMBRE, usando /posts/search-by-subject)
+  // --------------------------
+  static Future<List<Post>> searchPostsBySubject(
+    String subjectName, {
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    final uri = Uri.parse('$baseUrl/posts/search-by-subject').replace(
+      queryParameters: {
+        'q': subjectName,
+        'page': page.toString(),
+        'pageSize': pageSize.toString(),
+      },
     );
 
-    print('Searching posts by subject: $subjectId');
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
+    final response = await http.get(uri, headers: _getHeaders());
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Post.fromJson(json)).toList();
     } else {
       throw Exception(
-        'Error al buscar posts por materia: ${response.statusCode}',
+        'Error al buscar posts por materia: ${response.statusCode} - ${response.body}',
       );
     }
   }
 
-  // Replies
+  // --------------------------
+  // REPLIES
+  // --------------------------
   static Future<List<Reply>> getReplies(String postId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/posts/$postId/replies'),
@@ -375,26 +370,25 @@ class ApiService {
     }
   }
 
-  // Public Users
+  // --------------------------
+  // PUBLIC USERS
+  // --------------------------
   static Future<User> getPublicUser(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/public-users/$userId'),
       headers: _getHeaders(),
     );
 
-    print('Public User Response: ${response.statusCode}');
-    print('Public User Body: ${response.body}');
-
     if (response.statusCode == 200) {
-      final user = User.fromJson(json.decode(response.body));
-      print('User phone: ${user.phone}');
-      return user;
+      return User.fromJson(json.decode(response.body));
     } else {
       throw Exception('Error al cargar usuario público');
     }
   }
 
-  // Current User (GET /users/me)
+  // --------------------------
+  // CURRENT USER
+  // --------------------------
   static Future<Map<String, dynamic>> getMe() async {
     final response = await http.get(
       Uri.parse('$baseUrl/users/me'),
@@ -408,7 +402,6 @@ class ApiService {
     }
   }
 
-  // Update User (PUT /users/meeee)
   static Future<Map<String, dynamic>> updateUser({
     required String firstName,
     required String lastName,
@@ -426,12 +419,8 @@ class ApiService {
       'careerId': careerId,
     };
 
-    if (avatarId != null) {
-      body['avatarId'] = avatarId;
-    }
-    if (calendlyUrl != null) {
-      body['calendlyUrl'] = calendlyUrl;
-    }
+    if (avatarId != null) body['avatarId'] = avatarId;
+    if (calendlyUrl != null) body['calendlyUrl'] = calendlyUrl;
 
     final response = await http.put(
       Uri.parse('$baseUrl/users/me'),
@@ -442,13 +431,10 @@ class ApiService {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception(
-        json.decode(response.body)['message'] ?? 'Error al actualizar perfil',
-      );
+      throw Exception('Error al actualizar perfil');
     }
   }
 
-  // Get User by ID (GET /users/{id})
   static Future<Map<String, dynamic>> getUserById(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/users/$userId'),
@@ -462,7 +448,6 @@ class ApiService {
     }
   }
 
-  // Get Avatar Options (GET /users/avatars/options)
   static Future<List<Avatar>> getAvatarOptions() async {
     final response = await http.get(
       Uri.parse('$baseUrl/users/avatars/options'),
@@ -477,7 +462,9 @@ class ApiService {
     }
   }
 
-  // Helper para headers con token
+  // --------------------------
+  // TOKEN HEADERS
+  // --------------------------
   static Map<String, String> _getHeaders() {
     final headers = {'Content-Type': 'application/json'};
     if (_accessToken != null) {
@@ -486,11 +473,9 @@ class ApiService {
     return headers;
   }
 
-  // Getters para tokens
   static String? get accessToken => _accessToken;
   static String? get getRefreshToken => _refreshToken;
 
-  // Limpiar tokens (para logout)
   static void clearTokens() {
     _accessToken = null;
     _refreshToken = null;
