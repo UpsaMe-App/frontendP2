@@ -107,7 +107,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
 
     try {
-      await ApiService.updateUser(
+      print('🔄 Guardando cambios del perfil...');
+      
+      // Update user profile
+      final updatedData = await ApiService.updateUser(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         phone: _phoneController.text.trim().isNotEmpty
@@ -120,17 +123,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ? _calendlyUrlController.text.trim()
             : null,
       );
+      
+      print('✅ Perfil actualizado exitosamente en el servidor');
+      print('📦 Datos retornados: $updatedData');
+
+      // Reload fresh data from server to confirm changes were saved
+      final freshUserData = await ApiService.getMe();
+      print('🔄 Datos frescos recargados del servidor');
+      print('📦 Datos actualizados: $freshUserData');
 
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Perfil actualizado exitosamente'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
-        Navigator.pop(context, true); // Return true to indicate success
+        
+        // Return the fresh data to the profile page
+        Navigator.pop(context, freshUserData);
       }
     } catch (e) {
+      print('❌ Error al actualizar perfil: $e');
       setState(() {
         _isLoading = false;
       });
@@ -139,6 +158,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           SnackBar(
             content: Text('Error al actualizar perfil: $e'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
         );
       }

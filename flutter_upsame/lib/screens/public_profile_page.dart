@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_upsame/screens/post_detail_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../widgets/calendly_inline_widget.dart';
@@ -17,39 +18,47 @@ class PublicProfilePage extends StatefulWidget {
   State<PublicProfilePage> createState() => _PublicProfilePageState();
 }
 
-class _PublicProfilePageState extends State<PublicProfilePage> 
-    with SingleTickerProviderStateMixin {
+class _PublicProfilePageState extends State<PublicProfilePage>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   User? _user;
   bool _isLoading = false;
   final Map<int, AnimationController> _postAnimations = {};
 
+  // Paleta de colores verde
+  final Color _primaryGreen = const Color(0xFF2E7D32);
+  final Color _darkGreen = const Color(0xFF1B5E20);
+  final Color _lightGreen = const Color(0xFF4CAF50);
+  final Color _accentGreen = const Color(0xFF81C784);
+  final Color _backgroundGreen = const Color(0xFFE8F5E8);
+
   @override
   void initState() {
     super.initState();
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.6, curve: Curves.easeInOut),
       ),
     );
-    
+
     _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.2, 0.8, curve: Curves.easeOutBack),
       ),
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.1),
       end: Offset.zero,
@@ -59,7 +68,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
         curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
       ),
     );
-    
+
     _loadUser();
   }
 
@@ -83,8 +92,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
         _user = user;
         _isLoading = false;
       });
-      
-      // Inicializar animaciones para cada post
+
+      // Inicializar animaciones para cada post del usuario
       if (user.posts != null) {
         for (int i = 0; i < user.posts!.length; i++) {
           _postAnimations[i] = AnimationController(
@@ -93,11 +102,10 @@ class _PublicProfilePageState extends State<PublicProfilePage>
           )..forward();
         }
       }
-      
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _animationController.forward();
       });
-      
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -117,65 +125,78 @@ class _PublicProfilePageState extends State<PublicProfilePage>
     }
   }
 
-  // Paleta de colores verde
-  final Color _primaryGreen = const Color(0xFF2E7D32);
-  final Color _darkGreen = const Color(0xFF1B5E20);
-  final Color _lightGreen = const Color(0xFF4CAF50);
-  final Color _accentGreen = const Color(0xFF81C784);
-  final Color _backgroundGreen = const Color(0xFFE8F5E8);
-
   Color _getRoleColor(int role) {
     switch (role) {
-      case 1: return const Color(0xFFE53935); // Rojo para ofrecer ayuda
-      case 2: return const Color(0xFF1976D2); // Azul para buscar ayuda
-      case 3: return const Color(0xFF7B1FA2); // Morado para recomendaciones
-      default: return Colors.grey;
+      case 1:
+        return const Color(0xFFE53935); // Rojo para ofrecer ayuda
+      case 2:
+        return const Color(0xFF1976D2); // Azul para buscar ayuda
+      case 3:
+        return const Color(0xFF7B1FA2); // Morado para recomendaciones
+      default:
+        return Colors.grey;
     }
   }
 
   String _getRoleText(int role) {
     switch (role) {
-      case 1: return 'Ofrece Ayuda';
-      case 2: return 'Busca Ayuda';
-      case 3: return 'Recomendación';
-      default: return 'Publicación';
+      case 1:
+        return 'Ofrece Ayuda';
+      case 2:
+        return 'Busca Ayuda';
+      case 3:
+        return 'Recomendación';
+      default:
+        return 'Publicación';
     }
   }
 
   IconData _getRoleIcon(int role) {
     switch (role) {
-      case 1: return Icons.school_outlined;
-      case 2: return Icons.help_outline;
-      case 3: return Icons.lightbulb_outline;
-      default: return Icons.post_add;
+      case 1:
+        return Icons.school_outlined;
+      case 2:
+        return Icons.help_outline;
+      case 3:
+        return Icons.lightbulb_outline;
+      default:
+        return Icons.post_add;
     }
   }
 
   String _getStatusText(int status) {
     switch (status) {
-      case 0: return 'Activo';
-      case 1: return 'En Progreso';
-      case 2: return 'Completado';
-      default: return 'Desconocido';
+      case 0:
+        return 'Activo';
+      case 1:
+        return 'En Progreso';
+      case 2:
+        return 'Completado';
+      default:
+        return 'Desconocido';
     }
   }
 
   Color _getStatusColor(int status) {
     switch (status) {
-      case 0: return _lightGreen;
-      case 1: return Colors.orange;
-      case 2: return Colors.blue;
-      default: return Colors.grey;
+      case 0:
+        return _lightGreen;
+      case 1:
+        return Colors.orange;
+      case 2:
+        return Colors.blue;
+      default:
+        return Colors.grey;
     }
   }
 
   String _formatPhoneNumber(String phone) {
     final cleaned = phone.replaceAll(RegExp(r'[^\d+]'), '');
-    
+
     if (cleaned.length == 8) {
       return '${cleaned.substring(0, 4)}-${cleaned.substring(4)}';
     }
-    
+
     return phone;
   }
 
@@ -184,7 +205,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final difference = now.difference(date);
-      
+
       if (difference.inDays == 0) {
         return 'Hoy a las ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
       } else if (difference.inDays == 1) {
@@ -203,7 +224,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => PostDetailPage(post: post),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            PostDetailPage(post: post),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
@@ -225,6 +247,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
               : _buildProfileScreen(),
     );
   }
+
+  // ===================== PANTALLAS AUXILIARES =====================
 
   Widget _buildLoadingScreen() {
     return Center(
@@ -318,7 +342,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryGreen,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -330,6 +355,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
     );
   }
 
+  // ===================== PERFIL =====================
+
   Widget _buildProfileScreen() {
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -340,7 +367,6 @@ class _PublicProfilePageState extends State<PublicProfilePage>
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // Header con gradiente
               SliverAppBar(
                 expandedHeight: 280,
                 backgroundColor: _primaryGreen,
@@ -364,23 +390,15 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                   ),
                 ),
               ),
-
-              // Contenido principal
               SliverList(
                 delegate: SliverChildListDelegate([
-                  // Información del usuario
                   _buildUserInfoSection(),
-                  
-                  // Publicaciones
                   if (_user!.posts != null && _user!.posts!.isNotEmpty)
                     _buildPostsSection(),
-                  
-                  // Calendly
-                  if (_user!.calendlyUrl != null && 
-                      _user!.calendlyUrl!.isNotEmpty && 
+                  if (_user!.calendlyUrl != null &&
+                      _user!.calendlyUrl!.isNotEmpty &&
                       _user!.calendlyUrl != ".")
                     _buildCalendlySection(),
-                  
                   const SizedBox(height: 40),
                 ]),
               ),
@@ -402,7 +420,6 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       ),
       child: Stack(
         children: [
-          // Patrón decorativo
           Positioned(
             right: -50,
             top: -50,
@@ -427,15 +444,12 @@ class _PublicProfilePageState extends State<PublicProfilePage>
               ),
             ),
           ),
-          
-          // Contenido del header
           Padding(
             padding: const EdgeInsets.all(32.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(flex: 2),
-                // Avatar con efecto de brillo
                 Container(
                   width: 120,
                   height: 120,
@@ -485,8 +499,6 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                   ),
                 ),
                 const Spacer(),
-                
-                // Nombre y email
                 Text(
                   _user!.displayName,
                   style: GoogleFonts.poppins(
@@ -520,7 +532,6 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          // Tarjeta de información principal
           AnimatedContainer(
             duration: const Duration(milliseconds: 600),
             curve: Curves.easeOutBack,
@@ -534,7 +545,6 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    // Semestre
                     _buildInfoRow(
                       icon: Icons.school_rounded,
                       title: 'Semestre Actual',
@@ -542,8 +552,6 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                       color: Colors.blue,
                     ),
                     const SizedBox(height: 16),
-                    
-                    // Carrera
                     if (_user!.career != null && _user!.career!.isNotEmpty)
                       _buildInfoRow(
                         icon: Icons.work_rounded,
@@ -551,11 +559,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                         value: _user!.career!,
                         color: Colors.purple,
                       ),
-                    
                     if (_user!.career != null && _user!.career!.isNotEmpty)
                       const SizedBox(height: 16),
-                    
-                    // Teléfono
                     _buildPhoneRow(),
                   ],
                 ),
@@ -630,8 +635,9 @@ class _PublicProfilePageState extends State<PublicProfilePage>
 
   Widget _buildPhoneRow() {
     final hasPhone = _user!.phone != null && _user!.phone!.isNotEmpty;
-    final phoneText = hasPhone ? _formatPhoneNumber(_user!.phone!) : 'No disponible';
-    
+    final phoneText =
+        hasPhone ? _formatPhoneNumber(_user!.phone!) : 'No disponible';
+
     return Row(
       children: [
         Container(
@@ -639,7 +645,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
           height: 48,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: hasPhone 
+              colors: hasPhone
                   ? [Colors.green.withOpacity(0.8), Colors.green]
                   : [Colors.grey.withOpacity(0.8), Colors.grey],
               begin: Alignment.topLeft,
@@ -648,13 +654,14 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: (hasPhone ? Colors.green : Colors.grey).withOpacity(0.3),
+                color:
+                    (hasPhone ? Colors.green : Colors.grey).withOpacity(0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Icon(
+          child: const Icon(
             Icons.phone_rounded,
             color: Colors.white,
             size: 24,
@@ -694,7 +701,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             child: IconButton(
               icon: Icon(Icons.phone_outlined, color: Colors.green[700]),
               onPressed: () {
-                // Acción de llamar
+                // Aquí podrías meter integración con url_launcher si quieres llamar directo
               },
             ),
           ),
@@ -702,13 +709,14 @@ class _PublicProfilePageState extends State<PublicProfilePage>
     );
   }
 
+  // ===================== POSTS DEL USUARIO =====================
+
   Widget _buildPostsSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título de la sección
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Row(
@@ -719,7 +727,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                     color: _primaryGreen,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.dynamic_feed_rounded,
                     color: Colors.white,
                     size: 24,
@@ -736,7 +744,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: _accentGreen,
                     borderRadius: BorderRadius.circular(12),
@@ -753,8 +762,6 @@ class _PublicProfilePageState extends State<PublicProfilePage>
               ],
             ),
           ),
-
-          // Lista de posts
           ..._user!.posts!.asMap().entries.map((entry) {
             final index = entry.key;
             final post = entry.value;
@@ -767,7 +774,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
 
   Widget _buildAnimatedPostCard(Post post, int index) {
     final animationController = _postAnimations[index];
-    
+
     if (animationController == null) {
       return _buildPostCard(post);
     }
@@ -788,11 +795,11 @@ class _PublicProfilePageState extends State<PublicProfilePage>
   }
 
   Widget _buildPostCard(Post post) {
-    final hasCalendly = post.calendlyUrl != null && 
-                        post.calendlyUrl!.isNotEmpty && 
-                        post.calendlyUrl != '.' &&
-                        post.calendlyUrl != 'string';
-    
+    final hasCalendly = post.calendlyUrl != null &&
+        post.calendlyUrl!.isNotEmpty &&
+        post.calendlyUrl != '.' &&
+        post.calendlyUrl != 'string';
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: GestureDetector(
@@ -825,14 +832,16 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header con badge de role
+                      // Header rol
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: _getRoleColor(post.role).withOpacity(0.1),
+                              color:
+                                  _getRoleColor(post.role).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: _getRoleColor(post.role),
@@ -861,9 +870,11 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                           ),
                           if (post.status != null)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: _getStatusColor(post.status!).withOpacity(0.1),
+                                color: _getStatusColor(post.status!)
+                                    .withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -878,8 +889,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                         ],
                       ),
                       const SizedBox(height: 16),
-                      
-                      // Título mejorado
+                      // Título
                       Text(
                         post.title,
                         style: GoogleFonts.poppins(
@@ -892,7 +902,6 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
-                      
                       // Contenido
                       Text(
                         post.contentPreview ?? post.content,
@@ -905,12 +914,12 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 16),
-                      
-                      // Footer con información
+                      // Footer
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          if (post.subjectName != null && post.subjectName!.isNotEmpty)
+                          if (post.subjectName != null &&
+                              post.subjectName!.isNotEmpty)
                             Expanded(
                               child: Row(
                                 children: [
@@ -937,7 +946,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                             ),
                           const SizedBox(width: 12),
                           Text(
-                            _formatDate(post.createdAt.toIso8601String()),
+                            _formatDate(
+                                post.createdAt.toIso8601String()),
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               color: Colors.grey[500],
@@ -946,8 +956,6 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                           ),
                         ],
                       ),
-                      
-                      // Botón de Calendly si existe
                       if (hasCalendly) ...[
                         const SizedBox(height: 16),
                         Container(
@@ -983,13 +991,19 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                                     ),
                                     body: CalendlyInlineWidget(
                                       calendlyUrl: post.calendlyUrl!,
-                                      height: MediaQuery.of(context).size.height * 0.8,
+                                      height: MediaQuery.of(context)
+                                              .size
+                                              .height *
+                                          0.8,
                                     ),
                                   ),
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.calendar_today_rounded, size: 18),
+                            icon: const Icon(
+                              Icons.calendar_today_rounded,
+                              size: 18,
+                            ),
                             label: Text(
                               'Agendar cita',
                               style: GoogleFonts.poppins(
@@ -1000,12 +1014,14 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _primaryGreen,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 2,
-                              shadowColor: _primaryGreen.withOpacity(0.3),
+                              shadowColor:
+                                  _primaryGreen.withOpacity(0.3),
                             ),
                           ),
                         ),
@@ -1020,6 +1036,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       ),
     );
   }
+
+  // ===================== CALENDLY =====================
 
   Widget _buildCalendlySection() {
     return Padding(
