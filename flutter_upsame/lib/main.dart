@@ -23,7 +23,10 @@ class MainApp extends StatelessWidget {
       title: 'UpsaMe',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2E7D32), // verde oscuro UPSA vibes
+        ),
+        useMaterial3: true,
         textTheme: GoogleFonts.poppinsTextTheme(),
       ),
       initialRoute: '/',
@@ -37,7 +40,9 @@ class MainApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const RegisterPage());
           case '/main':
             final userId = settings.arguments as String? ?? 'user-id';
-            return MaterialPageRoute(builder: (_) => MainLayout(userId: userId));
+            return MaterialPageRoute(
+              builder: (_) => MainLayout(userId: userId),
+            );
           case '/create-post':
             return MaterialPageRoute(builder: (_) => const CreatePostPage());
           case '/public-profile':
