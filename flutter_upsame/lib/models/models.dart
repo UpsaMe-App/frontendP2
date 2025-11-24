@@ -91,19 +91,20 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     // Construir fullName si no viene en el JSON
     String? computedFullName = json['fullName'] ?? json['full_name'];
-    
+
     if (computedFullName == null || computedFullName.isEmpty) {
       // Intentar con firstName/lastName (camelCase)
       String? firstName = json['firstName'];
       String? lastName = json['lastName'];
-      
+
       // Intentar con first_name/last_name (snake_case)
       firstName ??= json['first_name'];
       lastName ??= json['last_name'];
-      
+
       // Intentar con name/username
       if (firstName == null && lastName == null) {
-        computedFullName = json['name'] ?? json['username'] ?? json['nombres'];
+        computedFullName =
+            json['name'] ?? json['username'] ?? json['nombres'];
       } else if (firstName != null && lastName != null) {
         computedFullName = '$firstName $lastName';
       } else if (firstName != null) {
@@ -124,17 +125,20 @@ class User {
       career: json['career'],
       semester: json['semester'] ?? 1,
       phone: json['phone'],
-      calendlyUrl: json['calendlyUrl'],
-      posts: json['posts'] != null 
-          ? (json['posts'] as List).map((p) => Post.fromJson(p)).toList()
-          : null,
       calendlyUrl: json['calendlyUrl'] ?? json['calendly_url'],
+      posts: json['posts'] != null
+          ? (json['posts'] as List)
+              .map((p) => Post.fromJson(p as Map<String, dynamic>))
+              .toList()
+          : null,
     );
   }
 
   String get displayName {
     if (fullName != null && fullName!.isNotEmpty) return fullName!;
-    if (firstName != null && lastName != null) return '$firstName $lastName';
+    if (firstName != null && lastName != null) {
+      return '$firstName $lastName';
+    }
     return email;
   }
 
@@ -183,7 +187,7 @@ class Post {
   final String? userId;
   final String? subjectId;
   final String? subjectName;
-  final int role; // 1=ayudante, 2=estudiante, 3=recomendacion
+  final int role; // 1=ayudante, 2=estudiante, 3=recomendación
   final int? status; // 0=activo, 1=en progreso, 2=completado
   final int? capacity;
   final int? maxCapacity;
@@ -217,7 +221,8 @@ class Post {
     Subject? subjectObj;
     if (json['subject'] != null) {
       if (json['subject'] is Map<String, dynamic>) {
-        subjectObj = Subject.fromJson(json['subject']);
+        subjectObj =
+            Subject.fromJson(json['subject'] as Map<String, dynamic>);
       } else if (json['subject'] is String) {
         // Si viene como String, crear un Subject mínimo con solo el nombre
         subjectObj = Subject(
@@ -232,7 +237,7 @@ class Post {
     // Manejar usuario: puede venir anidado en 'user' o aplanado como 'author...'
     User? userObj;
     if (json['user'] != null) {
-      userObj = User.fromJson(json['user']);
+      userObj = User.fromJson(json['user'] as Map<String, dynamic>);
     } else if (json['authorId'] != null || json['author'] != null) {
       // Construir usuario desde campos aplanados
       userObj = User(
@@ -246,37 +251,34 @@ class Post {
       );
     }
 
+    // Manejar la fecha de creación (sin ternarios raros)
+    DateTime createdAtDate;
+    if (json['createdAt'] != null) {
+      createdAtDate = DateTime.parse(json['createdAt']);
+    } else if (json['createdAtUtc'] != null) {
+      createdAtDate = DateTime.parse(json['createdAtUtc']);
+    } else {
+      createdAtDate = DateTime.now();
+    }
+
     return Post(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
       content: json['content'] ?? json['contentPreview'] ?? '',
       contentPreview: json['contentPreview'],
-      userId: json['userId'],
-
-      content: json['content'] ?? '',
       userId: json['userId'] ?? json['authorId'] ?? '',
       subjectId: json['subjectId'],
-      subjectName: json['subjectName'],
+      subjectName: json['subjectName'] ??
+          (json['subject'] is String ? json['subject'] as String : null),
       role: json['role'] ?? 1,
       status: json['status'],
       capacity: json['capacity'],
       maxCapacity: json['maxCapacity'],
-      calendlyUrl: json['calendlyUrl'],
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : (json['createdAtUtc'] != null
-              ? DateTime.parse(json['createdAtUtc'])
-              : DateTime.now()),
+      calendlyUrl: json['calendlyUrl'] ?? json['calendly_url'],
+      createdAt: createdAtDate,
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'])
           : null,
-      user: json['user'] != null ? User.fromJson(json['user']) : null,
-          : (json['createdAtUtc'] != null 
-              ? DateTime.parse(json['createdAtUtc']) 
-              : DateTime.now()),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.now(),
       user: userObj,
       subject: subjectObj,
     );
@@ -317,17 +319,27 @@ class Reply {
     // Manejar usuario: puede venir anidado en 'user' o aplanado como 'author...'
     User? userObj;
     if (json['user'] != null) {
-      userObj = User.fromJson(json['user']);
+      userObj = User.fromJson(json['user'] as Map<String, dynamic>);
     } else if (json['authorId'] != null || json['author'] != null) {
       // Construir usuario desde campos aplanados
       userObj = User(
         id: json['authorId'] ?? json['userId'] ?? '',
         email: '', // No viene en el formato aplanado
         fullName: json['author'],
-        avatarId: json['authorAvatarId'], // Asumiendo que podría venir
-        profilePhotoUrl: json['authorProfilePhotoUrl'], // Asumiendo que podría venir
+        avatarId: json['authorAvatarId'],
+        profilePhotoUrl: json['authorProfilePhotoUrl'],
         semester: 1, // Default
       );
+    }
+
+    // Manejar la fecha de creación
+    DateTime createdAtDate;
+    if (json['createdAt'] != null) {
+      createdAtDate = DateTime.parse(json['createdAt']);
+    } else if (json['createdAtUtc'] != null) {
+      createdAtDate = DateTime.parse(json['createdAtUtc']);
+    } else {
+      createdAtDate = DateTime.now();
     }
 
     return Reply(
@@ -335,11 +347,7 @@ class Reply {
       content: json['content'] ?? '',
       postId: json['postId'] ?? '',
       userId: json['userId'] ?? json['authorId'] ?? '',
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : (json['createdAtUtc'] != null 
-              ? DateTime.parse(json['createdAtUtc']) 
-              : DateTime.now()),
+      createdAt: createdAtDate,
       user: userObj,
     );
   }
