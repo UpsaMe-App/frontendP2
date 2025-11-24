@@ -408,7 +408,7 @@ class ApiService {
     }
   }
 
-  // Update User (PUT /users/me)
+  // Update User (PUT /users/meeee)
   static Future<Map<String, dynamic>> updateUser({
     required String firstName,
     required String lastName,
