@@ -225,15 +225,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       child: Row(
                         children: [
                           GestureDetector(
-                            onTap: () {
-                              if (widget.post.user != null) {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/public-profile',
-                                  arguments: widget.post.user!.id,
-                                );
-                              }
-                            },
+  onTap: () {
+    Navigator.pushNamed(
+      context,
+      '/public-profile',
+      arguments: widget.post.userId,
+    );
+  },
+
                             child: CircleAvatar(
                               radius: 26,
                               backgroundColor: greenLight.withOpacity(0.4),

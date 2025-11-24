@@ -309,7 +309,7 @@ class ApiService {
   }
 
   // --------------------------
-  // SEARCH POSTS BY SUBJECT (por NOMBRE, usando /posts/search-by-subject)
+  // SEARCH POSTS
   // --------------------------
   static Future<List<Post>> searchPostsBySubject(
     String subjectName, {
@@ -402,6 +402,7 @@ class ApiService {
     }
   }
 
+  // 🔥🔥🔥 FIX IMPORTANTE PARA QUE SE GUARDEN LOS CAMBIOS 🔥🔥🔥
   static Future<Map<String, dynamic>> updateUser({
     required String firstName,
     required String lastName,
@@ -411,27 +412,92 @@ class ApiService {
     String? avatarId,
     String? calendlyUrl,
   }) async {
-    final body = {
-      'firstName': firstName,
-      'lastName': lastName,
-      'phone': phone,
-      'semester': semester,
-      'careerId': careerId,
-    };
 
-    if (avatarId != null) body['avatarId'] = avatarId;
-    if (calendlyUrl != null) body['calendlyUrl'] = calendlyUrl;
-
-    final response = await http.put(
+    // IMPORTANTE: El backend espera multipart/form-data, NO JSON
+    var request = http.MultipartRequest(
+      'PUT',
       Uri.parse('$baseUrl/users/me'),
-      headers: _getHeaders(),
-      body: json.encode(body),
     );
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Error al actualizar perfil');
+    // Add authorization header
+    if (_accessToken != null) {
+      request.headers['Authorization'] = 'Bearer $_accessToken';
+    }
+
+    // Add form fields
+    request.fields['FirstName'] = firstName;
+    request.fields['LastName'] = lastName;
+    request.fields['Semester'] = semester.toString();
+    request.fields['CareerId'] = careerId;
+    
+    if (phone != null && phone.isNotEmpty) {
+      request.fields['Phone'] = phone;
+    }
+    
+    if (avatarId != null && avatarId.isNotEmpty) {
+      request.fields['AvatarId'] = avatarId;
+    }
+    
+    if (calendlyUrl != null && calendlyUrl.isNotEmpty) {
+      request.fields['CalendlyUrl'] = calendlyUrl;
+    }
+
+    // Debug logging
+    print('========================================');
+    print('ENVIANDO ACTUALIZACION DE PERFIL');
+    print('========================================');
+    print('URL: $baseUrl/users/me');
+    print('Campos (multipart/form-data):');
+    request.fields.forEach((key, value) {
+      print('  $key: $value');
+    });
+    print('========================================');
+
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('========================================');
+      print('RESPUESTA DEL SERVIDOR');
+      print('========================================');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body:');
+      print(response.body);
+      print('========================================');
+      
+      if (response.statusCode == 200) {
+        try {
+          final responseData = json.decode(response.body);
+          print('PERFIL ACTUALIZADO EXITOSAMENTE');
+          print('Datos recibidos del servidor:');
+          print(json.encode(responseData));
+          print('========================================');
+          return responseData;
+        } catch (e) {
+          print('ERROR AL PARSEAR RESPUESTA: $e');
+          print('========================================');
+          throw Exception('Error al parsear respuesta del servidor');
+        }
+      } else {
+        print('ERROR DEL SERVIDOR (Status ${response.statusCode})');
+        print('Mensaje: ${response.body}');
+        print('========================================');
+        
+        // Try to parse error message
+        try {
+          final errorData = json.decode(response.body);
+          final errorMessage = errorData['message'] ?? errorData['error'] ?? response.body;
+          throw Exception('Error del backend: $errorMessage');
+        } catch (e) {
+          throw Exception('Error al actualizar perfil (${response.statusCode}): ${response.body}');
+        }
+      }
+    } catch (e) {
+      print('========================================');
+      print('EXCEPCION EN LA PETICION HTTP');
+      print('Error: $e');
+      print('========================================');
+      rethrow;
     }
   }
 
