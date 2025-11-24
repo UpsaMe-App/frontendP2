@@ -311,7 +311,7 @@ class _SearchPageState extends State<SearchPage> with SingleTickerProviderStateM
             ),
           ),
 
-          // Results
+          // Resultados
           Expanded(
             child: _isLoadingPosts
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFF66B2A8)))
