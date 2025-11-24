@@ -136,7 +136,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      reply.user?.fullName ?? 'Usuario',
+                      reply.user?.displayName ?? 'Usuario',
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,

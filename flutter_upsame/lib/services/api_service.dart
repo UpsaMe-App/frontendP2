@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:5034';
+  static const String baseUrl = 'https://upsameapi.azurewebsites.net';
   static String? _accessToken;
   static String? _refreshToken;
 
@@ -188,11 +188,24 @@ class ApiService {
     final response = await http.get(Uri.parse(url), headers: _getHeaders());
 
     print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
+    //print('Response body: ${response.body}');
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       print('Posts decoded: ${data.length} posts');
+      
+      // Debug: Ver el primer post si existe
+      if (data.isNotEmpty) {
+        print('First post sample:');
+        print('  - userId: ${data[0]['userId']}');
+        print('  - user object: ${data[0]['user']}');
+        if (data[0]['user'] != null) {
+          print('    - user.fullName: ${data[0]['user']['fullName']}');
+          print('    - user.firstName: ${data[0]['user']['firstName']}');
+          print('    - user.lastName: ${data[0]['user']['lastName']}');
+        }
+      }
+      
       return data.map((json) => Post.fromJson(json)).toList();
     } else {
       throw Exception(
