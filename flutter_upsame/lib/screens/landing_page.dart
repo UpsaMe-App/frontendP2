@@ -388,7 +388,7 @@ class _LandingPageState extends State<LandingPage>
             ),
             child: const Row(
               children: [
-                Text('WORK WITH US'),
+                Text('UNITE'),
                 SizedBox(width: 8),
                 Icon(Icons.arrow_forward_rounded, size: 18),
               ],
@@ -450,7 +450,7 @@ class _LandingPageState extends State<LandingPage>
               const SizedBox(height: 20),
               _buildMobileNavItem('¿QUÉ HACEMOS?', Icons.help_rounded, _scrollToTutorial),
               const SizedBox(height: 20),
-              _buildMobileNavItem('WORK WITH US', Icons.rocket_launch_rounded, _navigateToLogin),
+              _buildMobileNavItem('UNITE', Icons.rocket_launch_rounded, _navigateToLogin),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.all(16),
@@ -573,7 +573,7 @@ class _LandingPageState extends State<LandingPage>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('WORK WITH US'),
+                          Text('UNITE'),
                           SizedBox(width: _isTablet ? 8 : 10),
                           Icon(Icons.rocket_launch_rounded, size: _isTablet ? 18 : 20),
                         ],
@@ -589,45 +589,71 @@ class _LandingPageState extends State<LandingPage>
           // Right side - Owl animation
           if (!_isTablet) Expanded(
             flex: 2,
-            child: Container(
-              height: 400,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  height: 400,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Lottie.network(
-                  'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
-                  fit: BoxFit.contain,
-                  repeat: true,
-                  animate: true,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF1A8E6B),
-                            const Color(0xFF2BB673),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.flutter_dash,
-                        size: 150,
-                        color: Colors.white,
-                      ),
-                    );
-                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Lottie.network(
+                      'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
+                      fit: BoxFit.contain,
+                      repeat: true,
+                      animate: true,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF1A8E6B),
+                                const Color(0xFF2BB673),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            Icons.flutter_dash,
+                            size: 150,
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                Text(
+                  '¡VOS PODÉS!',
+                  style: GoogleFonts.pacifico(
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.5),
+                        offset: const Offset(3, 3),
+                        blurRadius: 8,
+                      ),
+                      Shadow(
+                        color: const Color(0xFF0D5C63).withOpacity(0.3),
+                        offset: const Offset(-1, -1),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -664,46 +690,71 @@ class _LandingPageState extends State<LandingPage>
             ),
           ),
           const SizedBox(height: 40),
-          Container(
-            height: 200,
-            margin: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
+          Column(
+            children: [
+              Container(
+                height: 200,
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Lottie.network(
-                'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
-                fit: BoxFit.contain,
-                repeat: true,
-                animate: true,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF1A8E6B),
-                          const Color(0xFF2BB673),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Icon(
-                      Icons.flutter_dash,
-                      size: 80,
-                      color: Colors.white,
-                    ),
-                  );
-                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: Lottie.network(
+                    'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
+                    fit: BoxFit.contain,
+                    repeat: true,
+                    animate: true,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF1A8E6B),
+                              const Color(0xFF2BB673),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(
+                          Icons.flutter_dash,
+                          size: 80,
+                          color: Colors.white,
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 15),
+              Text(
+                '¡VOS PODÉS!',
+                style: GoogleFonts.pacifico(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.5),
+                      offset: const Offset(3, 3),
+                      blurRadius: 8,
+                    ),
+                    Shadow(
+                      color: const Color(0xFF0D5C63).withOpacity(0.3),
+                      offset: const Offset(-1, -1),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 40),
           ScaleTransition(
@@ -732,7 +783,7 @@ class _LandingPageState extends State<LandingPage>
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('WORK WITH US'),
+                    Text('UNITE'),
                     SizedBox(width: 10),
                     Icon(Icons.rocket_launch_rounded, size: 18),
                   ],
@@ -883,7 +934,7 @@ class _LandingPageState extends State<LandingPage>
                             style: GoogleFonts.poppins(
                               fontSize: _isMobile ? 20 : 22,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0D5C63),
+                              color: Colors.white,
                             ),
                           ),
                           SizedBox(height: _isMobile ? 10 : 15),
@@ -892,7 +943,7 @@ class _LandingPageState extends State<LandingPage>
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               fontSize: _isMobile ? 14 : 16,
-                              color: const Color(0xFF0D5C63).withOpacity(0.8),
+                              color: Colors.white.withOpacity(0.9),
                               height: 1.5,
                             ),
                           ),
@@ -1025,20 +1076,13 @@ class _LandingPageState extends State<LandingPage>
         const SizedBox(height: 25),
         _buildStepCard(
           step: 4,
-          title: 'RECIBE Y GESTIONA NOTIFICACIONES',
-          description: 'Acepta, rechaza o deja pendientes las solicitudes.\nTambién recibes alertas cuando alguien comenta o responde en tus posts.',
-          isVisible: _hasAnimatedTutorial,
-        ),
-        const SizedBox(height: 25),
-        _buildStepCard(
-          step: 5,
           title: 'INTERACTÚA EN LOS POSTS',
           description: 'Publica comentarios, participa en discusiones y mantente al tanto con las notificaciones automáticas.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 25),
         _buildStepCard(
-          step: 6,
+          step: 5,
           title: 'ADMINISTRA TU PERFIL',
           description: 'Edita tus datos, revisa solo tus propios posts (estilo feed personal) y actualiza tu avatar cuando quieras.',
           isVisible: _hasAnimatedTutorial,
@@ -1075,20 +1119,13 @@ class _LandingPageState extends State<LandingPage>
         const SizedBox(height: 20),
         _buildMobileStepCard(
           step: 4,
-          title: 'RECIBE Y GESTIONA NOTIFICACIONES',
-          description: 'Acepta, rechaza o deja pendientes las solicitudes. También recibes alertas cuando alguien comenta o responde en tus posts.',
-          isVisible: _hasAnimatedTutorial,
-        ),
-        const SizedBox(height: 20),
-        _buildMobileStepCard(
-          step: 5,
           title: 'INTERACTÚA EN LOS POSTS',
           description: 'Publica comentarios, participa en discusiones y mantente al tanto con las notificaciones automáticas.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 20),
         _buildMobileStepCard(
-          step: 6,
+          step: 5,
           title: 'ADMINISTRA TU PERFIL',
           description: 'Edita tus datos, revisa solo tus propios posts (estilo feed personal) y actualiza tu avatar cuando quieras.',
           isVisible: _hasAnimatedTutorial,
@@ -1187,7 +1224,7 @@ class _LandingPageState extends State<LandingPage>
                             style: GoogleFonts.poppins(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0D5C63),
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -1195,7 +1232,7 @@ class _LandingPageState extends State<LandingPage>
                             description,
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: const Color(0xFF0D5C63).withOpacity(0.8),
+                              color: Colors.white.withOpacity(0.9),
                               height: 1.4,
                             ),
                           ),
@@ -1302,7 +1339,7 @@ class _LandingPageState extends State<LandingPage>
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF0D5C63),
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -1310,7 +1347,7 @@ class _LandingPageState extends State<LandingPage>
                             description,
                             style: GoogleFonts.poppins(
                               fontSize: 13,
-                              color: const Color(0xFF0D5C63).withOpacity(0.8),
+                              color: Colors.white.withOpacity(0.9),
                               height: 1.4,
                             ),
                           ),
