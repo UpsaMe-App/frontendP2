@@ -284,14 +284,28 @@ class ApiService {
   }
 
   static Future<void> deletePost(String postId) async {
+    print('========================================');
+    print('ELIMINANDO POST');
+    print('========================================');
+    print('Post ID: $postId');
+    print('URL: $baseUrl/posts/$postId');
+    
     final response = await http.delete(
       Uri.parse('$baseUrl/posts/$postId'),
       headers: _getHeaders(),
     );
 
+    print('Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+    print('========================================');
+
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Error al eliminar post');
+      final errorMsg = 'Error al eliminar post (${response.statusCode}): ${response.body}';
+      print('ERROR: $errorMsg');
+      throw Exception(errorMsg);
     }
+    
+    print('Post eliminado exitosamente');
   }
 
   static Future<List<Post>> getMyPosts() async {
