@@ -18,6 +18,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
   List<Reply> _replies = [];
   bool _isLoadingReplies = false;
   bool _isSubmitting = false;
+  bool _hasChanges = false; // Track if post was edited or deleted
+  Map<String, dynamic>? _userData; // Current user data
 
   final Color greenDark = const Color(0xFF2E7D32);
   final Color green = const Color(0xFF4CAF50);
@@ -26,8 +28,20 @@ class _PostDetailPageState extends State<PostDetailPage> {
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     if (widget.post.role == 3) {
       _loadReplies();
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final userData = await ApiService.getMe();
+      setState(() {
+        _userData = userData;
+      });
+    } catch (e) {
+      print('Error loading user data: $e');
     }
   }
 
@@ -183,23 +197,141 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
+  void _handlePostUpdated() {
+    setState(() {
+      _hasChanges = true;
+    });
+  }
+
+  void _handlePostDeleted() {
+    Navigator.pop(context, true);
+  }
+
+  bool get _isOwner {
+    return _userData != null && widget.post.userId == _userData!['id'];
+  }
+
+  void _editPost() {
+    Navigator.pushNamed(context, '/edit-post', arguments: widget.post).then((result) {
+      if (result == true) {
+        _handlePostUpdated();
+      }
+    });
+  }
+
+  void _deletePost() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          '¿Eliminar post?',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Esta acción no se puede deshacer.',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar', style: GoogleFonts.poppins()),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ApiService.deletePost(widget.post.id);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Post eliminado exitosamente'),
+                      backgroundColor: greenDark,
+                    ),
+                  );
+                  _handlePostDeleted();
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error al eliminar: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(
+              'Eliminar',
+              style: GoogleFonts.poppins(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Fondo sólido blanco
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          'Detalle de Publicación',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+        // Fondo sólido blanco
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: Text(
+            'Detalle de Publicación',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
           ),
+          backgroundColor: greenDark,
+          foregroundColor: Colors.white,
+          elevation: 1,
+          actions: _isOwner
+              ? [
+                  PopupMenuButton<String>(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        _editPost();
+                      } else if (value == 'delete') {
+                        _deletePost();
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 20, color: greenDark),
+                            const SizedBox(width: 8),
+                            Text('Editar', style: GoogleFonts.poppins()),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete, color: Colors.red, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Eliminar',
+                              style: GoogleFonts.poppins(color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ]
+              : null,
         ),
-        backgroundColor: greenDark,
-        foregroundColor: Colors.white,
-        elevation: 1,
-      ),
       body: Column(
         children: [
           Expanded(

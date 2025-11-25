@@ -8,6 +8,7 @@ import 'screens/create_post_page.dart';
 import 'screens/public_profile_page.dart';
 import 'screens/edit_profile_page.dart';
 import 'screens/post_detail_page.dart';
+import 'screens/edit_post_page.dart';
 import 'models/models.dart';
 
 void main() {
@@ -59,6 +60,11 @@ class MainApp extends StatelessWidget {
             final post = settings.arguments as Post;
             return MaterialPageRoute(
               builder: (_) => PostDetailPage(post: post),
+            );
+          case '/edit-post':
+            final post = settings.arguments as Post;
+            return MaterialPageRoute(
+              builder: (_) => EditPostPage(post: post),
             );
           default:
             return MaterialPageRoute(builder: (_) => const LandingPage());

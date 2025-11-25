@@ -234,7 +234,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         child: PostCard(
           post: post,
-          currentUserId: widget.userId,
+          currentUserId: _userData?['id'], // FIX: usar el ID del usuario actual desde _userData
           onDeleted: _loadMyPosts,
           onUpdated: _loadMyPosts,
         ),
