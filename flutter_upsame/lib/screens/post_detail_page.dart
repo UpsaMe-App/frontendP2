@@ -74,16 +74,17 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
     setState(() => _isSubmitting = true);
     try {
-      final newReply = await ApiService.createReply(
+      await ApiService.createReply(
         postId: widget.post.id,
         content: _replyController.text.trim(),
       );
 
-      setState(() {
-        _replies.add(newReply);
-        _replyController.clear();
-        _isSubmitting = false;
-      });
+      _replyController.clear();
+      
+      // Reload replies to get complete user data
+      await _loadReplies();
+      
+      setState(() => _isSubmitting = false);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
