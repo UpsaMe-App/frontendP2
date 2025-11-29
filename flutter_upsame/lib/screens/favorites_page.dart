@@ -140,7 +140,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                     radius: 32,
                     backgroundColor: greenLight.withOpacity(0.3),
                     backgroundImage: favorite.photoUrl.isNotEmpty
-                        ? NetworkImage('${ApiService.baseUrl}${favorite.photoUrl}')
+                        ? NetworkImage(ApiService.getFullImageUrl(favorite.photoUrl))
                         : null,
                     child: favorite.photoUrl.isEmpty
                         ? Icon(Icons.person, size: 32, color: greenDark)

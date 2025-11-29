@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
@@ -25,6 +27,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   List<Avatar> _avatars = [];
   String? _selectedCareerId;
   String? _selectedAvatarId;
+  File? _profilePhoto;
+  final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   bool _isLoadingData = true;
 
@@ -172,6 +176,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         careerId: _selectedCareerId!,
         avatarId: _selectedAvatarId,  // Send null instead of empty string
         calendlyUrl: calendlyUrl,      // Already null if empty
+        profilePhoto: _profilePhoto,
       );
 
       print('Perfil actualizado exitosamente en el backend');
@@ -291,14 +296,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   CircleAvatar(
                                     radius: 60,
                                     backgroundColor: primaryLight.withOpacity(0.7),
-                                    backgroundImage: _selectedAvatarId != null
-                                        ? NetworkImage(
-                                            '${ApiService.baseUrl}/avatars/$_selectedAvatarId.png',
-                                          )
-                                        : null,
-                                    child: _selectedAvatarId == null
+                                    child: _selectedAvatarId == null && _profilePhoto == null
                                         ? Icon(Icons.person, size: 60, color: primaryDark)
                                         : null,
+                                    backgroundImage: _profilePhoto != null
+                                        ? FileImage(_profilePhoto!)
+                                        : _selectedAvatarId != null
+                                            ? NetworkImage(
+                                                ApiService.getFullImageUrl('/avatars/$_selectedAvatarId.png'),
+                                              ) as ImageProvider
+                                            : null,
                                   ),
                                   Positioned(
                                     bottom: 4,
@@ -428,14 +435,34 @@ class _EditProfilePageState extends State<EditProfilePage> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
-            itemCount: _avatars.length,
+            itemCount: _avatars.length + 1, // +1 for "Upload from gallery" option
             itemBuilder: (context, index) {
-              final avatar = _avatars[index];
+              if (index == 0) {
+                return GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: primaryLight.withOpacity(0.5),
+                      border: Border.all(
+                        color: primary,
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(Icons.add_photo_alternate, color: primaryDark, size: 30),
+                  ),
+                );
+              }
+
+              final avatar = _avatars[index - 1];
               final isSelected = _selectedAvatarId == avatar.id;
 
               return GestureDetector(
                 onTap: () {
-                  setState(() => _selectedAvatarId = avatar.id);
+                  setState(() {
+                    _selectedAvatarId = avatar.id;
+                    _profilePhoto = null;
+                  });
                   Navigator.pop(context);
                 },
                 child: Container(
@@ -447,7 +474,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   ),
                   child: CircleAvatar(
-                    backgroundImage: NetworkImage('${ApiService.baseUrl}${avatar.url}'),
+                    backgroundImage: NetworkImage(ApiService.getFullImageUrl(avatar.url)),
                   ),
                 ),
               );
@@ -456,5 +483,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
       },
     );
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _profilePhoto = File(image.path);
+          _selectedAvatarId = null;
+        });
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al seleccionar imagen: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

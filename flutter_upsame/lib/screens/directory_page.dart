@@ -49,7 +49,7 @@ class _DirectoryPageState extends State<DirectoryPage> {
   // Función para obtener el icono según el nombre real de la facultad
   IconData _getFacultyIcon(String facultyName) {
     final name = facultyName.toLowerCase();
-    
+
     if (name.contains('ingeniería')) {
       return Icons.engineering;
     } else if (name.contains('arquitectura')) {
@@ -61,14 +61,14 @@ class _DirectoryPageState extends State<DirectoryPage> {
     } else if (name.contains('jurídicas')) {
       return Icons.gavel;
     }
-    
+
     return Icons.school;
   }
 
   // Función para obtener colores según la facultad real
   List<Color> _getFacultyColors(String facultyName) {
     final name = facultyName.toLowerCase();
-    
+
     if (name.contains('ingeniería')) {
       return [const Color(0xFF2E7D32), const Color(0xFF4CAF50)];
     } else if (name.contains('arquitectura')) {
@@ -80,7 +80,7 @@ class _DirectoryPageState extends State<DirectoryPage> {
     } else if (name.contains('jurídicas')) {
       return [const Color(0xFF1B5E20), const Color(0xFF4CAF50)];
     }
-    
+
     return [const Color(0xFF2E7D32), const Color(0xFF4CAF50)];
   }
 
@@ -101,9 +101,7 @@ class _DirectoryPageState extends State<DirectoryPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
       ),
       body: _isLoading
@@ -136,16 +134,14 @@ class _DirectoryPageState extends State<DirectoryPage> {
 
   Widget _buildFacultyCard(Faculty faculty, int index) {
     final colors = _getFacultyColors(faculty.name);
-    
+
     return AnimatedContainer(
       duration: Duration(milliseconds: 300 + (index * 100)),
       curve: Curves.easeInOut,
       transform: Matrix4.translationValues(0, 0, 0),
       child: Card(
         elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         shadowColor: colors[0].withOpacity(0.3),
         child: InkWell(
           onTap: () {
@@ -154,18 +150,22 @@ class _DirectoryPageState extends State<DirectoryPage> {
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) =>
                     FacultyCareersPage(faculty: faculty),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(1.0, 0.0);
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOut;
-                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                  var offsetAnimation = animation.drive(tween);
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                      const begin = Offset(1.0, 0.0);
+                      const end = Offset.zero;
+                      const curve = Curves.easeInOut;
+                      var tween = Tween(
+                        begin: begin,
+                        end: end,
+                      ).chain(CurveTween(curve: curve));
+                      var offsetAnimation = animation.drive(tween);
 
-                  return SlideTransition(
-                    position: offsetAnimation,
-                    child: child,
-                  );
-                },
+                      return SlideTransition(
+                        position: offsetAnimation,
+                        child: child,
+                      );
+                    },
                 transitionDuration: const Duration(milliseconds: 400),
               ),
             );
@@ -224,14 +224,13 @@ class _DirectoryPageState extends State<DirectoryPage> {
   }
 }
 
-// Faculty Careers Page
+// ===========================
+// FACULTY CAREERS PAGE
+// ===========================
 class FacultyCareersPage extends StatefulWidget {
   final Faculty faculty;
 
-  const FacultyCareersPage({
-    super.key,
-    required this.faculty,
-  });
+  const FacultyCareersPage({super.key, required this.faculty});
 
   @override
   State<FacultyCareersPage> createState() => _FacultyCareersPageState();
@@ -303,9 +302,7 @@ class _FacultyCareersPageState extends State<FacultyCareersPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
       ),
       body: _isLoading
@@ -334,9 +331,7 @@ class _FacultyCareersPageState extends State<FacultyCareersPage> {
       transform: Matrix4.translationValues(0, 0, 0),
       child: Card(
         elevation: 6,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         shadowColor: colors[0].withOpacity(0.3),
         child: InkWell(
           onTap: () {
@@ -345,18 +340,22 @@ class _FacultyCareersPageState extends State<FacultyCareersPage> {
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) =>
                     CareerUsersPage(career: career),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(1.0, 0.0);
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOut;
-                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                  var offsetAnimation = animation.drive(tween);
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                      const begin = Offset(1.0, 0.0);
+                      const end = Offset.zero;
+                      const curve = Curves.easeInOut;
+                      var tween = Tween(
+                        begin: begin,
+                        end: end,
+                      ).chain(CurveTween(curve: curve));
+                      var offsetAnimation = animation.drive(tween);
 
-                  return SlideTransition(
-                    position: offsetAnimation,
-                    child: child,
-                  );
-                },
+                      return SlideTransition(
+                        position: offsetAnimation,
+                        child: child,
+                      );
+                    },
                 transitionDuration: const Duration(milliseconds: 400),
               ),
             );
@@ -395,6 +394,8 @@ class _FacultyCareersPageState extends State<FacultyCareersPage> {
                       color: Colors.white,
                       fontSize: 16,
                     ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Container(
@@ -422,10 +423,7 @@ class _FacultyCareersPageState extends State<FacultyCareersPage> {
 class CareerUsersPage extends StatefulWidget {
   final Career career;
 
-  const CareerUsersPage({
-    super.key,
-    required this.career,
-  });
+  const CareerUsersPage({super.key, required this.career});
 
   @override
   State<CareerUsersPage> createState() => _CareerUsersPageState();
@@ -495,9 +493,7 @@ class _CareerUsersPageState extends State<CareerUsersPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
       ),
       body: _isLoading
@@ -507,35 +503,31 @@ class _CareerUsersPageState extends State<CareerUsersPage> {
               ),
             )
           : _users.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.people_outline,
-                        size: 80,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No hay usuarios registrados',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.people_outline, size: 80, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No hay usuarios registrados',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: _users.length,
-                  itemBuilder: (context, index) {
-                    final user = _users[index];
-                    final colors = _getUserColors(index);
-                    return _buildUserCard(user, colors, index);
-                  },
-                ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: _users.length,
+              itemBuilder: (context, index) {
+                final user = _users[index];
+                final colors = _getUserColors(index);
+                return _buildUserCard(user, colors, index);
+              },
+            ),
     );
   }
 
@@ -546,17 +538,11 @@ class _CareerUsersPageState extends State<CareerUsersPage> {
       margin: const EdgeInsets.only(bottom: 12),
       child: Card(
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         shadowColor: colors[0].withOpacity(0.3),
         child: InkWell(
           onTap: () {
-            Navigator.pushNamed(
-              context,
-              '/public-profile',
-              arguments: user.id,
-            );
+            Navigator.pushNamed(context, '/public-profile', arguments: user.id);
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
@@ -589,46 +575,46 @@ class _CareerUsersPageState extends State<CareerUsersPage> {
                     ],
                   ),
                   child: ClipOval(
-                      child: (user.profilePhotoUrl ?? '').isNotEmpty
-                          ? Image.network(
-                              '${ApiService.baseUrl}${user.profilePhotoUrl}',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Colors.white.withOpacity(0.3),
-                                        Colors.white.withOpacity(0.1),
-                                      ],
-                                    ),
+                    child: (user.profilePhotoUrl ?? '').isNotEmpty
+                        ? Image.network(
+                            ApiService.getFullImageUrl(user.profilePhotoUrl!),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.white.withOpacity(0.3),
+                                      Colors.white.withOpacity(0.1),
+                                    ],
                                   ),
-                                  child: const Icon(
-                                    Icons.person,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Colors.white.withOpacity(0.3),
-                                    Colors.white.withOpacity(0.1),
-                                  ],
                                 ),
-                              ),
-                              child: const Icon(
-                                Icons.person,
-                                color: Colors.white,
+                                child: const Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.white.withOpacity(0.3),
+                                  Colors.white.withOpacity(0.1),
+                                ],
                               ),
                             ),
-                    ),
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

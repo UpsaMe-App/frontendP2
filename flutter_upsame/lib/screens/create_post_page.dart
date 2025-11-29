@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
@@ -27,7 +31,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
   List<Subject> _searchResults = [];
   bool _isLoading = false;
   bool _isSearching = false;
+
   Timer? _debounce;
+  File? _selectedImage;
+  Uint8List? _imageBytes; // For web support
+  String? _imageFileName; // Store original filename with extension
+  final ImagePicker _picker = ImagePicker();
 
   // 🎨 UPSA vibes – paleta verde
   final Color primaryDark = const Color(0xFF2E7D32);
@@ -143,6 +152,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
             title: _titleController.text.trim(),
             content: _contentController.text.trim(),
             subjectId: _selectedSubject!.id,
+            image: kIsWeb ? null : _selectedImage,
+            imageBytes: _imageBytes,
+            imageFileName: _imageFileName,
           );
           break;
         case 3: // Comentario
@@ -180,6 +192,43 @@ class _CreatePostPageState extends State<CreatePostPage> {
     }
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        print('========================================');
+        print('IMAGEN SELECCIONADA');
+        print('========================================');
+        print('Path: ${image.path}');
+        print('Name: ${image.name}');
+        print('Bytes length: ${bytes.length}');
+        print('kIsWeb: $kIsWeb');
+        print('========================================');
+        setState(() {
+          if (!kIsWeb) {
+            _selectedImage = File(image.path);
+          }
+          _imageBytes = bytes;
+          _imageFileName = image.name; // Store filename with extension
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al seleccionar imagen: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   InputDecoration _inputDecoration(String label, {String? hint}) {
     return InputDecoration(
       labelText: label,
@@ -207,15 +256,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(
-          color: primary,
-          width: 1.6,
-        ),
+        borderSide: BorderSide(color: primary, width: 1.6),
       ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
@@ -226,10 +269,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       appBar: AppBar(
         title: Text(
           'Nueva Publicación',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         backgroundColor: primaryDark,
         foregroundColor: Colors.white,
@@ -346,32 +386,33 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         },
                         child: TextFormField(
                           controller: _subjectSearchController,
-                          decoration: _inputDecoration(
-                            'Materia *',
-                            hint: 'Toca para ver todas las materias...',
-                          ).copyWith(
-                            prefixIcon: Icon(
-                              Icons.book,
-                              color: primaryDark,
-                            ),
-                            suffixIcon: _isSearching
-                                ? const Padding(
-                                    padding: EdgeInsets.all(12.0),
-                                    child: SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                  )
-                                : _selectedSubject != null
+                          decoration:
+                              _inputDecoration(
+                                'Materia *',
+                                hint: 'Toca para ver todas las materias...',
+                              ).copyWith(
+                                prefixIcon: Icon(
+                                  Icons.book,
+                                  color: primaryDark,
+                                ),
+                                suffixIcon: _isSearching
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(12.0),
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      )
+                                    : _selectedSubject != null
                                     ? const Icon(
                                         Icons.check_circle,
                                         color: Colors.green,
                                       )
                                     : const Icon(Icons.arrow_drop_down),
-                          ),
+                              ),
                           onChanged: _searchSubjects,
                           onTap: () {
                             if (_allSubjects.isNotEmpty) {
@@ -391,10 +432,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: primary,
-                              width: 1.6,
-                            ),
+                            border: Border.all(color: primary, width: 1.6),
                             boxShadow: [
                               BoxShadow(
                                 color: primary.withOpacity(0.18),
@@ -491,6 +529,79 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       const SizedBox(height: 16),
                     ],
 
+                    // Image picker for Student role
+                    if (_selectedRole == 2) ...[
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: double.infinity,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: primaryLight.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: primaryLight.withOpacity(0.9),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: _imageBytes != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: kIsWeb
+                                      ? Image.memory(
+                                          _imageBytes!,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.file(
+                                          _selectedImage!,
+                                          fit: BoxFit.cover,
+                                        ),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_photo_alternate_outlined,
+                                      size: 40,
+                                      color: primaryDark.withOpacity(0.7),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Agregar imagen (opcional)',
+                                      style: GoogleFonts.poppins(
+                                        color: primaryDark.withOpacity(0.7),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                      if (_imageBytes != null)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _selectedImage = null;
+                                _imageBytes = null;
+                                _imageFileName = null;
+                              });
+                            },
+                            icon: const Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                              size: 18,
+                            ),
+                            label: Text(
+                              'Eliminar imagen',
+                              style: GoogleFonts.poppins(color: Colors.red),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                    ],
+
                     // Helper specific fields
                     if (_selectedRole == 1) ...[
                       Row(
@@ -500,7 +611,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                               controller: _capacityController,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
+                                FilteringTextInputFormatter.digitsOnly,
                               ],
                               decoration: _inputDecoration('Capacidad actual'),
                               style: GoogleFonts.poppins(fontSize: 14),
@@ -518,10 +629,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
                               controller: _maxCapacityController,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
+                                FilteringTextInputFormatter.digitsOnly,
                               ],
-                              decoration:
-                                  _inputDecoration('Capacidad máxima'),
+                              decoration: _inputDecoration('Capacidad máxima'),
                               style: GoogleFonts.poppins(fontSize: 14),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -557,9 +667,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 ),
               ),
 
-              const SizedBox(height: 24),
-
-              // Submit button
+              const SizedBox(height: 24), // Submit button
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -624,11 +732,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       label: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 16,
-            color: isSelected ? Colors.white : color,
-          ),
+          Icon(icon, size: 16, color: isSelected ? Colors.white : color),
           const SizedBox(width: 4),
           Text(
             label,

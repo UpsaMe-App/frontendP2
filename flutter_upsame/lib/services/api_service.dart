@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:typed_data';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
@@ -6,6 +8,17 @@ class ApiService {
   static const String baseUrl = 'http://localhost:5034';
   static String? _accessToken;
   static String? _refreshToken;
+
+  // Helper para construir URLs de imagen correctamente
+  // Si la URL ya es completa (Azure Blob), la devuelve tal cual
+  // Si es relativa, la concatena con baseUrl
+  static String getFullImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) return '';
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl; // URL completa de Azure Blob
+    }
+    return '$baseUrl$imageUrl'; // URL relativa
+  }
 
   // --------------------------
   // AUTH
@@ -18,20 +31,38 @@ class ApiService {
     required String careerId,
     required int semester,
     String? phone,
+    File? profilePhoto,
+    Uint8List? profilePhotoBytes,
   }) async {
-    final response = await http.post(
+    var request = http.MultipartRequest(
+      'POST',
       Uri.parse('$baseUrl/auth/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'email': email,
-        'password': password,
-        'firstName': firstName,
-        'lastName': lastName,
-        'careerId': careerId,
-        'semester': semester,
-        'phone': phone,
-      }),
     );
+
+    request.fields['Email'] = email;
+    request.fields['Password'] = password;
+    request.fields['FirstName'] = firstName;
+    request.fields['LastName'] = lastName;
+    request.fields['CareerId'] = careerId;
+    request.fields['Semester'] = semester.toString();
+    if (phone != null) request.fields['Phone'] = phone;
+
+    if (profilePhoto != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('profilePhoto', profilePhoto.path),
+      );
+    } else if (profilePhotoBytes != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'profilePhoto',
+          profilePhotoBytes,
+          filename: 'profile.jpg',
+        ),
+      );
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
@@ -231,21 +262,76 @@ class ApiService {
     required String title,
     required String content,
     required String subjectId,
+    File? image,
+    Uint8List? imageBytes,
+    String? imageFileName,
   }) async {
-    final response = await http.post(
+    var request = http.MultipartRequest(
+      'POST',
       Uri.parse('$baseUrl/posts/student'),
-      headers: _getHeaders(),
-      body: json.encode({
-        'title': title,
-        'content': content,
-        'subjectId': subjectId,
-      }),
     );
+
+    if (_accessToken != null) {
+      request.headers['Authorization'] = 'Bearer $_accessToken';
+    }
+
+    request.fields['Title'] = title;
+    request.fields['Content'] = content;
+    request.fields['SubjectId'] = subjectId;
+
+    print('========================================');
+    print('CREAR POST ESTUDIANTE - REQUEST');
+    print('========================================');
+    print('Title: $title');
+    print('Content: $content');
+    print('SubjectId: $subjectId');
+    print('Has image (file): ${image != null}');
+    print('Has imageBytes: ${imageBytes != null}');
+    if (imageBytes != null) {
+      print('ImageBytes length: ${imageBytes.length}');
+    }
+    print('========================================');
+
+    if (image != null) {
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+    } else if (imageBytes != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename:
+              imageFileName ??
+              'image.png', // Use original filename or default to PNG
+        ),
+      );
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    print('========================================');
+    print('CREAR POST ESTUDIANTE - RESPUESTA');
+    print('========================================');
+    print('Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+    print('Response Headers: ${response.headers}');
+    print('========================================');
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return Post.fromJson(json.decode(response.body));
     } else {
-      throw Exception('Error al crear post de estudiante');
+      // El servidor puede devolver texto plano en caso de error
+      String errorMsg;
+      try {
+        final errorJson = json.decode(response.body);
+        errorMsg = errorJson['message'] ?? errorJson.toString();
+      } catch (e) {
+        // Si no es JSON, usar el texto plano
+        errorMsg = response.body;
+      }
+      throw Exception(
+        'Error al crear post de estudiante (${response.statusCode}): $errorMsg',
+      );
     }
   }
 
@@ -289,7 +375,7 @@ class ApiService {
     print('========================================');
     print('Post ID: $postId');
     print('URL: $baseUrl/posts/$postId');
-    
+
     final response = await http.delete(
       Uri.parse('$baseUrl/posts/$postId'),
       headers: _getHeaders(),
@@ -300,11 +386,12 @@ class ApiService {
     print('========================================');
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      final errorMsg = 'Error al eliminar post (${response.statusCode}): ${response.body}';
+      final errorMsg =
+          'Error al eliminar post (${response.statusCode}): ${response.body}';
       print('ERROR: $errorMsg');
       throw Exception(errorMsg);
     }
-    
+
     print('Post eliminado exitosamente');
   }
 
@@ -370,12 +457,35 @@ class ApiService {
   static Future<Reply> createReply({
     required String postId,
     required String content,
+    File? image,
+    Uint8List? imageBytes,
+    String? imageFileName,
   }) async {
-    final response = await http.post(
+    var request = http.MultipartRequest(
+      'POST',
       Uri.parse('$baseUrl/posts/$postId/replies'),
-      headers: _getHeaders(),
-      body: json.encode({'content': content}),
     );
+
+    if (_accessToken != null) {
+      request.headers['Authorization'] = 'Bearer $_accessToken';
+    }
+
+    request.fields['Content'] = content;
+
+    if (image != null) {
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+    } else if (imageBytes != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename: imageFileName ?? 'reply_image.png',
+        ),
+      );
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200) {
       return Reply.fromJson(json.decode(response.body));
@@ -425,13 +535,11 @@ class ApiService {
     required String careerId,
     String? avatarId,
     String? calendlyUrl,
+    File? profilePhoto,
+    Uint8List? profilePhotoBytes,
   }) async {
-
     // IMPORTANTE: El backend espera multipart/form-data, NO JSON
-    var request = http.MultipartRequest(
-      'PUT',
-      Uri.parse('$baseUrl/users/me'),
-    );
+    var request = http.MultipartRequest('PUT', Uri.parse('$baseUrl/users/me'));
 
     // Add authorization header
     if (_accessToken != null) {
@@ -443,17 +551,31 @@ class ApiService {
     request.fields['LastName'] = lastName;
     request.fields['Semester'] = semester.toString();
     request.fields['CareerId'] = careerId;
-    
+
     if (phone != null && phone.isNotEmpty) {
       request.fields['Phone'] = phone;
     }
-    
+
     if (avatarId != null && avatarId.isNotEmpty) {
       request.fields['AvatarId'] = avatarId;
     }
-    
+
     if (calendlyUrl != null && calendlyUrl.isNotEmpty) {
       request.fields['CalendlyUrl'] = calendlyUrl;
+    }
+
+    if (profilePhoto != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('profilePhoto', profilePhoto.path),
+      );
+    } else if (profilePhotoBytes != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'profilePhoto',
+          profilePhotoBytes,
+          filename: 'profile.jpg',
+        ),
+      );
     }
 
     // Debug logging
@@ -478,7 +600,7 @@ class ApiService {
       print('Response Body:');
       print(response.body);
       print('========================================');
-      
+
       if (response.statusCode == 200) {
         try {
           final responseData = json.decode(response.body);
@@ -496,14 +618,17 @@ class ApiService {
         print('ERROR DEL SERVIDOR (Status ${response.statusCode})');
         print('Mensaje: ${response.body}');
         print('========================================');
-        
+
         // Try to parse error message
         try {
           final errorData = json.decode(response.body);
-          final errorMessage = errorData['message'] ?? errorData['error'] ?? response.body;
+          final errorMessage =
+              errorData['message'] ?? errorData['error'] ?? response.body;
           throw Exception('Error del backend: $errorMessage');
         } catch (e) {
-          throw Exception('Error al actualizar perfil (${response.statusCode}): ${response.body}');
+          throw Exception(
+            'Error al actualizar perfil (${response.statusCode}): ${response.body}',
+          );
         }
       }
     } catch (e) {
@@ -551,8 +676,12 @@ class ApiService {
       headers: _getHeaders(),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201 && response.statusCode != 204) {
-      throw Exception('Error al agregar favorito (${response.statusCode}): ${response.body}');
+    if (response.statusCode != 200 &&
+        response.statusCode != 201 &&
+        response.statusCode != 204) {
+      throw Exception(
+        'Error al agregar favorito (${response.statusCode}): ${response.body}',
+      );
     }
   }
 
@@ -563,7 +692,9 @@ class ApiService {
     );
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Error al eliminar favorito (${response.statusCode}): ${response.body}');
+      throw Exception(
+        'Error al eliminar favorito (${response.statusCode}): ${response.body}',
+      );
     }
   }
 

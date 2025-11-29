@@ -480,7 +480,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                   child: ClipOval(
                     child: _user!.photoUrl.isNotEmpty
                         ? Image.network(
-                            '${ApiService.baseUrl}${_user!.photoUrl}',
+                            ApiService.getFullImageUrl(_user!.photoUrl),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(

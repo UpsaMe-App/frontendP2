@@ -196,6 +196,7 @@ class Post {
   final DateTime? updatedAt;
   final User? user;
   final Subject? subject;
+  final String? imageUrl;
 
   Post({
     required this.id,
@@ -214,6 +215,7 @@ class Post {
     this.updatedAt,
     this.user,
     this.subject,
+    this.imageUrl,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -281,6 +283,7 @@ class Post {
           : null,
       user: userObj,
       subject: subjectObj,
+      imageUrl: json['imageUrl'] ?? json['image_url'],
     );
   }
 
@@ -305,6 +308,7 @@ class Reply {
   final String userId;
   final DateTime createdAt;
   final User? user;
+  final String? imageUrl;
 
   Reply({
     required this.id,
@@ -313,6 +317,7 @@ class Reply {
     required this.userId,
     required this.createdAt,
     this.user,
+    this.imageUrl,
   });
 
   factory Reply.fromJson(Map<String, dynamic> json) {
@@ -349,6 +354,7 @@ class Reply {
       userId: json['userId'] ?? json['authorId'] ?? '',
       createdAt: createdAtDate,
       user: userObj,
+      imageUrl: json['imageUrl'] ?? json['image_url'],
     );
   }
 }

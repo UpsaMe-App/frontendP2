@@ -135,7 +135,7 @@ class _AvatarSelectorState extends State<AvatarSelector> {
                     )
                   : _selectedAvatarId != null
                       ? Image.network(
-                          '${ApiService.baseUrl}${_avatars.firstWhere((a) => a.id == _selectedAvatarId).url}',
+                          ApiService.getFullImageUrl(_avatars.firstWhere((a) => a.id == _selectedAvatarId).url),
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return const Icon(
@@ -242,7 +242,7 @@ class _AvatarSelectorState extends State<AvatarSelector> {
                     ),
                     child: ClipOval(
                       child: Image.network(
-                        '${ApiService.baseUrl}${avatar.url}',
+                        ApiService.getFullImageUrl(avatar.url),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
