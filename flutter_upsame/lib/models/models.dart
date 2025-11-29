@@ -352,3 +352,39 @@ class Reply {
     );
   }
 }
+
+class FavoriteUserDto {
+  final String id;
+  final String fullName;
+  final String? email;
+  final String? profilePhotoUrl;
+  final String? career;
+  final int? semester;
+
+  FavoriteUserDto({
+    required this.id,
+    required this.fullName,
+    this.email,
+    this.profilePhotoUrl,
+    this.career,
+    this.semester,
+  });
+
+  factory FavoriteUserDto.fromJson(Map<String, dynamic> json) {
+    return FavoriteUserDto(
+      id: json['id'] ?? json['userId'] ?? '',
+      fullName: json['fullName'] ?? json['full_name'] ?? '',
+      email: json['email'],
+      profilePhotoUrl: json['profilePhotoUrl'] ?? json['profile_photo_url'],
+      career: json['career'],
+      semester: json['semester'],
+    );
+  }
+
+  String get photoUrl {
+    if (profilePhotoUrl != null && profilePhotoUrl!.isNotEmpty) {
+      return profilePhotoUrl!;
+    }
+    return '';
+  }
+}

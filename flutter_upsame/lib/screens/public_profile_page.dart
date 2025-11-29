@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_upsame/screens/post_detail_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../widgets/calendly_inline_widget.dart';
+import '../widgets/favorite_button.dart';
 
 class PublicProfilePage extends StatefulWidget {
   final String userId;
@@ -145,9 +146,9 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       case 2:
         return 'Busca Ayuda';
       case 3:
-        return 'Recomendación';
+        return 'RecomendaciÃ³n';
       default:
-        return 'Publicación';
+        return 'PublicaciÃ³n';
     }
   }
 
@@ -211,7 +212,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       } else if (difference.inDays == 1) {
         return 'Ayer a las ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
       } else if (difference.inDays < 7) {
-        return 'Hace ${difference.inDays} días';
+        return 'Hace ${difference.inDays} dÃ­as';
       } else {
         return '${date.day}/${date.month}/${date.year}';
       }
@@ -325,7 +326,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
           ),
           const SizedBox(height: 8),
           Text(
-            'El perfil que buscas no está disponible',
+            'El perfil que buscas no estÃ¡ disponible',
             style: GoogleFonts.poppins(
               fontSize: 16,
               color: Colors.grey[600],
@@ -373,6 +374,10 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 foregroundColor: Colors.white,
                 elevation: 0,
                 pinned: true,
+                actions: [
+                  FavoriteButton(userId: widget.userId),
+                  const SizedBox(width: 8),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: _buildProfileHeader(),
                   title: Text(
@@ -548,7 +553,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                     _buildInfoRow(
                       icon: Icons.school_rounded,
                       title: 'Semestre Actual',
-                      value: '${_user!.semester}° Semestre',
+                      value: '${_user!.semester}Â° Semestre',
                       color: Colors.blue,
                     ),
                     const SizedBox(height: 16),
@@ -673,7 +678,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Teléfono de Contacto',
+                'TelÃ©fono de Contacto',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   color: Colors.grey[600],
@@ -701,7 +706,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             child: IconButton(
               icon: Icon(Icons.phone_outlined, color: Colors.green[700]),
               onPressed: () {
-                // Aquí podrías meter integración con url_launcher si quieres llamar directo
+                // AquÃ­ podrÃ­as meter integraciÃ³n con url_launcher si quieres llamar directo
               },
             ),
           ),
@@ -889,7 +894,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // Título
+                      // TÃ­tulo
                       Text(
                         post.title,
                         style: GoogleFonts.poppins(
@@ -1083,7 +1088,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Coordina una reunión directamente con ${_user!.displayName.split(' ').first}',
+                  'Coordina una reuniÃ³n directamente con ${_user!.displayName.split(' ').first}',
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     color: Colors.grey[700],

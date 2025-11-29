@@ -9,6 +9,7 @@ import 'screens/public_profile_page.dart';
 import 'screens/edit_profile_page.dart';
 import 'screens/post_detail_page.dart';
 import 'screens/edit_post_page.dart';
+import 'screens/favorites_page.dart';
 import 'models/models.dart';
 
 void main() {
@@ -66,6 +67,8 @@ class MainApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (_) => EditPostPage(post: post),
             );
+          case '/favorites':
+            return MaterialPageRoute(builder: (_) => const FavoritesPage());
           default:
             return MaterialPageRoute(builder: (_) => const LandingPage());
         }
