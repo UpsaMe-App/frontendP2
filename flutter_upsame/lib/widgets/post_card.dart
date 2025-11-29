@@ -89,7 +89,7 @@ class PostCard extends StatelessWidget {
                       backgroundImage: post.user?.photoUrl != null &&
                               post.user!.photoUrl.isNotEmpty
                           ? NetworkImage(
-                              '${ApiService.baseUrl}${post.user!.photoUrl}',
+                              ApiService.getFullImageUrl(post.user!.photoUrl),
                             )
                           : null,
                       child: (post.user?.photoUrl == null ||

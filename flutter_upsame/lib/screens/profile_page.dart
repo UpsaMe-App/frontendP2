@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../widgets/post_card.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../utils/token_manager.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -48,9 +47,9 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() => _isLoadingProfile = false);
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar perfil: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar perfil: $e')));
     }
   }
 
@@ -67,9 +66,9 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() => _isLoading = false);
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar posts: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar posts: $e')));
     }
   }
 
@@ -81,8 +80,14 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('¿Cerrar sesión?', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        content: Text('¿Estás seguro que deseas cerrar sesión?', style: GoogleFonts.poppins()),
+        title: Text(
+          '¿Cerrar sesión?',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          '¿Estás seguro que deseas cerrar sesión?',
+          style: GoogleFonts.poppins(),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -94,8 +99,13 @@ class _ProfilePageState extends State<ProfilePage> {
               ApiService.clearTokens();
               Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             },
-            child: Text('Cerrar sesión',
-                style: GoogleFonts.poppins(color: Colors.red, fontWeight: FontWeight.bold)),
+            child: Text(
+              'Cerrar sesión',
+              style: GoogleFonts.poppins(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -130,16 +140,23 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: GoogleFonts.poppins(
-                        fontSize: 11, color: Colors.white70)),
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: Colors.white70,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(value,
-                    maxLines: 1,
-                    style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white)),
+                Text(
+                  value,
+                  maxLines: 1,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),
@@ -157,7 +174,9 @@ class _ProfilePageState extends State<ProfilePage> {
           radius: 50,
           backgroundColor: Colors.white70,
           backgroundImage: _userData?['profilePhotoUrl'] != null
-              ? NetworkImage('${ApiService.baseUrl}${_userData!['profilePhotoUrl']}')
+              ? NetworkImage(
+                  ApiService.getFullImageUrl(_userData!['profilePhotoUrl']),
+                )
               : null,
           child: _userData?['profilePhotoUrl'] == null
               ? Icon(Icons.person, size: 52, color: greenDark)
@@ -190,7 +209,9 @@ class _ProfilePageState extends State<ProfilePage> {
           radius: 14,
           backgroundColor: Colors.white30,
           backgroundImage: _userData?['profilePhotoUrl'] != null
-              ? NetworkImage('${ApiService.baseUrl}${_userData!['profilePhotoUrl']}')
+              ? NetworkImage(
+                  ApiService.getFullImageUrl(_userData!['profilePhotoUrl']),
+                )
               : null,
           child: _userData?['profilePhotoUrl'] == null
               ? Icon(Icons.person, size: 16, color: Colors.white)
@@ -234,7 +255,8 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         child: PostCard(
           post: post,
-          currentUserId: _userData?['id'], // FIX: usar el ID del usuario actual desde _userData
+          currentUserId:
+              _userData?['id'], // FIX: usar el ID del usuario actual desde _userData
           onDeleted: _loadMyPosts,
           onUpdated: _loadMyPosts,
         ),
@@ -277,10 +299,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           duration: const Duration(milliseconds: 200),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [
-                                greenDark,
-                                green,
-                              ],
+                              colors: [greenDark, green],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                             ),
@@ -289,8 +308,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: Center(
                               child: AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 250),
-                                child:
-                                    collapsed ? _buildCollapsedHeader() : _buildExpandedHeader(),
+                                child: collapsed
+                                    ? _buildCollapsedHeader()
+                                    : _buildExpandedHeader(),
                               ),
                             ),
                           ),
@@ -302,7 +322,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   // INFO CARDS
                   SliverToBoxAdapter(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [green, greenDark],
@@ -326,7 +349,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 child: _buildInfoCard(
                                   icon: Icons.calendar_today,
                                   label: 'Semestre',
-                                  value: _userData?['semester']?.toString() ?? 'N/A',
+                                  value:
+                                      _userData?['semester']?.toString() ??
+                                      'N/A',
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -343,14 +368,16 @@ class _ProfilePageState extends State<ProfilePage> {
                           ElevatedButton(
                             onPressed: () async {
                               final result = await Navigator.pushNamed(
-                                context, 
+                                context,
                                 '/edit-profile',
                                 arguments: _userData,
                               );
-                              
+
                               // Reload user data after returning from edit profile
                               if (result == true) {
-                                print('Recargando perfil despues de edicion...');
+                                print(
+                                  'Recargando perfil despues de edicion...',
+                                );
                                 await _loadUserData();
                                 print('Perfil recargado');
                               }
@@ -358,14 +385,20 @@ class _ProfilePageState extends State<ProfilePage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: greenDark,
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
-                            child: Text('Editar perfil',
-                                style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Editar perfil',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 10),
                           ElevatedButton.icon(
@@ -373,13 +406,19 @@ class _ProfilePageState extends State<ProfilePage> {
                               Navigator.pushNamed(context, '/favorites');
                             },
                             icon: const Icon(Icons.favorite, size: 18),
-                            label: Text('Mis Favoritos',
-                                style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600)),
+                            label: Text(
+                              'Mis Favoritos',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: greenDark,
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
@@ -403,13 +442,17 @@ class _ProfilePageState extends State<ProfilePage> {
                   // POSTS
                   if (_isLoading)
                     const SliverFillRemaining(
-                        child: Center(child: CircularProgressIndicator()))
+                      child: Center(child: CircularProgressIndicator()),
+                    )
                   else if (_myPosts.isEmpty)
                     SliverFillRemaining(
                       child: Center(
                         child: Text(
                           'No tienes publicaciones',
-                          style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey[600]),
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ),
                     )

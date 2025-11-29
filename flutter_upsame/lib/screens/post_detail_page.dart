@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 import '../widgets/calendly_inline_widget.dart';
+import '../widgets/safe_image_widget.dart';
 
 class PostDetailPage extends StatefulWidget {
   final Post post;
@@ -18,8 +23,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
   List<Reply> _replies = [];
   bool _isLoadingReplies = false;
   bool _isSubmitting = false;
-  bool _hasChanges = false; // Track if post was edited or deleted
   Map<String, dynamic>? _userData; // Current user data
+  File? _replyImage;
+  Uint8List? _replyImageBytes;
+  String? _replyImageFileName;
+  final ImagePicker _picker = ImagePicker();
 
   final Color greenDark = const Color(0xFF2E7D32);
   final Color green = const Color(0xFF4CAF50);
@@ -29,7 +37,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
   void initState() {
     super.initState();
     _loadUserData();
-    if (widget.post.role == 3) {
+    if (widget.post.role == 2 || widget.post.role == 3) {
       _loadReplies();
     }
   }
@@ -77,19 +85,27 @@ class _PostDetailPageState extends State<PostDetailPage> {
       await ApiService.createReply(
         postId: widget.post.id,
         content: _replyController.text.trim(),
+        image: kIsWeb ? null : _replyImage,
+        imageBytes: _replyImageBytes,
+        imageFileName: _replyImageFileName,
       );
 
       _replyController.clear();
-      
+      setState(() {
+        _replyImage = null;
+        _replyImageBytes = null;
+        _replyImageFileName = null;
+      });
+
       // Reload replies to get complete user data
       await _loadReplies();
-      
+
       setState(() => _isSubmitting = false);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Respuesta enviada')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Respuesta enviada')));
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
@@ -101,7 +117,34 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-  Color _getRoleColor() => greenDark;
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          if (!kIsWeb) {
+            _replyImage = File(image.path);
+          }
+          _replyImageBytes = bytes;
+          _replyImageFileName = image.name;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al seleccionar imagen: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   bool _isValidCalendlyUrl(String? url) {
     if (url == null || url.isEmpty) return false;
@@ -133,13 +176,15 @@ class _PostDetailPageState extends State<PostDetailPage> {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: greenLight.withOpacity(0.4),
-                backgroundImage: reply.user?.photoUrl != null &&
+                backgroundImage:
+                    reply.user?.photoUrl != null &&
                         reply.user!.photoUrl.isNotEmpty
                     ? NetworkImage(
-                        '${ApiService.baseUrl}${reply.user!.photoUrl}',
+                        ApiService.getFullImageUrl(reply.user!.photoUrl),
                       )
                     : null,
-                child: (reply.user?.photoUrl == null ||
+                child:
+                    (reply.user?.photoUrl == null ||
                         reply.user!.photoUrl.isEmpty)
                     ? Icon(Icons.person, size: 18, color: greenDark)
                     : null,
@@ -178,6 +223,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
               height: 1.45,
             ),
           ),
+          if (reply.imageUrl != null && reply.imageUrl!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            SafeImageWidget(
+              url: ApiService.getFullImageUrl(reply.imageUrl),
+              fit: BoxFit.contain,
+              borderRadius: 12,
+              maxWidth: 600,
+              optimizeImage: false,
+            ),
+          ],
         ],
       ),
     );
@@ -200,7 +255,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   void _handlePostUpdated() {
     setState(() {
-      _hasChanges = true;
+      // Refresh data or UI as needed
     });
   }
 
@@ -213,7 +268,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   void _editPost() {
-    Navigator.pushNamed(context, '/edit-post', arguments: widget.post).then((result) {
+    Navigator.pushNamed(context, '/edit-post', arguments: widget.post).then((
+      result,
+    ) {
       if (result == true) {
         _handlePostUpdated();
       }
@@ -278,61 +335,58 @@ class _PostDetailPageState extends State<PostDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        // Fondo sólido blanco
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: Text(
-            'Detalle de Publicación',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-          backgroundColor: greenDark,
-          foregroundColor: Colors.white,
-          elevation: 1,
-          actions: _isOwner
-              ? [
-                  PopupMenuButton<String>(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        _editPost();
-                      } else if (value == 'delete') {
-                        _deletePost();
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 20, color: greenDark),
-                            const SizedBox(width: 8),
-                            Text('Editar', style: GoogleFonts.poppins()),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            const Icon(Icons.delete, color: Colors.red, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Eliminar',
-                              style: GoogleFonts.poppins(color: Colors.red),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ]
-              : null,
+      // Fondo sólido blanco
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(
+          'Detalle de Publicación',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
         ),
+        backgroundColor: greenDark,
+        foregroundColor: Colors.white,
+        elevation: 1,
+        actions: _isOwner
+            ? [
+                PopupMenuButton<String>(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _editPost();
+                    } else if (value == 'delete') {
+                      _deletePost();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 20, color: greenDark),
+                          const SizedBox(width: 8),
+                          Text('Editar', style: GoogleFonts.poppins()),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete, color: Colors.red, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Eliminar',
+                            style: GoogleFonts.poppins(color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ]
+            : null,
+      ),
       body: Column(
         children: [
           Expanded(
@@ -349,33 +403,34 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border(
-                          bottom: BorderSide(
-                            color: greenLight,
-                            width: 1.2,
-                          ),
+                          bottom: BorderSide(color: greenLight, width: 1.2),
                         ),
                       ),
                       child: Row(
                         children: [
                           GestureDetector(
-  onTap: () {
-    Navigator.pushNamed(
-      context,
-      '/public-profile',
-      arguments: widget.post.userId,
-    );
-  },
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/public-profile',
+                                arguments: widget.post.userId,
+                              );
+                            },
 
                             child: CircleAvatar(
                               radius: 26,
                               backgroundColor: greenLight.withOpacity(0.4),
-                              backgroundImage: widget.post.user?.photoUrl != null &&
+                              backgroundImage:
+                                  widget.post.user?.photoUrl != null &&
                                       widget.post.user!.photoUrl.isNotEmpty
                                   ? NetworkImage(
-                                      '${ApiService.baseUrl}${widget.post.user!.photoUrl}',
+                                      ApiService.getFullImageUrl(
+                                        widget.post.user!.photoUrl,
+                                      ),
                                     )
                                   : null,
-                              child: widget.post.user?.photoUrl == null ||
+                              child:
+                                  widget.post.user?.photoUrl == null ||
                                       widget.post.user!.photoUrl.isEmpty
                                   ? Icon(Icons.person, color: greenDark)
                                   : null,
@@ -425,7 +480,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                             color: green.withOpacity(0.08),
                             blurRadius: 6,
                             offset: const Offset(0, 3),
-                          )
+                          ),
                         ],
                       ),
                       child: Column(
@@ -448,13 +503,24 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               height: 1.5,
                             ),
                           ),
+                          if (widget.post.imageUrl != null &&
+                              widget.post.imageUrl!.isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            SafeImageWidget(
+                              url: ApiService.getFullImageUrl(
+                                widget.post.imageUrl,
+                              ),
+                              fit: BoxFit.contain,
+                              borderRadius: 12,
+                              optimizeImage: false,
+                            ),
+                          ],
                           const SizedBox(height: 20),
 
                           if (widget.post.subject != null) ...[
                             Row(
                               children: [
-                                Icon(Icons.book,
-                                    size: 20, color: greenDark),
+                                Icon(Icons.book, size: 20, color: greenDark),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Materia: ${widget.post.subject!.name}',
@@ -473,8 +539,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               widget.post.maxCapacity != null)
                             Row(
                               children: [
-                                Icon(Icons.people,
-                                    size: 20, color: greenDark),
+                                Icon(Icons.people, size: 20, color: greenDark),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Capacidad: ${widget.post.capacity ?? 0}/${widget.post.maxCapacity}',
@@ -516,7 +581,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     ],
 
                     // REPLIES
-                    if (widget.post.role == 3) ...[
+                    if (widget.post.role == 2 || widget.post.role == 3) ...[
                       const SizedBox(height: 24),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -568,14 +633,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
           ),
 
           // INPUT RESPUESTA
-          if (widget.post.role == 3)
+          if (widget.post.role == 2 || widget.post.role == 3)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: greenLight, width: 1.2),
-                ),
+                border: Border(top: BorderSide(color: greenLight, width: 1.2)),
                 boxShadow: [
                   BoxShadow(
                     color: green.withOpacity(0.12),
@@ -585,64 +648,125 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 ],
               ),
               child: SafeArea(
-                child: Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _replyController,
-                        decoration: InputDecoration(
-                          hintText: 'Escribe una respuesta...',
-                          hintStyle: GoogleFonts.poppins(
-                            color: Colors.grey[400],
-                            fontSize: 14,
+                    if (_replyImage != null)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        height: 100,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: kIsWeb && _replyImageBytes != null
+                                  ? Image.memory(
+                                      _replyImageBytes!,
+                                      fit: BoxFit.contain,
+                                    )
+                                  : Image.file(
+                                      _replyImage!,
+                                      fit: BoxFit.contain,
+                                    ),
+                            ),
+                            Positioned(
+                              top: 5,
+                              right: 5,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _replyImage = null;
+                                    _replyImageBytes = null;
+                                    _replyImageFileName = null;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    Row(
+                      children: [
+                        // Only show image picker for Student posts (role == 2)
+                        if (widget.post.role == 2)
+                          IconButton(
+                            onPressed: _pickImage,
+                            icon: Icon(Icons.image, color: greenDark),
                           ),
-                          filled: true,
-                          fillColor: greenLight.withOpacity(0.25),
-                          border: OutlineInputBorder(
+                        Expanded(
+                          child: TextField(
+                            controller: _replyController,
+                            decoration: InputDecoration(
+                              hintText: 'Escribe una respuesta...',
+                              hintStyle: GoogleFonts.poppins(
+                                color: Colors.grey[400],
+                                fontSize: 14,
+                              ),
+                              filled: true,
+                              fillColor: greenLight.withOpacity(0.25),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide(
+                                  color: greenLight,
+                                  width: 1.2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                            ),
+                            style: GoogleFonts.poppins(fontSize: 14),
+                            maxLines: null,
+                            textCapitalization: TextCapitalization.sentences,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Material(
+                          color: greenDark,
+                          borderRadius: BorderRadius.circular(24),
+                          child: InkWell(
+                            onTap: _isSubmitting ? null : _submitReply,
                             borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(
-                              color: greenLight,
-                              width: 1.2,
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              child: _isSubmitting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.send,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
                         ),
-                        style: GoogleFonts.poppins(fontSize: 14),
-                        maxLines: null,
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Material(
-                      color: greenDark,
-                      borderRadius: BorderRadius.circular(24),
-                      child: InkWell(
-                        onTap: _isSubmitting ? null : _submitReply,
-                        borderRadius: BorderRadius.circular(24),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor:
-                                        AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.send,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                        ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
