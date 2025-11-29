@@ -367,6 +367,24 @@ class _ProfilePageState extends State<ProfilePage> {
                                 style: GoogleFonts.poppins(
                                     fontWeight: FontWeight.w600)),
                           ),
+                          const SizedBox(height: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/favorites');
+                            },
+                            icon: const Icon(Icons.favorite, size: 18),
+                            label: Text('Mis Favoritos',
+                                style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: greenDark,
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             '${_myPosts.length} publicación${_myPosts.length != 1 ? "es" : ""}',

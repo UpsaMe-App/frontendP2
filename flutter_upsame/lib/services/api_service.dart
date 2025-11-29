@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://upsameapi.azurewebsites.net';
+  static const String baseUrl = 'http://localhost:5034';
   static String? _accessToken;
   static String? _refreshToken;
 
@@ -539,6 +539,58 @@ class ApiService {
       return data.map((json) => Avatar.fromJson(json)).toList();
     } else {
       throw Exception('Error al cargar opciones de avatar');
+    }
+  }
+
+  // --------------------------
+  // FAVORITES
+  // --------------------------
+  static Future<void> addFavorite(String userId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/favorites/$userId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201 && response.statusCode != 204) {
+      throw Exception('Error al agregar favorito (${response.statusCode}): ${response.body}');
+    }
+  }
+
+  static Future<void> removeFavorite(String userId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/favorites/$userId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Error al eliminar favorito (${response.statusCode}): ${response.body}');
+    }
+  }
+
+  static Future<List<FavoriteUserDto>> getFavorites() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/favorites'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => FavoriteUserDto.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al cargar favoritos');
+    }
+  }
+
+  static Future<bool> isFavorite(String userId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/favorites/is-favorite/$userId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as bool;
+    } else {
+      throw Exception('Error al verificar favorito');
     }
   }
 
