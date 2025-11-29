@@ -146,9 +146,9 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       case 2:
         return 'Busca Ayuda';
       case 3:
-        return 'RecomendaciÃ³n';
+        return 'Recomendación';
       default:
-        return 'PublicaciÃ³n';
+        return 'Publicación';
     }
   }
 
@@ -212,7 +212,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       } else if (difference.inDays == 1) {
         return 'Ayer a las ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
       } else if (difference.inDays < 7) {
-        return 'Hace ${difference.inDays} dÃ­as';
+        return 'Hace ${difference.inDays} días';
       } else {
         return '${date.day}/${date.month}/${date.year}';
       }
@@ -326,7 +326,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
           ),
           const SizedBox(height: 8),
           Text(
-            'El perfil que buscas no estÃ¡ disponible',
+            'El perfil que buscas no está disponible',
             style: GoogleFonts.poppins(
               fontSize: 16,
               color: Colors.grey[600],
@@ -380,13 +380,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: _buildProfileHeader(),
-                  title: Text(
-                    _user!.displayName,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
+                  // 👇 Sacamos el title para que NO se dibuje el nombre en negro
                   centerTitle: true,
                 ),
                 shape: const ContinuousRectangleBorder(
@@ -553,7 +547,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                     _buildInfoRow(
                       icon: Icons.school_rounded,
                       title: 'Semestre Actual',
-                      value: '${_user!.semester}Â° Semestre',
+                      value: '${_user!.semester}º Semestre',
                       color: Colors.blue,
                     ),
                     const SizedBox(height: 16),
@@ -678,7 +672,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'TelÃ©fono de Contacto',
+                'Teléfono de Contacto',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   color: Colors.grey[600],
@@ -706,7 +700,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             child: IconButton(
               icon: Icon(Icons.phone_outlined, color: Colors.green[700]),
               onPressed: () {
-                // AquÃ­ podrÃ­as meter integraciÃ³n con url_launcher si quieres llamar directo
+                // aquí podrías integrar url_launcher si quieres llamar directo
               },
             ),
           ),
@@ -894,7 +888,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // TÃ­tulo
+                      // Título
                       Text(
                         post.title,
                         style: GoogleFonts.poppins(
@@ -1088,7 +1082,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Coordina una reuniÃ³n directamente con ${_user!.displayName.split(' ').first}',
+                  'Coordina una reunión directamente con ${_user!.displayName.split(' ').first}',
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     color: Colors.grey[700],

@@ -18,9 +18,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Post> _posts = [];
+  List<Post> _posts = [];      // lista que se muestra (filtrada)
+  List<Post> _allPosts = [];   // lista completa sin filtro
   bool _isLoading = false;
-  int? _selectedRole;
+  int? _selectedRole;          // null = todos, 1 = ayudantes, 2 = estudiantes, 3 = comentarios
 
   final Color _greenDark = const Color(0xFF2E7D32);
   final Color _green = const Color(0xFF388E3C);
@@ -38,33 +39,62 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final posts = await ApiService.getPosts(role: _selectedRole);
-      if (mounted) {
-        setState(() {
-          _posts = posts;
-          _isLoading = false;
-        });
-      }
+      // Traemos SIEMPRE todos los posts del backend
+      final posts = await ApiService.getPosts();
+
+      if (!mounted) return;
+
+      setState(() {
+        _allPosts = posts;
+      });
+
+      // Aplicamos el filtro actual (por si refrescas teniendo un filtro activo)
+      _applyFilter();
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar posts: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar posts: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _applyFilter() {
+    setState(() {
+      if (_selectedRole == null) {
+        // "Todos": mostramos todo
+        _posts = List<Post>.from(_allPosts);
+      } else {
+        // Filtramos según el rol
+        _posts = _allPosts
+            .where((post) => post.role == _selectedRole)
+            .toList();
+      }
+    });
   }
 
   void _filterByRole(int? role) {
-    setState(() {
+    // Si tocan el mismo filtro de nuevo, reseteamos a "Todos"
+    if (_selectedRole == role) {
+      _selectedRole = null;
+    } else {
       _selectedRole = role;
-    });
-    _loadPosts();
+    }
+
+    _applyFilter();
   }
 
   Widget _buildFilterChip({
@@ -212,8 +242,11 @@ class _HomePageState extends State<HomePage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.inbox_outlined,
-                                  size: 64, color: _greenDark),
+                              Icon(
+                                Icons.inbox_outlined,
+                                size: 64,
+                                color: _greenDark,
+                              ),
                               const SizedBox(height: 20),
                               Text(
                                 "No hay publicaciones",
@@ -233,7 +266,8 @@ class _HomePageState extends State<HomePage> {
                             return TweenAnimationBuilder<double>(
                               tween: Tween(begin: 0.0, end: 1.0),
                               duration: Duration(
-                                  milliseconds: 250 + index * 40),
+                                milliseconds: 250 + index * 40,
+                              ),
                               builder: (context, value, child) {
                                 return Opacity(
                                   opacity: value,
@@ -245,7 +279,9 @@ class _HomePageState extends State<HomePage> {
                               },
                               child: Container(
                                 margin: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 10),
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(18),
                                   boxShadow: [
