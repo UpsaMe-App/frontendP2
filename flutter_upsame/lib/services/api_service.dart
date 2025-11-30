@@ -726,6 +726,83 @@ class ApiService {
   }
 
   // --------------------------
+  // CALENDLY
+  // --------------------------
+  static Future<Map<String, dynamic>> syncCalendlyEvents() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/calendly/events/sync'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Error al sincronizar eventos de Calendly');
+    }
+  }
+
+  static Future<List<dynamic>> getUpcomingCalendlyEvents() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/calendly/events/upcoming'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as List<dynamic>;
+    } else {
+      throw Exception('Error al obtener eventos próximos de Calendly');
+    }
+  }
+
+  // --------------------------
+  // MY REPLIES & USER REPLIES
+  // --------------------------
+  static Future<List<MyReplyDto>> getMyReplies() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/posts/replies/mine'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => MyReplyDto.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al cargar mis respuestas');
+    }
+  }
+
+  static Future<List<MyReplyDto>> getUserReplies(String userId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/posts/replies/user/$userId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => MyReplyDto.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al cargar respuestas del usuario');
+    }
+  }
+
+  // --------------------------
+  // USER ONLINE STATUS
+  // --------------------------
+  static Future<Map<String, dynamic>> getUserOnlineStatus(String userId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/$userId/online-status'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Error al obtener estado en línea del usuario');
+    }
+  }
+
+
+  // --------------------------
   // TOKEN HEADERS
   // --------------------------
   static Map<String, String> _getHeaders() {

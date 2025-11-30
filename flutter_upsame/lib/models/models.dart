@@ -394,3 +394,96 @@ class FavoriteUserDto {
     return '';
   }
 }
+
+class MyReplyDto {
+  final String replyId;
+  final String content;
+  final DateTime createdAt;
+  // Author de la respuesta
+  final String replyAuthorId;
+  final String? replyAuthorFullName;
+  final String? replyAuthorAvatarId;
+  final String? replyAuthorProfilePhotoUrl;
+  // Información del post
+  final String postId;
+  final String? postTitle;
+  final String? postContentPreview;
+  final String? postAuthorId;
+  final String? postAuthorFullName;
+  final String? postAuthorAvatarId;
+  final String? postAuthorProfilePhotoUrl;
+  // Subject
+  final String? subjectId;
+  final String? subjectName;
+
+  MyReplyDto({
+    required this.replyId,
+    required this.content,
+    required this.createdAt,
+    required this.replyAuthorId,
+    this.replyAuthorFullName,
+    this.replyAuthorAvatarId,
+    this.replyAuthorProfilePhotoUrl,
+    required this.postId,
+    this.postTitle,
+    this.postContentPreview,
+    this.postAuthorId,
+    this.postAuthorFullName,
+    this.postAuthorAvatarId,
+    this.postAuthorProfilePhotoUrl,
+    this.subjectId,
+    this.subjectName,
+  });
+
+  factory MyReplyDto.fromJson(Map<String, dynamic> json) {
+    DateTime createdAtDate;
+    if (json['createdAtUtc'] != null) {
+      createdAtDate = DateTime.parse(json['createdAtUtc']);
+    } else if (json['createdAt'] != null) {
+      createdAtDate = DateTime.parse(json['createdAt']);
+    } else {
+      createdAtDate = DateTime.now();
+    }
+
+    return MyReplyDto(
+      replyId: json['replyId'] ?? '',
+      content: json['content'] ?? '',
+      createdAt: createdAtDate,
+      replyAuthorId: json['replyAuthorId'] ?? '',
+      replyAuthorFullName: json['replyAuthorFullName'],
+      replyAuthorAvatarId: json['replyAuthorAvatarId'],
+      replyAuthorProfilePhotoUrl: json['replyAuthorProfilePhotoUrl'],
+      postId: json['postId'] ?? '',
+      postTitle: json['postTitle'],
+      postContentPreview: json['postContentPreview'],
+      postAuthorId: json['postAuthorId'],
+      postAuthorFullName: json['postAuthorFullName'],
+      postAuthorAvatarId: json['postAuthorAvatarId'],
+      postAuthorProfilePhotoUrl: json['postAuthorProfilePhotoUrl'],
+      subjectId: json['subjectId'],
+      subjectName: json['subjectName'],
+    );
+  }
+
+  String get replyAuthorPhotoUrl {
+    if (replyAuthorProfilePhotoUrl != null &&
+        replyAuthorProfilePhotoUrl!.isNotEmpty) {
+      return replyAuthorProfilePhotoUrl!;
+    }
+    if (replyAuthorAvatarId != null && replyAuthorAvatarId!.isNotEmpty) {
+      return '/avatars/$replyAuthorAvatarId';
+    }
+    return '';
+  }
+
+  String get postAuthorPhotoUrl {
+    if (postAuthorProfilePhotoUrl != null &&
+        postAuthorProfilePhotoUrl!.isNotEmpty) {
+      return postAuthorProfilePhotoUrl!;
+    }
+    if (postAuthorAvatarId != null && postAuthorAvatarId!.isNotEmpty) {
+      return '/avatars/$postAuthorAvatarId';
+    }
+    return '';
+  }
+}

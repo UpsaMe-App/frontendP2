@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/models.dart';
@@ -28,6 +30,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? _selectedCareerId;
   String? _selectedAvatarId;
   File? _profilePhoto;
+  Uint8List? _profilePhotoBytes;  // Para web
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   bool _isLoadingData = true;
@@ -167,6 +170,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       print('  - CarreraId: $_selectedCareerId');
       print('  - AvatarId: $_selectedAvatarId');
       print('  - Calendly: $calendlyUrl');
+      print('  - kIsWeb: $kIsWeb');
 
       await ApiService.updateUser(
         firstName: _firstNameController.text.trim(),
@@ -174,9 +178,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         phone: phone,
         semester: semesterParsed,
         careerId: _selectedCareerId!,
-        avatarId: _selectedAvatarId,  // Send null instead of empty string
-        calendlyUrl: calendlyUrl,      // Already null if empty
-        profilePhoto: _profilePhoto,
+        avatarId: _selectedAvatarId,
+        calendlyUrl: calendlyUrl,
+        profilePhoto: kIsWeb ? null : _profilePhoto,
+        profilePhotoBytes: _profilePhotoBytes,
       );
 
       print('Perfil actualizado exitosamente en el backend');
@@ -296,16 +301,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   CircleAvatar(
                                     radius: 60,
                                     backgroundColor: primaryLight.withOpacity(0.7),
-                                    child: _selectedAvatarId == null && _profilePhoto == null
+                                    child: _selectedAvatarId == null && _profilePhoto == null && _profilePhotoBytes == null
                                         ? Icon(Icons.person, size: 60, color: primaryDark)
                                         : null,
-                                    backgroundImage: _profilePhoto != null
-                                        ? FileImage(_profilePhoto!)
-                                        : _selectedAvatarId != null
-                                            ? NetworkImage(
-                                                ApiService.getFullImageUrl('/avatars/$_selectedAvatarId.png'),
-                                              ) as ImageProvider
-                                            : null,
+                                    backgroundImage: _profilePhotoBytes != null
+                                        ? MemoryImage(_profilePhotoBytes!)
+                                        : _profilePhoto != null
+                                            ? FileImage(_profilePhoto!) as ImageProvider
+                                            : _selectedAvatarId != null
+                                                ? NetworkImage(
+                                                    ApiService.getFullImageUrl('/avatars/$_selectedAvatarId.png'),
+                                                  )
+                                                : null,
                                   ),
                                   Positioned(
                                     bottom: 4,
@@ -402,11 +409,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           onPressed: _isLoading ? null : _saveProfile,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryDark,
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           child: _isLoading
                               ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text('Guardar cambios'),
+                              : Text(
+                                  'Guardar cambios',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
                     ],
@@ -462,6 +476,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   setState(() {
                     _selectedAvatarId = avatar.id;
                     _profilePhoto = null;
+                    _profilePhotoBytes = null;
                   });
                   Navigator.pop(context);
                 },
@@ -495,8 +510,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       );
 
       if (image != null) {
+        final bytes = await image.readAsBytes();
         setState(() {
-          _profilePhoto = File(image.path);
+          if (!kIsWeb) {
+            _profilePhoto = File(image.path);
+          }
+          _profilePhotoBytes = bytes;
           _selectedAvatarId = null;
         });
         Navigator.pop(context);

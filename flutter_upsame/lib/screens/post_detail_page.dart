@@ -176,16 +176,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: greenLight.withOpacity(0.4),
-                backgroundImage:
-                    reply.user?.photoUrl != null &&
-                        reply.user!.photoUrl.isNotEmpty
+                backgroundImage: reply.user != null && reply.user!.photoUrl.isNotEmpty
                     ? NetworkImage(
                         ApiService.getFullImageUrl(reply.user!.photoUrl),
                       )
                     : null,
-                child:
-                    (reply.user?.photoUrl == null ||
-                        reply.user!.photoUrl.isEmpty)
+                child: reply.user == null || reply.user!.photoUrl.isEmpty
                     ? Icon(Icons.person, size: 18, color: greenDark)
                     : null,
               ),
