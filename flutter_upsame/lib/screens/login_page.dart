@@ -34,8 +34,12 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      // Construir el email completo
+      final fullEmail =
+          '${_emailController.text.trim()}@estudiantes.upsa.edu.bo';
+
       await ApiService.login(
-        email: _emailController.text.trim(),
+        email: fullEmail,
         password: _passwordController.text,
       );
 
@@ -46,23 +50,21 @@ class _LoginPageState extends State<LoginPage> {
 
       // Obtener el userId de la respuesta
       await ApiService.login(
-        email: _emailController.text.trim(),
+        email: fullEmail,
         password: _passwordController.text,
       );
-      
+
       // Navegar al MainLayout
       Navigator.pushReplacementNamed(
         context,
         '/main',
-        arguments: 'user-id-placeholder', // TODO: Obtener el userId real del login response
+        arguments:
+            'user-id-placeholder', // TODO: Obtener el userId real del login response
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('$e'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) {
@@ -151,10 +153,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 40),
 
-                    // Email field
+                    // Email field with suffix
                     TextFormField(
                       controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      keyboardType: TextInputType.text,
                       style: GoogleFonts.poppins(),
                       decoration: InputDecoration(
                         labelText: 'Correo electrónico',
@@ -164,6 +166,11 @@ class _LoginPageState extends State<LoginPage> {
                         prefixIcon: Icon(
                           Icons.email_outlined,
                           color: Colors.grey[600],
+                        ),
+                        suffixText: '@estudiantes.upsa.edu.bo',
+                        suffixStyle: GoogleFonts.poppins(
+                          color: Colors.grey[600],
+                          fontSize: 14,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
@@ -189,10 +196,10 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu correo';
+                          return 'Por favor ingresa tu código';
                         }
-                        if (!value.contains('@')) {
-                          return 'Por favor ingresa un correo válido';
+                        if (!value.startsWith('a')) {
+                          return 'El código debe empezar con "a"';
                         }
                         return null;
                       },

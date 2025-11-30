@@ -30,7 +30,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? _selectedCareerId;
   String? _selectedAvatarId;
   File? _profilePhoto;
-  Uint8List? _profilePhotoBytes;  // Para web
+  Uint8List? _profilePhotoBytes; // Para web
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   bool _isLoadingData = true;
@@ -62,7 +62,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       print('Cargando datos frescos del perfil desde el backend...');
       final userData = await ApiService.getMe();
       print('Datos del perfil recibidos: $userData');
-      
+
       final faculties = await ApiService.getFaculties();
       final avatars = await ApiService.getAvatarOptions();
 
@@ -75,20 +75,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
       // Parse user data and populate controllers with FRESH data
       final String firstName = userData['firstName'] ?? '';
       final String lastName = userData['lastName'] ?? '';
-      
+
       _firstNameController.text = firstName;
       _lastNameController.text = lastName;
       _phoneController.text = userData['phone'] ?? '';
-      _semesterController.text = userData['semester'] != null 
-          ? userData['semester'].toString() 
+      _semesterController.text = userData['semester'] != null
+          ? userData['semester'].toString()
           : '';
       _calendlyUrlController.text = userData['calendlyUrl'] ?? '';
 
       _selectedCareerId = userData['careerId'];
 
+      // PRIORIDAD: Primero buscar avatarId, luego profilePhotoUrl
+      final String? avatarId = userData['avatarId'];
       final String? photoUrl = userData['profilePhotoUrl'];
-      if (photoUrl != null && photoUrl.startsWith('/avatars/')) {
-        _selectedAvatarId = photoUrl.replaceAll('/avatars/', '').replaceAll('.png', '');
+
+      print('📸 profilePhotoUrl recibido: $photoUrl');
+      print('🎭 avatarId recibido: $avatarId');
+
+      if (avatarId != null && avatarId.isNotEmpty) {
+        _selectedAvatarId = avatarId;
+        print('✅ Usando avatarId: $_selectedAvatarId');
+      } else if (photoUrl != null && photoUrl.startsWith('/avatars/')) {
+        _selectedAvatarId = photoUrl
+            .replaceAll('/avatars/', '')
+            .replaceAll('.png', '');
+        print('✅ Avatar ID extraído de URL: $_selectedAvatarId');
+      } else if (photoUrl != null) {
+        print('📷 Es una foto personalizada, no un avatar predefinido');
+      } else {
+        print('❌ No hay foto de perfil ni avatar');
       }
 
       setState(() {
@@ -98,6 +114,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       });
 
       print('Datos del perfil cargados y aplicados a los campos');
+      print('Avatar ID actual: $_selectedAvatarId');
     } catch (e) {
       print('Error al cargar datos: $e');
       setState(() {
@@ -157,8 +174,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     try {
       // Prepare phone - send null if empty instead of empty string
-      final String? phone = _phoneController.text.trim().isEmpty 
-          ? null 
+      final String? phone = _phoneController.text.trim().isEmpty
+          ? null
           : _phoneController.text.trim();
 
       // Debug logging
@@ -222,10 +239,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.poppins(
-        color: Colors.grey[500],
-        fontSize: 13,
-      ),
+      hintStyle: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 13),
       filled: true,
       fillColor: primaryLight.withOpacity(0.4),
       border: OutlineInputBorder(
@@ -244,15 +258,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(
-          color: primary,
-          width: 1.6,
-        ),
+        borderSide: BorderSide(color: primary, width: 1.6),
       ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
@@ -263,10 +271,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         title: Text(
           'Editar Perfil',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 22),
         ),
         centerTitle: true,
         backgroundColor: primaryDark,
@@ -300,19 +305,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 children: [
                                   CircleAvatar(
                                     radius: 60,
-                                    backgroundColor: primaryLight.withOpacity(0.7),
-                                    child: _selectedAvatarId == null && _profilePhoto == null && _profilePhotoBytes == null
-                                        ? Icon(Icons.person, size: 60, color: primaryDark)
+                                    backgroundColor: primaryLight.withOpacity(
+                                      0.7,
+                                    ),
+                                    child:
+                                        _selectedAvatarId == null &&
+                                            _profilePhoto == null &&
+                                            _profilePhotoBytes == null
+                                        ? Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: primaryDark,
+                                          )
                                         : null,
-                                    backgroundImage: _profilePhotoBytes != null
+                                    // PRIORIDAD: avatarId primero, luego foto personalizada
+                                    backgroundImage: _selectedAvatarId != null
+                                        ? NetworkImage(
+                                            ApiService.getFullImageUrl(
+                                              '/avatars/$_selectedAvatarId.png',
+                                            ),
+                                          )
+                                        : _profilePhotoBytes != null
                                         ? MemoryImage(_profilePhotoBytes!)
                                         : _profilePhoto != null
-                                            ? FileImage(_profilePhoto!) as ImageProvider
-                                            : _selectedAvatarId != null
-                                                ? NetworkImage(
-                                                    ApiService.getFullImageUrl('/avatars/$_selectedAvatarId.png'),
-                                                  )
-                                                : null,
+                                        ? FileImage(_profilePhoto!)
+                                              as ImageProvider
+                                        : null,
                                   ),
                                   Positioned(
                                     bottom: 4,
@@ -323,7 +341,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                         color: primary,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.camera_alt, color: Colors.white),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -336,27 +357,40 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       const SizedBox(height: 28),
 
                       /// NOMBRE
-                      Text('Nombre', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Nombre',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      ),
                       TextFormField(
                         controller: _firstNameController,
                         decoration: _inputDecoration('Ingresa tu nombre'),
-                        validator: (v) => v == null || v.trim().isEmpty ? 'Campo requerido' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Campo requerido'
+                            : null,
                       ),
 
                       const SizedBox(height: 16),
 
                       /// APELLIDO
-                      Text('Apellido', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Apellido',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      ),
                       TextFormField(
                         controller: _lastNameController,
                         decoration: _inputDecoration('Ingresa tu apellido'),
-                        validator: (v) => v == null || v.trim().isEmpty ? 'Campo requerido' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Campo requerido'
+                            : null,
                       ),
 
                       const SizedBox(height: 16),
 
                       /// TELÉFONO
-                      Text('Teléfono', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Teléfono',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      ),
                       TextFormField(
                         controller: _phoneController,
                         decoration: _inputDecoration('Teléfono'),
@@ -366,23 +400,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       const SizedBox(height: 16),
 
                       /// CALENDLY
-                      Text('Calendly URL', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Calendly URL',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      ),
                       TextFormField(
                         controller: _calendlyUrlController,
-                        decoration: _inputDecoration('https://calendly.com/tu-usuario'),
+                        decoration: _inputDecoration(
+                          'https://calendly.com/tu-usuario',
+                        ),
                       ),
 
                       const SizedBox(height: 16),
 
                       /// SEMESTRE
-                      Text('Semestre', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Semestre',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      ),
                       TextFormField(
                         controller: _semesterController,
                         keyboardType: TextInputType.number,
                         decoration: _inputDecoration('Ingresa tu semestre'),
                         validator: (v) {
                           final n = int.tryParse(v ?? '');
-                          if (n == null || n < 1 || n > 12) return 'Semestre inválido';
+                          if (n == null || n < 1 || n > 12)
+                            return 'Semestre inválido';
                           return null;
                         },
                       ),
@@ -390,14 +433,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       const SizedBox(height: 16),
 
                       /// CARRERA
-                      Text('Carrera', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                      Text(
+                        'Carrera',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                      ),
                       DropdownButtonFormField<String>(
                         value: _selectedCareerId,
                         decoration: _inputDecoration('Selecciona tu carrera'),
                         items: _careers.map((c) {
-                          return DropdownMenuItem(value: c.id, child: Text(c.name));
+                          return DropdownMenuItem(
+                            value: c.id,
+                            child: Text(c.name),
+                          );
                         }).toList(),
-                        onChanged: (value) => setState(() => _selectedCareerId = value),
+                        onChanged: (value) =>
+                            setState(() => _selectedCareerId = value),
                         validator: (v) => v == null ? 'Campo requerido' : null,
                       ),
 
@@ -413,7 +463,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
                               : Text(
                                   'Guardar cambios',
                                   style: GoogleFonts.poppins(
@@ -449,7 +501,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
-            itemCount: _avatars.length + 1, // +1 for "Upload from gallery" option
+            itemCount:
+                _avatars.length + 1, // +1 for "Upload from gallery" option
             itemBuilder: (context, index) {
               if (index == 0) {
                 return GestureDetector(
@@ -458,12 +511,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: primaryLight.withOpacity(0.5),
-                      border: Border.all(
-                        color: primary,
-                        width: 2,
-                      ),
+                      border: Border.all(color: primary, width: 2),
                     ),
-                    child: Icon(Icons.add_photo_alternate, color: primaryDark, size: 30),
+                    child: Icon(
+                      Icons.add_photo_alternate,
+                      color: primaryDark,
+                      size: 30,
+                    ),
                   ),
                 );
               }
@@ -489,7 +543,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   ),
                   child: CircleAvatar(
-                    backgroundImage: NetworkImage(ApiService.getFullImageUrl(avatar.url)),
+                    backgroundImage: NetworkImage(
+                      ApiService.getFullImageUrl(avatar.url),
+                    ),
                   ),
                 ),
               );

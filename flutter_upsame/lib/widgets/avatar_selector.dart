@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import '../services/api_service.dart';
 import '../models/models.dart';
 
 class AvatarSelector extends StatefulWidget {
   final Function(String?) onAvatarSelected;
   final Function(File?) onImageSelected;
+  final Function(Uint8List?)? onImageBytesSelected;
   final String? initialAvatarUrl;
 
   const AvatarSelector({
     super.key,
     required this.onAvatarSelected,
     required this.onImageSelected,
+    this.onImageBytesSelected,
     this.initialAvatarUrl,
   });
 
@@ -26,6 +30,7 @@ class _AvatarSelectorState extends State<AvatarSelector> {
   bool _isLoading = false;
   String? _selectedAvatarId;
   File? _selectedImage;
+  Uint8List? _selectedImageBytes;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -70,12 +75,16 @@ class _AvatarSelectorState extends State<AvatarSelector> {
       );
 
       if (image != null) {
-        final file = File(image.path);
+        final bytes = await image.readAsBytes();
         setState(() {
-          _selectedImage = file;
+          if (!kIsWeb) {
+            _selectedImage = File(image.path);
+          }
+          _selectedImageBytes = bytes;
           _selectedAvatarId = null;
         });
-        widget.onImageSelected(file);
+        widget.onImageSelected(kIsWeb ? null : File(image.path));
+        widget.onImageBytesSelected?.call(bytes);
         widget.onAvatarSelected(null);
       }
     } catch (e) {
@@ -94,9 +103,11 @@ class _AvatarSelectorState extends State<AvatarSelector> {
     setState(() {
       _selectedAvatarId = avatar.id;
       _selectedImage = null;
+      _selectedImageBytes = null;
     });
     widget.onAvatarSelected(avatar.url);
     widget.onImageSelected(null);
+    widget.onImageBytesSelected?.call(null);
   }
 
   @override
@@ -122,46 +133,46 @@ class _AvatarSelectorState extends State<AvatarSelector> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: const Color(0xFFE8F5F3),
-              border: Border.all(
-                color: const Color(0xFF66B2A8),
-                width: 3,
-              ),
+              border: Border.all(color: const Color(0xFF66B2A8), width: 3),
             ),
             child: ClipOval(
-              child: _selectedImage != null
-                  ? Image.file(
-                      _selectedImage!,
-                      fit: BoxFit.cover,
-                    )
+              child: _selectedImageBytes != null
+                  ? (kIsWeb
+                        ? Image.memory(_selectedImageBytes!, fit: BoxFit.cover)
+                        : Image.file(_selectedImage!, fit: BoxFit.cover))
                   : _selectedAvatarId != null
-                      ? Image.network(
-                          ApiService.getFullImageUrl(_avatars.firstWhere((a) => a.id == _selectedAvatarId).url),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Color(0xFF66B2A8),
-                            );
-                          },
-                        )
-                      : widget.initialAvatarUrl != null
-                          ? Image.network(
-                              widget.initialAvatarUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: Color(0xFF66B2A8),
-                                );
-                              },
-                            )
-                          : const Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Color(0xFF66B2A8),
-                            ),
+                  ? Image.network(
+                      ApiService.getFullImageUrl(
+                        _avatars
+                            .firstWhere((a) => a.id == _selectedAvatarId)
+                            .url,
+                      ),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.person,
+                          size: 60,
+                          color: Color(0xFF66B2A8),
+                        );
+                      },
+                    )
+                  : widget.initialAvatarUrl != null
+                  ? Image.network(
+                      widget.initialAvatarUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.person,
+                          size: 60,
+                          color: Color(0xFF66B2A8),
+                        );
+                      },
+                    )
+                  : const Icon(
+                      Icons.person,
+                      size: 60,
+                      color: Color(0xFF66B2A8),
+                    ),
             ),
           ),
         ),
@@ -179,10 +190,7 @@ class _AvatarSelectorState extends State<AvatarSelector> {
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF66B2A8),
-              side: const BorderSide(
-                color: Color(0xFF66B2A8),
-                width: 2,
-              ),
+              side: const BorderSide(color: Color(0xFF66B2A8), width: 2),
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -194,10 +202,7 @@ class _AvatarSelectorState extends State<AvatarSelector> {
 
         Text(
           'O elige un avatar:',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: Colors.grey[700],
-          ),
+          style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]),
         ),
         const SizedBox(height: 10),
 

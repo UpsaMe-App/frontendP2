@@ -31,6 +31,7 @@ class ApiService {
     required String careerId,
     required int semester,
     String? phone,
+    String? avatarId,
     File? profilePhoto,
     Uint8List? profilePhotoBytes,
   }) async {
@@ -46,6 +47,8 @@ class ApiService {
     request.fields['CareerId'] = careerId;
     request.fields['Semester'] = semester.toString();
     if (phone != null) request.fields['Phone'] = phone;
+    if (avatarId != null && avatarId.isNotEmpty)
+      request.fields['AvatarId'] = avatarId;
 
     if (profilePhoto != null) {
       request.files.add(
@@ -216,16 +219,35 @@ class ApiService {
   // --------------------------
   // POSTS
   // --------------------------
-  static Future<List<Post>> getPosts({int? role}) async {
-    String url = '$baseUrl/posts';
-    if (role != null) url += '?role=$role';
+  static Future<List<Post>> getPosts({
+    int? role,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    String url = '$baseUrl/posts?page=$page&pageSize=$pageSize';
+    if (role != null) url += '&role=$role';
+
+    print('🔍 Fetching posts from: $url');
 
     final response = await http.get(Uri.parse(url), headers: _getHeaders());
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Post.fromJson(json)).toList();
+      print('✅ Received ${data.length} posts from API (page $page)');
+
+      final posts = data.map((json) => Post.fromJson(json)).toList();
+
+      // Debug: contar posts por rol
+      final role1Count = posts.where((p) => p.role == 1).length;
+      final role2Count = posts.where((p) => p.role == 2).length;
+      final role3Count = posts.where((p) => p.role == 3).length;
+      print(
+        '📊 Posts by role - Ayudantes: $role1Count, Estudiantes: $role2Count, Comentarios: $role3Count',
+      );
+
+      return posts;
     } else {
+      print('❌ Error response: ${response.body}');
       throw Exception('Error al cargar posts');
     }
   }
@@ -800,7 +822,6 @@ class ApiService {
       throw Exception('Error al obtener estado en línea del usuario');
     }
   }
-
 
   // --------------------------
   // TOKEN HEADERS
