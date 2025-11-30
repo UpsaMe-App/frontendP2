@@ -167,18 +167,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // HEADER EXPANDIDO
   Widget _buildExpandedHeader() {
+    // Determinar la URL de la foto/avatar
+    String? photoUrl;
+    if (_userData?['profilePhotoUrl'] != null && _userData!['profilePhotoUrl'].toString().isNotEmpty) {
+      photoUrl = _userData!['profilePhotoUrl'];
+    } else if (_userData?['avatarId'] != null && _userData!['avatarId'].toString().isNotEmpty) {
+      photoUrl = '/avatars/${_userData!['avatarId']}.png';
+    }
+
     return Column(
       children: [
         const SizedBox(height: 12),
         CircleAvatar(
           radius: 50,
           backgroundColor: Colors.white70,
-          backgroundImage: _userData?['profilePhotoUrl'] != null
-              ? NetworkImage(
-                  ApiService.getFullImageUrl(_userData!['profilePhotoUrl']),
-                )
+          backgroundImage: photoUrl != null
+              ? NetworkImage(ApiService.getFullImageUrl(photoUrl))
               : null,
-          child: _userData?['profilePhotoUrl'] == null
+          child: photoUrl == null
               ? Icon(Icons.person, size: 52, color: greenDark)
               : null,
         ),
@@ -202,18 +208,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // HEADER COLAPSADO
   Widget _buildCollapsedHeader() {
+    // Determinar la URL de la foto/avatar
+    String? photoUrl;
+    if (_userData?['profilePhotoUrl'] != null && _userData!['profilePhotoUrl'].toString().isNotEmpty) {
+      photoUrl = _userData!['profilePhotoUrl'];
+    } else if (_userData?['avatarId'] != null && _userData!['avatarId'].toString().isNotEmpty) {
+      photoUrl = '/avatars/${_userData!['avatarId']}.png';
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         CircleAvatar(
           radius: 14,
           backgroundColor: Colors.white30,
-          backgroundImage: _userData?['profilePhotoUrl'] != null
-              ? NetworkImage(
-                  ApiService.getFullImageUrl(_userData!['profilePhotoUrl']),
-                )
+          backgroundImage: photoUrl != null
+              ? NetworkImage(ApiService.getFullImageUrl(photoUrl))
               : null,
-          child: _userData?['profilePhotoUrl'] == null
+          child: photoUrl == null
               ? Icon(Icons.person, size: 16, color: Colors.white)
               : null,
         ),
