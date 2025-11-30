@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -27,6 +28,14 @@ class _LandingPageState extends State<LandingPage>
 
   bool _hasAnimatedTutorial = false;
   bool _hasAnimatedAboutUs = false;
+
+  // ✅ Helpers para responsividad REAL (incluye iPhone 14 Pro)
+  double get _screenWidth => MediaQuery.of(context).size.width;
+  double get _screenHeight => MediaQuery.of(context).size.height;
+  EdgeInsets get _viewPadding => MediaQuery.of(context).padding;
+
+  bool get _isMobile => _screenWidth < 768;
+  bool get _isTablet => _screenWidth >= 768 && _screenWidth < 1024;
 
   @override
   void initState() {
@@ -64,6 +73,7 @@ class _LandingPageState extends State<LandingPage>
       vsync: this,
     )..repeat();
 
+    // Dejo un valor grande para que cubra pantallas altas; visualmente funciona bien en todos
     _fallingAnimation = Tween<double>(begin: -100, end: 1200).animate(
       CurvedAnimation(parent: _fallingLeavesController, curve: Curves.linear),
     );
@@ -79,7 +89,7 @@ class _LandingPageState extends State<LandingPage>
       final tutorialPosition = tutorialContext.findRenderObject() as RenderBox?;
       if (tutorialPosition != null) {
         final tutorialTop = tutorialPosition.localToGlobal(Offset.zero).dy;
-        final screenHeight = MediaQuery.of(context).size.height;
+        final screenHeight = _screenHeight;
 
         if (tutorialTop < screenHeight * 0.8) {
           setState(() {
@@ -93,7 +103,7 @@ class _LandingPageState extends State<LandingPage>
       final aboutUsPosition = aboutUsContext.findRenderObject() as RenderBox?;
       if (aboutUsPosition != null) {
         final aboutUsTop = aboutUsPosition.localToGlobal(Offset.zero).dy;
-        final screenHeight = MediaQuery.of(context).size.height;
+        final screenHeight = _screenHeight;
 
         if (aboutUsTop < screenHeight * 0.8) {
           setState(() {
@@ -145,12 +155,14 @@ class _LandingPageState extends State<LandingPage>
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const AboutUsPage(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const AboutUsPage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(0.0, 1.0);
           const end = Offset.zero;
           const curve = Curves.easeInOut;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
           return SlideTransition(
             position: animation.drive(tween),
             child: child,
@@ -161,9 +173,6 @@ class _LandingPageState extends State<LandingPage>
     );
   }
 
-  bool get _isMobile => MediaQuery.of(context).size.width < 768;
-  bool get _isTablet => MediaQuery.of(context).size.width < 1024;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,11 +181,11 @@ class _LandingPageState extends State<LandingPage>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF0D5C63),
-              const Color(0xFF1A8E6B),
-              const Color(0xFF2BB673),
-              const Color(0xFF44A080),
+            colors: const [
+              Color(0xFF0D5C63),
+              Color(0xFF1A8E6B),
+              Color(0xFF2BB673),
+              Color(0xFF44A080),
             ],
             stops: const [0.0, 0.3, 0.7, 1.0],
           ),
@@ -185,13 +194,9 @@ class _LandingPageState extends State<LandingPage>
           controller: _scrollController,
           child: Column(
             children: [
-              // Hero Section
               _buildHeroSection(),
-              // About Us Preview Section
               _buildAboutUsPreviewSection(),
-              // Tutorial Section
               _buildTutorialSection(),
-              // Footer
               _buildFooter(),
             ],
           ),
@@ -201,9 +206,14 @@ class _LandingPageState extends State<LandingPage>
   }
 
   Widget _buildHeroSection() {
-    return Container(
+    // ✅ Hero adaptado: llena pantalla en iPhone 14 Pro y otros móviles altos
+    final double heroHeight = _isMobile
+        ? max(620, _screenHeight) // en iPhone 14 Pro ≈ 844, queda full-screen
+        : max(750, _screenHeight * 0.9);
+
+    return SizedBox(
       width: double.infinity,
-      height: _isMobile ? 600 : 750,
+      height: heroHeight,
       child: Stack(
         children: [
           // Falling leaves background
@@ -213,17 +223,26 @@ class _LandingPageState extends State<LandingPage>
               return Stack(
                 children: List.generate(_isMobile ? 8 : 12, (index) {
                   double speed = 0.3 + (index % 4) * 0.2;
-                  double rotation = _fallingLeavesController.value * (1.0 + index % 3);
+                  double rotation =
+                      _fallingLeavesController.value * (1.0 + index % 3);
                   double opacity = 0.05 + (index % 4) * 0.03;
-                  double left = (index * (_isMobile ? 50.0 : 100.0)) % (_isMobile ? 300 : 400);
-                  
+                  double left = (index *
+                          (_isMobile
+                              ? 50.0
+                              : 100.0)) %
+                      (_isMobile ? 300 : 400);
+
                   return Positioned(
                     left: left,
                     top: _fallingAnimation.value * speed,
                     child: Transform.rotate(
                       angle: index.isEven ? rotation : -rotation,
-                      child: _buildLeaf(const Color(0xFF2D5A52).withOpacity(opacity), 
-                          _isMobile ? 25 + (index % 3) * 8 : 35 + (index % 3) * 10),
+                      child: _buildLeaf(
+                        const Color(0xFF2D5A52).withOpacity(opacity),
+                        _isMobile
+                            ? 25 + (index % 3) * 8
+                            : 35 + (index % 3) * 10,
+                      ),
                     ),
                   );
                 }),
@@ -239,20 +258,20 @@ class _LandingPageState extends State<LandingPage>
                 children: [
                   Positioned(
                     left: -60 + _floatingAnimation.value * 0.8,
-                    top: 80,
+                    top: 80 + _viewPadding.top * 0.2,
                     child: _buildFloatingCircle(
-                      _isMobile ? 120 : 180, 
-                      Colors.white, 
-                      _isMobile ? 0.03 : 0.05
+                      _isMobile ? 120 : 180,
+                      Colors.white,
+                      _isMobile ? 0.03 : 0.05,
                     ),
                   ),
                   Positioned(
                     right: -90 + _floatingAnimation.value * -1.2,
-                    top: 180,
+                    top: 180 + _viewPadding.top * 0.1,
                     child: _buildFloatingCircle(
-                      _isMobile ? 150 : 220, 
-                      Colors.white, 
-                      _isMobile ? 0.02 : 0.04
+                      _isMobile ? 150 : 220,
+                      Colors.white,
+                      _isMobile ? 0.02 : 0.04,
                     ),
                   ),
                   if (!_isMobile) ...[
@@ -274,13 +293,15 @@ class _LandingPageState extends State<LandingPage>
 
           // Header with navigation
           Positioned(
-            top: _isMobile ? 20 : 40,
+            // ✅ Respeta notch / dynamic island
+            top: _viewPadding.top + (_isMobile ? 12 : 24),
             left: 0,
             right: 0,
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: _isMobile ? 20 : 40),
+                padding:
+                    EdgeInsets.symmetric(horizontal: _isMobile ? 20 : 40),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -301,7 +322,8 @@ class _LandingPageState extends State<LandingPage>
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
-                          borderRadius: BorderRadius.circular(_isMobile ? 15 : 20),
+                          borderRadius:
+                              BorderRadius.circular(_isMobile ? 15 : 20),
                           border: Border.all(
                             color: Colors.white.withOpacity(0.4),
                             width: 2,
@@ -320,13 +342,18 @@ class _LandingPageState extends State<LandingPage>
                             fontSize: _isMobile ? 28 : 36,
                             fontWeight: FontWeight.bold,
                             foreground: Paint()
-                              ..shader = LinearGradient(
+                              ..shader = const LinearGradient(
                                 colors: [
-                                  const Color(0xFF0D5C63),
-                                  const Color(0xFF1A8E6B),
+                                  Color(0xFF0D5C63),
+                                  Color(0xFF1A8E6B),
                                 ],
                               ).createShader(
-                                Rect.fromLTWH(0, 0, _isMobile ? 120 : 200, _isMobile ? 50 : 70),
+                                Rect.fromLTWH(
+                                  0,
+                                  0,
+                                  200,
+                                  70,
+                                ),
                               ),
                             shadows: [
                               Shadow(
@@ -340,8 +367,9 @@ class _LandingPageState extends State<LandingPage>
                       ),
                     ),
 
-                    // Navigation buttons - Responsive
-                    _isMobile ? _buildMobileNavigation() : _buildDesktopNavigation(),
+                    _isMobile
+                        ? _buildMobileNavigation()
+                        : _buildDesktopNavigation(),
                   ],
                 ),
               ),
@@ -420,7 +448,7 @@ class _LandingPageState extends State<LandingPage>
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.6,
+        height: _screenHeight * 0.6,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -446,11 +474,14 @@ class _LandingPageState extends State<LandingPage>
                 ),
               ),
               const SizedBox(height: 30),
-              _buildMobileNavItem('¿QUIÉNES SOMOS?', Icons.people_alt_rounded, _showAboutUsPage),
+              _buildMobileNavItem(
+                  '¿QUIÉNES SOMOS?', Icons.people_alt_rounded, _showAboutUsPage),
               const SizedBox(height: 20),
-              _buildMobileNavItem('¿QUÉ HACEMOS?', Icons.help_rounded, _scrollToTutorial),
+              _buildMobileNavItem(
+                  '¿QUÉ HACEMOS?', Icons.help_rounded, _scrollToTutorial),
               const SizedBox(height: 20),
-              _buildMobileNavItem('UNITE', Icons.rocket_launch_rounded, _navigateToLogin),
+              _buildMobileNavItem(
+                  'UNITE', Icons.rocket_launch_rounded, _navigateToLogin),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.all(16),
@@ -474,7 +505,8 @@ class _LandingPageState extends State<LandingPage>
     );
   }
 
-  Widget _buildMobileNavItem(String text, IconData icon, VoidCallback onPressed) {
+  Widget _buildMobileNavItem(
+      String text, IconData icon, VoidCallback onPressed) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -505,7 +537,8 @@ class _LandingPageState extends State<LandingPage>
                   ),
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+              const Icon(Icons.arrow_forward_ios_rounded,
+                  color: Colors.white, size: 14),
             ],
           ),
         ),
@@ -561,7 +594,8 @@ class _LandingPageState extends State<LandingPage>
                           vertical: _isTablet ? 16 : 18,
                         ),
                         elevation: 6,
-                        shadowColor: const Color(0xFFFF6B6B).withOpacity(0.3),
+                        shadowColor:
+                            const Color(0xFFFF6B6B).withOpacity(0.3),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -573,9 +607,10 @@ class _LandingPageState extends State<LandingPage>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('UNITE'),
+                          const Text('UNITE'),
                           SizedBox(width: _isTablet ? 8 : 10),
-                          Icon(Icons.rocket_launch_rounded, size: _isTablet ? 18 : 20),
+                          Icon(Icons.rocket_launch_rounded,
+                              size: _isTablet ? 18 : 20),
                         ],
                       ),
                     ),
@@ -585,77 +620,78 @@ class _LandingPageState extends State<LandingPage>
             ),
           ),
           SizedBox(width: _isTablet ? 40 : 80),
-          
+
           // Right side - Owl animation
-          if (!_isTablet) Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  height: 400,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Lottie.network(
-                      'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
-                      fit: BoxFit.contain,
-                      repeat: true,
-                      animate: true,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF1A8E6B),
-                                const Color(0xFF2BB673),
-                              ],
+          if (!_isTablet)
+            Expanded(
+              flex: 2,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 400,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Lottie.network(
+                        'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
+                        fit: BoxFit.contain,
+                        repeat: true,
+                        animate: true,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF1A8E6B),
+                                  Color(0xFF2BB673),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            Icons.flutter_dash,
-                            size: 150,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
+                            child: const Icon(
+                              Icons.flutter_dash,
+                              size: 150,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  '¡VOS PODÉS!',
-                  style: GoogleFonts.pacifico(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.5),
-                        offset: const Offset(3, 3),
-                        blurRadius: 8,
-                      ),
-                      Shadow(
-                        color: const Color(0xFF0D5C63).withOpacity(0.3),
-                        offset: const Offset(-1, -1),
-                        blurRadius: 4,
-                      ),
-                    ],
+                  const SizedBox(height: 20),
+                  Text(
+                    '¡VOS PODÉS!',
+                    style: GoogleFonts.pacifico(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.5),
+                          offset: const Offset(3, 3),
+                          blurRadius: 8,
+                        ),
+                        Shadow(
+                          color: const Color(0xFF0D5C63).withOpacity(0.3),
+                          offset: const Offset(-1, -1),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -663,12 +699,17 @@ class _LandingPageState extends State<LandingPage>
 
   Widget _buildMobileContent() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        // ✅ Baja un poco respetando notch / status bar
+        80 + _viewPadding.top * 0.4,
+        20,
+        20,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(height: 100),
           FadeTransition(
             opacity: _fadeAnimation,
             child: Text(
@@ -715,10 +756,10 @@ class _LandingPageState extends State<LandingPage>
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
-                              const Color(0xFF1A8E6B),
-                              const Color(0xFF2BB673),
+                              Color(0xFF1A8E6B),
+                              Color(0xFF2BB673),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(15),
@@ -805,11 +846,13 @@ class _LandingPageState extends State<LandingPage>
           onTap: onPressed,
           borderRadius: BorderRadius.circular(10),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+              border:
+                  Border.all(color: Colors.white.withOpacity(0.2), width: 1),
             ),
             child: Text(
               text,
@@ -839,26 +882,27 @@ class _LandingPageState extends State<LandingPage>
       key: _aboutUsKey,
       width: double.infinity,
       padding: EdgeInsets.symmetric(
-        vertical: _isMobile ? 60 : 100, 
-        horizontal: _isMobile ? 20 : 40
+        vertical: _isMobile ? 60 : 100,
+        horizontal: _isMobile ? 20 : 40,
       ),
       child: Column(
         children: [
-          // Title
           AnimatedOpacity(
             opacity: _hasAnimatedAboutUs ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 800),
             child: AnimatedPadding(
               duration: const Duration(milliseconds: 800),
-              padding: EdgeInsets.only(bottom: _hasAnimatedAboutUs ? 0 : 50),
+              padding: EdgeInsets.only(
+                  bottom: _hasAnimatedAboutUs ? 0 : 50),
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: _isMobile ? 20 : 30, 
-                  vertical: _isMobile ? 12 : 15
+                  horizontal: _isMobile ? 20 : 30,
+                  vertical: _isMobile ? 12 : 15,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(_isMobile ? 20 : 25),
+                  borderRadius:
+                      BorderRadius.circular(_isMobile ? 20 : 25),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -879,15 +923,14 @@ class _LandingPageState extends State<LandingPage>
             ),
           ),
           SizedBox(height: _isMobile ? 30 : 40),
-
-          // Preview Card
           AnimatedOpacity(
             opacity: _hasAnimatedAboutUs ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 800),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 600),
               curve: Curves.easeOut,
-              transform: Matrix4.translationValues(0, _hasAnimatedAboutUs ? 0 : 50, 0),
+              transform: Matrix4.translationValues(
+                  0, _hasAnimatedAboutUs ? 0 : 50, 0),
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: Material(
@@ -897,12 +940,15 @@ class _LandingPageState extends State<LandingPage>
                     borderRadius: BorderRadius.circular(20),
                     child: Ink(
                       width: double.infinity,
-                      padding: EdgeInsets.all(_isMobile ? 25 : 40),
+                      padding: EdgeInsets.all(
+                          _isMobile ? 25 : 40),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            const Color(0xFFFF6B6B).withOpacity(0.05),
-                            const Color(0xFF4ECDC4).withOpacity(0.05),
+                            const Color(0xFFFF6B6B)
+                                .withOpacity(0.05),
+                            const Color(0xFF4ECDC4)
+                                .withOpacity(0.05),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -925,40 +971,51 @@ class _LandingPageState extends State<LandingPage>
                           Icon(
                             Icons.group_rounded,
                             size: _isMobile ? 50 : 60,
-                            color: const Color(0xFF0D5C63).withOpacity(0.7),
+                            color: const Color(0xFF0D5C63)
+                                .withOpacity(0.7),
                           ),
-                          SizedBox(height: _isMobile ? 15 : 20),
+                          SizedBox(
+                              height: _isMobile ? 15 : 20),
                           Text(
                             'Conoce al equipo detrás de UpsaMe',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
-                              fontSize: _isMobile ? 20 : 22,
+                              fontSize:
+                                  _isMobile ? 20 : 22,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: _isMobile ? 10 : 15),
+                          SizedBox(
+                              height: _isMobile ? 10 : 15),
                           Text(
                             'Descubre nuestra misión, visión y al talentoso equipo de desarrolladores que hizo posible este proyecto',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
-                              fontSize: _isMobile ? 14 : 16,
-                              color: Colors.white.withOpacity(0.9),
+                              fontSize:
+                                  _isMobile ? 14 : 16,
+                              color: Colors.white
+                                  .withOpacity(0.9),
                               height: 1.5,
                             ),
                           ),
-                          SizedBox(height: _isMobile ? 20 : 25),
+                          SizedBox(
+                              height: _isMobile ? 20 : 25),
                           Container(
                             padding: EdgeInsets.symmetric(
-                              horizontal: _isMobile ? 25 : 30, 
-                              vertical: _isMobile ? 12 : 15
+                              horizontal:
+                                  _isMobile ? 25 : 30,
+                              vertical:
+                                  _isMobile ? 12 : 15,
                             ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF0D5C63),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF0D5C63).withOpacity(0.3),
+                                  color: const Color(0xFF0D5C63)
+                                      .withOpacity(0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -970,16 +1027,20 @@ class _LandingPageState extends State<LandingPage>
                                 Text(
                                   'VER MÁS',
                                   style: GoogleFonts.poppins(
-                                    fontSize: _isMobile ? 14 : 16,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize:
+                                        _isMobile ? 14 : 16,
+                                    fontWeight:
+                                        FontWeight.w600,
                                     color: Colors.white,
                                   ),
                                 ),
-                                SizedBox(width: _isMobile ? 6 : 8),
-                                Icon(
-                                  Icons.arrow_forward_rounded, 
-                                  size: _isMobile ? 16 : 18, 
-                                  color: Colors.white
+                                SizedBox(
+                                    width:
+                                        _isMobile ? 6 : 8),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 18,
+                                  color: Colors.white,
                                 ),
                               ],
                             ),
@@ -1002,26 +1063,27 @@ class _LandingPageState extends State<LandingPage>
       key: _tutorialKey,
       width: double.infinity,
       padding: EdgeInsets.symmetric(
-        vertical: _isMobile ? 60 : 100, 
-        horizontal: _isMobile ? 20 : 40
+        vertical: _isMobile ? 60 : 100,
+        horizontal: _isMobile ? 20 : 40,
       ),
       child: Column(
         children: [
-          // Title
           AnimatedOpacity(
             opacity: _hasAnimatedTutorial ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 800),
             child: AnimatedPadding(
               duration: const Duration(milliseconds: 800),
-              padding: EdgeInsets.only(bottom: _hasAnimatedTutorial ? 0 : 50),
+              padding: EdgeInsets.only(
+                  bottom: _hasAnimatedTutorial ? 0 : 50),
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: _isMobile ? 20 : 30, 
-                  vertical: _isMobile ? 12 : 15
+                  horizontal: _isMobile ? 20 : 30,
+                  vertical: _isMobile ? 12 : 15,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(_isMobile ? 20 : 25),
+                  borderRadius:
+                      BorderRadius.circular(_isMobile ? 20 : 25),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -1042,8 +1104,6 @@ class _LandingPageState extends State<LandingPage>
             ),
           ),
           SizedBox(height: _isMobile ? 40 : 60),
-
-          // Steps - Responsive
           _isMobile ? _buildMobileSteps() : _buildDesktopSteps(),
         ],
       ),
@@ -1056,7 +1116,8 @@ class _LandingPageState extends State<LandingPage>
         _buildStepCard(
           step: 1,
           title: 'REGÍSTRATE',
-          description: 'Crea tu cuenta con tu correo universitario y completa tu perfil.',
+          description:
+              'Crea tu cuenta con tu correo universitario y completa tu perfil.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 25),
@@ -1070,21 +1131,24 @@ class _LandingPageState extends State<LandingPage>
         _buildStepCard(
           step: 3,
           title: 'CREA O SOLICITA AYUDANTÍAS',
-          description: 'Los ayudantes publican horarios y materias con Calendly integrado.\nLos estudiantes envían solicitudes directamente desde el post.',
+          description:
+              'Los ayudantes publican horarios y materias con Calendly integrado.\nLos estudiantes envían solicitudes directamente desde el post.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 25),
         _buildStepCard(
           step: 4,
           title: 'INTERACTÚA EN LOS POSTS',
-          description: 'Publica comentarios, participa en discusiones y mantente al tanto con las notificaciones automáticas.',
+          description:
+              'Publica comentarios, participa en discusiones y mantente al tanto con las notificaciones automáticas.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 25),
         _buildStepCard(
           step: 5,
           title: 'ADMINISTRA TU PERFIL',
-          description: 'Edita tus datos, revisa solo tus propios posts (estilo feed personal) y actualiza tu avatar cuando quieras.',
+          description:
+              'Edita tus datos, revisa solo tus propios posts (estilo feed personal) y actualiza tu avatar cuando quieras.',
           isVisible: _hasAnimatedTutorial,
         ),
       ],
@@ -1099,7 +1163,8 @@ class _LandingPageState extends State<LandingPage>
         _buildMobileStepCard(
           step: 1,
           title: 'REGÍSTRATE',
-          description: 'Crea tu cuenta con tu correo universitario y completa tu perfil.',
+          description:
+              'Crea tu cuenta con tu correo universitario y completa tu perfil.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 20),
@@ -1113,21 +1178,24 @@ class _LandingPageState extends State<LandingPage>
         _buildMobileStepCard(
           step: 3,
           title: 'CREA O SOLICITA AYUDANTÍAS',
-          description: 'Los ayudantes publican horarios y materias con Calendly integrado. Los estudiantes envían solicitudes directamente desde el post.',
+          description:
+              'Los ayudantes publican horarios y materias con Calendly integrado. Los estudiantes envían solicitudes directamente desde el post.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 20),
         _buildMobileStepCard(
           step: 4,
           title: 'INTERACTÚA EN LOS POSTS',
-          description: 'Publica comentarios, participa en discusiones y mantente al tanto con las notificaciones automáticas.',
+          description:
+              'Publica comentarios, participa en discusiones y mantente al tanto con las notificaciones automáticas.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 20),
         _buildMobileStepCard(
           step: 5,
           title: 'ADMINISTRA TU PERFIL',
-          description: 'Edita tus datos, revisa solo tus propios posts (estilo feed personal) y actualiza tu avatar cuando quieras.',
+          description:
+              'Edita tus datos, revisa solo tus propios posts (estilo feed personal) y actualiza tu avatar cuando quieras.',
           isVisible: _hasAnimatedTutorial,
         ),
       ],
@@ -1332,7 +1400,8 @@ class _LandingPageState extends State<LandingPage>
                     const SizedBox(width: 15),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
                           Text(
                             title,
@@ -1368,16 +1437,16 @@ class _LandingPageState extends State<LandingPage>
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(
-        vertical: _isMobile ? 30 : 50, 
-        horizontal: _isMobile ? 20 : 40
+        vertical: _isMobile ? 30 : 50,
+        horizontal: _isMobile ? 20 : 40,
       ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            const Color(0xFF0D5C63),
-            const Color(0xFF0A4A4F),
+            Color(0xFF0D5C63),
+            Color(0xFF0A4A4F),
           ],
         ),
         border: Border(
@@ -1389,7 +1458,9 @@ class _LandingPageState extends State<LandingPage>
       ),
       child: Column(
         children: [
-          _isMobile ? _buildMobileFooterContent() : _buildDesktopFooterContent(),
+          _isMobile
+              ? _buildMobileFooterContent()
+              : _buildDesktopFooterContent(),
           const SizedBox(height: 20),
           Container(
             height: 1,
@@ -1471,14 +1542,14 @@ class AboutUsPage extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF0D5C63),
-              const Color(0xFF1A8E6B),
-              const Color(0xFF2BB673),
+              Color(0xFF0D5C63),
+              Color(0xFF1A8E6B),
+              Color(0xFF2BB673),
             ],
           ),
         ),
@@ -1510,9 +1581,15 @@ class AboutUsPage extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withOpacity(0.3)),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                              ),
                             ),
-                            child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: isMobile ? 20 : 24),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              color: Colors.white,
+                              size: isMobile ? 20 : 24,
+                            ),
                           ),
                         ),
                       ),
@@ -1538,7 +1615,7 @@ class AboutUsPage extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Content
               Expanded(
                 child: Container(
@@ -1554,11 +1631,8 @@ class AboutUsPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Mission & Vision Section
                         _buildMissionVisionSection(isMobile),
                         SizedBox(height: isMobile ? 30 : 40),
-                        
-                        // Team Section
                         _buildTeamSection(isMobile, isTablet),
                       ],
                     ),
@@ -1575,21 +1649,20 @@ class AboutUsPage extends StatelessWidget {
   Widget _buildMissionVisionSection(bool isMobile) {
     return Column(
       children: [
-        // Mission
         _buildMissionVisionCard(
           title: 'MISIÓN',
           titleColor: const Color(0xFFFF6B6B),
-          content: 'Conectar estudiantes y ayudantes de la UPSA en un solo espacio digital, simple, rápido y organizado; donde cada usuario pueda encontrar apoyo académico, coordinar horarios, compartir conocimientos y tener toda su información centralizada sin perder tiempo.',
+          content:
+              'Conectar estudiantes y ayudantes de la UPSA en un solo espacio digital, simple, rápido y organizado; donde cada usuario pueda encontrar apoyo académico, coordinar horarios, compartir conocimientos y tener toda su información centralizada sin perder tiempo.',
           icon: Icons.flag_rounded,
           isMobile: isMobile,
         ),
         SizedBox(height: isMobile ? 20 : 30),
-        
-        // Vision
         _buildMissionVisionCard(
           title: 'VISIÓN',
           titleColor: const Color(0xFF4ECDC4),
-          content: 'Convertirnos en la plataforma académica líder para la UPSA, impulsando una cultura de colaboración, eficiencia y aprendizaje inteligente, integrando herramientas modernas que automaticen procesos, fortalezcan la comunidad y mejoren la experiencia universitaria de cada estudiante.',
+          content:
+              'Convertirnos en la plataforma académica líder para la UPSA, impulsando una cultura de colaboración, eficiencia y aprendizaje inteligente, integrando herramientas modernas que automaticen procesos, fortalezcan la comunidad y mejoren la experiencia universitaria de cada estudiante.',
           icon: Icons.visibility_rounded,
           isMobile: isMobile,
         ),
@@ -1700,12 +1773,13 @@ class AboutUsPage extends StatelessWidget {
         Center(
           child: Container(
             padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 20 : 30, 
-              vertical: isMobile ? 12 : 15
+              horizontal: isMobile ? 20 : 30,
+              vertical: isMobile ? 12 : 15,
             ),
             decoration: BoxDecoration(
               color: const Color(0xFF0D5C63),
-              borderRadius: BorderRadius.circular(isMobile ? 20 : 25),
+              borderRadius:
+                  BorderRadius.circular(isMobile ? 20 : 25),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -1725,13 +1799,11 @@ class AboutUsPage extends StatelessWidget {
           ),
         ),
         SizedBox(height: isMobile ? 20 : 30),
-        
-        // Team Members Grid - Completely responsive
-        if (isMobile) 
+        if (isMobile)
           _buildMobileTeamGrid()
-        else if (isTablet) 
+        else if (isTablet)
           _buildTabletTeamGrid()
-        else 
+        else
           _buildDesktopTeamGrid(),
       ],
     );
@@ -1810,14 +1882,12 @@ class AboutUsPage extends StatelessWidget {
     ];
 
     if (isMobile) {
-      List<Widget> mobileMembers = [];
+      final mobileMembers = <Widget>[];
       for (var member in members) {
         mobileMembers.add(member);
         mobileMembers.add(const SizedBox(height: 15));
       }
-      if (mobileMembers.isNotEmpty) {
-        mobileMembers.removeLast();
-      }
+      if (mobileMembers.isNotEmpty) mobileMembers.removeLast();
       return mobileMembers;
     }
 
@@ -1849,7 +1919,8 @@ class AboutUsPage extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(isMobile ? 15 : 20),
+              borderRadius:
+                  BorderRadius.circular(isMobile ? 15 : 20),
               border: Border.all(
                 color: color.withOpacity(0.15),
                 width: 1,
@@ -1863,10 +1934,13 @@ class AboutUsPage extends StatelessWidget {
               ],
             ),
             child: Padding(
-              padding: EdgeInsets.all(isMobile ? 15 : 20),
-              child: isMobile 
-                  ? _buildMobileTeamMemberContent(name, role, career, isFemale, color)
-                  : _buildDesktopTeamMemberContent(name, role, career, isFemale, color),
+              padding:
+                  EdgeInsets.all(isMobile ? 15 : 20),
+              child: isMobile
+                  ? _buildMobileTeamMemberContent(
+                      name, role, career, isFemale, color)
+                  : _buildDesktopTeamMemberContent(
+                      name, role, career, isFemale, color),
             ),
           ),
         ),
@@ -1874,7 +1948,12 @@ class AboutUsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDesktopTeamMemberContent(String name, String role, String career, bool isFemale, Color color) {
+  Widget _buildDesktopTeamMemberContent(
+      String name,
+      String role,
+      String career,
+      bool isFemale,
+      Color color) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -1931,7 +2010,12 @@ class AboutUsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMobileTeamMemberContent(String name, String role, String career, bool isFemale, Color color) {
+  Widget _buildMobileTeamMemberContent(
+      String name,
+      String role,
+      String career,
+      bool isFemale,
+      Color color) {
     return Row(
       children: [
         Container(
@@ -1957,7 +2041,8 @@ class AboutUsPage extends StatelessWidget {
         const SizedBox(width: 15),
         Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               Text(
                 name,
@@ -2005,7 +2090,6 @@ class LeafPainter extends CustomPainter {
 
     final path = Path();
 
-    // Leaf shape
     path.moveTo(size.width * 0.5, 0);
     path.quadraticBezierTo(
       size.width * 0.8,
@@ -2022,15 +2106,14 @@ class LeafPainter extends CustomPainter {
 
     canvas.drawPath(path, paint);
 
-    // Center vein
     final veinPaint = Paint()
       ..color = color.withOpacity(0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
-    final veinPath = Path();
-    veinPath.moveTo(size.width * 0.5, 0);
-    veinPath.lineTo(size.width * 0.5, size.height);
+    final veinPath = Path()
+      ..moveTo(size.width * 0.5, 0)
+      ..lineTo(size.width * 0.5, size.height);
 
     canvas.drawPath(veinPath, veinPaint);
   }
