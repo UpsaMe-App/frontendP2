@@ -3,11 +3,7 @@ class Career {
   final String name;
   final String facultyId;
 
-  Career({
-    required this.id,
-    required this.name,
-    required this.facultyId,
-  });
+  Career({required this.id, required this.name, required this.facultyId});
 
   factory Career.fromJson(Map<String, dynamic> json) {
     return Career(
@@ -22,16 +18,10 @@ class Faculty {
   final String id;
   final String name;
 
-  Faculty({
-    required this.id,
-    required this.name,
-  });
+  Faculty({required this.id, required this.name});
 
   factory Faculty.fromJson(Map<String, dynamic> json) {
-    return Faculty(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-    );
+    return Faculty(id: json['id'] ?? '', name: json['name'] ?? '');
   }
 }
 
@@ -40,11 +30,7 @@ class Avatar {
   final String label;
   final String url;
 
-  Avatar({
-    required this.id,
-    required this.label,
-    required this.url,
-  });
+  Avatar({required this.id, required this.label, required this.url});
 
   factory Avatar.fromJson(Map<String, dynamic> json) {
     return Avatar(
@@ -103,8 +89,7 @@ class User {
 
       // Intentar con name/username
       if (firstName == null && lastName == null) {
-        computedFullName =
-            json['name'] ?? json['username'] ?? json['nombres'];
+        computedFullName = json['name'] ?? json['username'] ?? json['nombres'];
       } else if (firstName != null && lastName != null) {
         computedFullName = '$firstName $lastName';
       } else if (firstName != null) {
@@ -128,8 +113,8 @@ class User {
       calendlyUrl: json['calendlyUrl'] ?? json['calendly_url'],
       posts: json['posts'] != null
           ? (json['posts'] as List)
-              .map((p) => Post.fromJson(p as Map<String, dynamic>))
-              .toList()
+                .map((p) => Post.fromJson(p as Map<String, dynamic>))
+                .toList()
           : null,
     );
   }
@@ -223,8 +208,7 @@ class Post {
     Subject? subjectObj;
     if (json['subject'] != null) {
       if (json['subject'] is Map<String, dynamic>) {
-        subjectObj =
-            Subject.fromJson(json['subject'] as Map<String, dynamic>);
+        subjectObj = Subject.fromJson(json['subject'] as Map<String, dynamic>);
       } else if (json['subject'] is String) {
         // Si viene como String, crear un Subject mínimo con solo el nombre
         subjectObj = Subject(
@@ -270,7 +254,8 @@ class Post {
       contentPreview: json['contentPreview'],
       userId: json['userId'] ?? json['authorId'] ?? '',
       subjectId: json['subjectId'],
-      subjectName: json['subjectName'] ??
+      subjectName:
+          json['subjectName'] ??
           (json['subject'] is String ? json['subject'] as String : null),
       role: json['role'] ?? 1,
       status: json['status'],
@@ -331,8 +316,9 @@ class Reply {
         id: json['authorId'] ?? json['userId'] ?? '',
         email: '', // No viene en el formato aplanado
         fullName: json['author'],
-        avatarId: json['authorAvatarId'],
-        profilePhotoUrl: json['authorProfilePhotoUrl'],
+        avatarId: json['avatarId'] ?? json['authorAvatarId'],
+        profilePhotoUrl:
+            json['profilePhotoUrl'] ?? json['authorProfilePhotoUrl'],
         semester: 1, // Default
       );
     }

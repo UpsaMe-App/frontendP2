@@ -10,10 +10,7 @@ import '../widgets/favorite_button.dart';
 class PublicProfilePage extends StatefulWidget {
   final String userId;
 
-  const PublicProfilePage({
-    super.key,
-    required this.userId,
-  });
+  const PublicProfilePage({super.key, required this.userId});
 
   @override
   State<PublicProfilePage> createState() => _PublicProfilePageState();
@@ -25,10 +22,12 @@ class _PublicProfilePageState extends State<PublicProfilePage>
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<Offset> _slideAnimation;
+  late ScrollController _scrollController;
 
   User? _user;
   bool _isLoading = false;
   final Map<int, AnimationController> _postAnimations = {};
+  bool _showTitle = false;
 
   // Paleta de colores verde
   final Color _primaryGreen = const Color(0xFF2E7D32);
@@ -40,6 +39,9 @@ class _PublicProfilePageState extends State<PublicProfilePage>
   @override
   void initState() {
     super.initState();
+
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
 
     _animationController = AnimationController(
       vsync: this,
@@ -60,21 +62,32 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       ),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _loadUser();
   }
 
+  void _onScroll() {
+    // Show title when scrolled past 150 pixels
+    final shouldShowTitle =
+        _scrollController.hasClients && _scrollController.offset > 150;
+    if (shouldShowTitle != _showTitle) {
+      setState(() {
+        _showTitle = shouldShowTitle;
+      });
+    }
+  }
+
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _animationController.dispose();
     for (var controller in _postAnimations.values) {
       controller.dispose();
@@ -228,10 +241,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
         pageBuilder: (context, animation, secondaryAnimation) =>
             PostDetailPage(post: post),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
       ),
     );
@@ -244,8 +254,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       body: _isLoading
           ? _buildLoadingScreen()
           : _user == null
-              ? _buildErrorScreen()
-              : _buildProfileScreen(),
+          ? _buildErrorScreen()
+          : _buildProfileScreen(),
     );
   }
 
@@ -276,11 +286,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 40,
-            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 40),
           ),
           const SizedBox(height: 20),
           Text(
@@ -327,10 +333,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
           const SizedBox(height: 8),
           Text(
             'El perfil que buscas no está disponible',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[600]),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -343,8 +346,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryGreen,
               foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -366,6 +368,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
         child: SlideTransition(
           position: _slideAnimation,
           child: CustomScrollView(
+            controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             slivers: [
               SliverAppBar(
@@ -380,8 +383,60 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: _buildProfileHeader(),
-                  // 👇 Sacamos el title para que NO se dibuje el nombre en negro
                   centerTitle: true,
+                  title: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: _showTitle ? 1.0 : 0.0,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: ClipOval(
+                            child: _user!.photoUrl.isNotEmpty
+                                ? Image.network(
+                                    ApiService.getFullImageUrl(_user!.photoUrl),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(
+                                        Icons.person,
+                                        size: 16,
+                                        color: Colors.white,
+                                      );
+                                    },
+                                  )
+                                : Icon(
+                                    Icons.person,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            _user!.displayName,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 shape: const ContinuousRectangleBorder(
                   borderRadius: BorderRadius.vertical(
@@ -454,10 +509,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                   height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 4,
-                    ),
+                    border: Border.all(color: Colors.white, width: 4),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.3),
@@ -597,11 +649,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
               ),
             ],
           ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 24,
-          ),
+          child: Icon(icon, color: Colors.white, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -634,8 +682,9 @@ class _PublicProfilePageState extends State<PublicProfilePage>
 
   Widget _buildPhoneRow() {
     final hasPhone = _user!.phone != null && _user!.phone!.isNotEmpty;
-    final phoneText =
-        hasPhone ? _formatPhoneNumber(_user!.phone!) : 'No disponible';
+    final phoneText = hasPhone
+        ? _formatPhoneNumber(_user!.phone!)
+        : 'No disponible';
 
     return Row(
       children: [
@@ -653,18 +702,13 @@ class _PublicProfilePageState extends State<PublicProfilePage>
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color:
-                    (hasPhone ? Colors.green : Colors.grey).withOpacity(0.3),
+                color: (hasPhone ? Colors.green : Colors.grey).withOpacity(0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: const Icon(
-            Icons.phone_rounded,
-            color: Colors.white,
-            size: 24,
-          ),
+          child: const Icon(Icons.phone_rounded, color: Colors.white, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -744,7 +788,9 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: _accentGreen,
                     borderRadius: BorderRadius.circular(12),
@@ -783,10 +829,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(0, (1 - animationController.value) * 20),
-          child: Opacity(
-            opacity: animationController.value,
-            child: child,
-          ),
+          child: Opacity(opacity: animationController.value, child: child),
         );
       },
       child: _buildPostCard(post),
@@ -794,7 +837,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
   }
 
   Widget _buildPostCard(Post post) {
-    final hasCalendly = post.calendlyUrl != null &&
+    final hasCalendly =
+        post.calendlyUrl != null &&
         post.calendlyUrl!.isNotEmpty &&
         post.calendlyUrl != '.' &&
         post.calendlyUrl != 'string';
@@ -837,10 +881,11 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              color:
-                                  _getRoleColor(post.role).withOpacity(0.1),
+                              color: _getRoleColor(post.role).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: _getRoleColor(post.role),
@@ -870,10 +915,13 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                           if (post.status != null)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: _getStatusColor(post.status!)
-                                    .withOpacity(0.1),
+                                color: _getStatusColor(
+                                  post.status!,
+                                ).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -945,8 +993,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                             ),
                           const SizedBox(width: 12),
                           Text(
-                            _formatDate(
-                                post.createdAt.toIso8601String()),
+                            _formatDate(post.createdAt.toIso8601String()),
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               color: Colors.grey[500],
@@ -990,9 +1037,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                                     ),
                                     body: CalendlyInlineWidget(
                                       calendlyUrl: post.calendlyUrl!,
-                                      height: MediaQuery.of(context)
-                                              .size
-                                              .height *
+                                      height:
+                                          MediaQuery.of(context).size.height *
                                           0.8,
                                     ),
                                   ),
@@ -1013,14 +1059,12 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _primaryGreen,
                               foregroundColor: Colors.white,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 2,
-                              shadowColor:
-                                  _primaryGreen.withOpacity(0.3),
+                              shadowColor: _primaryGreen.withOpacity(0.3),
                             ),
                           ),
                         ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../widgets/avatar_selector.dart';
+import '../utils/token_manager.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -34,6 +36,8 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _loadingFaculties = false;
   bool _loadingCareers = false;
   File? _profilePhoto;
+  Uint8List? _profilePhotoBytes;
+  String? _selectedAvatarId;
 
   @override
   void initState() {
@@ -70,9 +74,9 @@ class _RegisterPageState extends State<RegisterPage> {
     } catch (e) {
       setState(() => _loadingCareers = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar carreras: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al cargar carreras: $e')));
       }
     }
   }
@@ -89,6 +93,7 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _isLoading = true);
 
     try {
+      // 1. Registrar usuario
       await ApiService.register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -96,19 +101,42 @@ class _RegisterPageState extends State<RegisterPage> {
         lastName: _lastNameController.text.trim(),
         careerId: _selectedCareer!.id,
         semester: int.parse(_semesterController.text.trim()),
-        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
+        avatarId: _selectedAvatarId,
         profilePhoto: _profilePhoto,
+        profilePhotoBytes: _profilePhotoBytes,
       );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registro exitoso. Por favor inicia sesión.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pushReplacementNamed(context, '/login');
-      }
+      if (!mounted) return;
+
+      // 2. Iniciar sesión automáticamente
+      await ApiService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      // 3. Iniciar el refresh automático del token
+      TokenManager.startTokenRefresh();
+
+      // 4. Mostrar mensaje de éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Registro exitoso! Bienvenido a UpsaMe'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // 5. Navegar al MainLayout (home)
+      Navigator.pushReplacementNamed(
+        context,
+        '/main',
+        arguments: 'user-id-placeholder',
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -156,11 +184,34 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(height: 30),
 
                   // Avatar Selector
+                  // Avatar Selector
                   AvatarSelector(
-                    onAvatarSelected: (_) {}, // No usamos avatar ID en registro por ahora, o podríamos
+                    onAvatarSelected: (avatarUrl) {
+                      // Extraer el ID del avatar de la URL (formato: /avatars/panda-feliz.png)
+                      if (avatarUrl != null &&
+                          avatarUrl.contains('/avatars/')) {
+                        final avatarId = avatarUrl
+                            .replaceAll('/avatars/', '')
+                            .replaceAll('.png', '');
+                        setState(() {
+                          _selectedAvatarId = avatarId;
+                        });
+                      } else {
+                        setState(() {
+                          _selectedAvatarId = null;
+                        });
+                      }
+                    },
                     onImageSelected: (file) {
                       setState(() {
                         _profilePhoto = file;
+                        _selectedAvatarId =
+                            null; // Limpiar avatar si se sube foto
+                      });
+                    },
+                    onImageBytesSelected: (bytes) {
+                      setState(() {
+                        _profilePhotoBytes = bytes;
                       });
                     },
                   ),
@@ -334,7 +385,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               return 'Requerido';
                             }
                             final semester = int.tryParse(value);
-                            if (semester == null || semester < 1 || semester > 12) {
+                            if (semester == null ||
+                                semester < 1 ||
+                                semester > 12) {
                               return 'Entre 1 y 12';
                             }
                             return null;
@@ -428,8 +481,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: TextButton.icon(
                       onPressed: () {
                         Navigator.pushNamedAndRemoveUntil(
-                          context, 
-                          '/', 
+                          context,
+                          '/',
                           (route) => false,
                         );
                       },
@@ -475,13 +528,8 @@ class _RegisterPageState extends State<RegisterPage> {
       style: GoogleFonts.poppins(),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.poppins(
-          color: Colors.grey[600],
-        ),
-        prefixIcon: Icon(
-          icon,
-          color: Colors.grey[600],
-        ),
+        labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+        prefixIcon: Icon(icon, color: Colors.grey[600]),
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.grey[50],
@@ -502,17 +550,11 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(
-            color: Colors.red,
-            width: 1,
-          ),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(
-            color: Colors.red,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,
@@ -548,9 +590,7 @@ class _RegisterPageState extends State<RegisterPage> {
         style: GoogleFonts.poppins(),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: GoogleFonts.poppins(
-            color: Colors.grey[600],
-          ),
+          labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
           prefixIcon: Icon(
             Icons.arrow_drop_down_circle_outlined,
             color: Colors.grey[600],
@@ -582,10 +622,7 @@ class _RegisterPageState extends State<RegisterPage> {
             : items.map((item) {
                 return DropdownMenuItem<T>(
                   value: item,
-                  child: Text(
-                    itemLabel(item),
-                    style: GoogleFonts.poppins(),
-                  ),
+                  child: Text(itemLabel(item), style: GoogleFonts.poppins()),
                 );
               }).toList(),
         onChanged: enabled && !isLoading ? onChanged : null,

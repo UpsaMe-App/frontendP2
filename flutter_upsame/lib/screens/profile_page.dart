@@ -168,11 +168,14 @@ class _ProfilePageState extends State<ProfilePage> {
   // HEADER EXPANDIDO
   Widget _buildExpandedHeader() {
     // Determinar la URL de la foto/avatar
+    // PRIORIDAD: avatarId primero (si existe), luego profilePhotoUrl
     String? photoUrl;
-    if (_userData?['profilePhotoUrl'] != null && _userData!['profilePhotoUrl'].toString().isNotEmpty) {
-      photoUrl = _userData!['profilePhotoUrl'];
-    } else if (_userData?['avatarId'] != null && _userData!['avatarId'].toString().isNotEmpty) {
+    if (_userData?['avatarId'] != null &&
+        _userData!['avatarId'].toString().isNotEmpty) {
       photoUrl = '/avatars/${_userData!['avatarId']}.png';
+    } else if (_userData?['profilePhotoUrl'] != null &&
+        _userData!['profilePhotoUrl'].toString().isNotEmpty) {
+      photoUrl = _userData!['profilePhotoUrl'];
     }
 
     return Column(
@@ -209,11 +212,14 @@ class _ProfilePageState extends State<ProfilePage> {
   // HEADER COLAPSADO
   Widget _buildCollapsedHeader() {
     // Determinar la URL de la foto/avatar
+    // PRIORIDAD: avatarId primero (si existe), luego profilePhotoUrl
     String? photoUrl;
-    if (_userData?['profilePhotoUrl'] != null && _userData!['profilePhotoUrl'].toString().isNotEmpty) {
-      photoUrl = _userData!['profilePhotoUrl'];
-    } else if (_userData?['avatarId'] != null && _userData!['avatarId'].toString().isNotEmpty) {
+    if (_userData?['avatarId'] != null &&
+        _userData!['avatarId'].toString().isNotEmpty) {
       photoUrl = '/avatars/${_userData!['avatarId']}.png';
+    } else if (_userData?['profilePhotoUrl'] != null &&
+        _userData!['profilePhotoUrl'].toString().isNotEmpty) {
+      photoUrl = _userData!['profilePhotoUrl'];
     }
 
     return Row(
