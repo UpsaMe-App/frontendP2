@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_upsame/screens/post_detail_page.dart';
 import 'package:flutter_upsame/screens/user_replies_page.dart';
+import 'package:flutter_upsame/screens/user_favorites_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/models.dart';
@@ -649,6 +650,43 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+                shadowColor: _primaryGreen.withOpacity(0.3),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Botón Ver Favoritos
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserFavoritesPage(
+                      userId: widget.userId,
+                      userName: _user!.displayName.split(' ').first,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.favorite, size: 18),
+              label: Text(
+                'Ver Favoritos',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: _primaryGreen,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: _primaryGreen, width: 2),
                 ),
                 elevation: 2,
                 shadowColor: _primaryGreen.withOpacity(0.3),

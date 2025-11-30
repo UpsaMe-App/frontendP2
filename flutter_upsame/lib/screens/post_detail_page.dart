@@ -153,6 +153,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   Widget _buildReplyCard(Reply reply) {
+    final bool isMyReply =
+        _userData != null && reply.userId == _userData!['id'];
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -176,7 +179,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: greenLight.withOpacity(0.4),
-                backgroundImage: reply.user != null && reply.user!.photoUrl.isNotEmpty
+                backgroundImage:
+                    reply.user != null && reply.user!.photoUrl.isNotEmpty
                     ? NetworkImage(
                         ApiService.getFullImageUrl(reply.user!.photoUrl),
                       )
@@ -208,6 +212,13 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   ],
                 ),
               ),
+              if (isMyReply)
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                  onPressed: () => _showDeleteReplyDialog(reply),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -257,6 +268,66 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   void _handlePostDeleted() {
     Navigator.pop(context, true);
+  }
+
+  void _showDeleteReplyDialog(Reply reply) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          '¿Eliminar respuesta?',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Esta acción no se puede deshacer.',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar', style: GoogleFonts.poppins()),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteReply(reply);
+            },
+            child: Text(
+              'Eliminar',
+              style: GoogleFonts.poppins(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteReply(Reply reply) async {
+    try {
+      await ApiService.deleteReply(reply.id, postId: widget.post.id);
+
+      setState(() {
+        _replies.removeWhere((r) => r.id == reply.id);
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Respuesta eliminada exitosamente'),
+            backgroundColor: greenDark,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar respuesta: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   bool get _isOwner {

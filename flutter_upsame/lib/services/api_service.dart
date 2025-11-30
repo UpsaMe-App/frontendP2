@@ -516,6 +516,39 @@ class ApiService {
     }
   }
 
+  static Future<void> deleteReply(String replyId, {String? postId}) async {
+    print('========================================');
+    print('ELIMINANDO REPLY');
+    print('========================================');
+    print('Reply ID: $replyId');
+    print('Post ID: $postId');
+
+    // Try with postId if provided, otherwise use direct pattern
+    String url;
+    if (postId != null) {
+      url = '$baseUrl/posts/$postId/replies/$replyId';
+      print('URL (with postId): $url');
+    } else {
+      url = '$baseUrl/posts/replies/$replyId';
+      print('URL (without postId): $url');
+    }
+
+    final response = await http.delete(Uri.parse(url), headers: _getHeaders());
+
+    print('Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+    print('========================================');
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      final errorMsg =
+          'Error al eliminar respuesta (${response.statusCode}): ${response.body}';
+      print('ERROR: $errorMsg');
+      throw Exception(errorMsg);
+    }
+
+    print('Respuesta eliminada exitosamente');
+  }
+
   // --------------------------
   // PUBLIC USERS
   // --------------------------
@@ -731,6 +764,20 @@ class ApiService {
       return data.map((json) => FavoriteUserDto.fromJson(json)).toList();
     } else {
       throw Exception('Error al cargar favoritos');
+    }
+  }
+
+  static Future<List<FavoriteUserDto>> getUserFavorites(String userId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/favorites/$userId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => FavoriteUserDto.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al cargar favoritos del usuario');
     }
   }
 

@@ -95,6 +95,69 @@ class _MyRepliesPageState extends State<MyRepliesPage> {
     );
   }
 
+  void _showDeleteDialog(MyReplyDto reply) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          '¿Eliminar respuesta?',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          '¿Estás seguro que deseas eliminar esta respuesta? Esta acción no se puede deshacer.',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar', style: GoogleFonts.poppins()),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteReply(reply);
+            },
+            child: Text(
+              'Eliminar',
+              style: GoogleFonts.poppins(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteReply(MyReplyDto reply) async {
+    try {
+      await ApiService.deleteReply(reply.replyId, postId: reply.postId);
+
+      setState(() {
+        _replies.removeWhere((r) => r.replyId == reply.replyId);
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Respuesta eliminada'),
+          backgroundColor: _primaryGreen,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al eliminar respuesta: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -275,6 +338,24 @@ class _MyRepliesPageState extends State<MyRepliesPage> {
                         fontSize: 12,
                         color: Colors.grey[500],
                         fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Botón eliminar
+                    InkWell(
+                      onTap: () => _showDeleteDialog(reply),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: Colors.red[700],
+                        ),
                       ),
                     ),
                   ],
