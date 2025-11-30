@@ -5,6 +5,7 @@ import '../models/models.dart';
 import '../services/api_service.dart';
 import '../widgets/post_card.dart';
 import '../utils/token_manager.dart';
+import 'my_replies_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userId;
@@ -168,14 +169,16 @@ class _ProfilePageState extends State<ProfilePage> {
   // HEADER EXPANDIDO
   Widget _buildExpandedHeader() {
     // Determinar la URL de la foto/avatar
-    // PRIORIDAD: avatarId primero (si existe), luego profilePhotoUrl
+    // PRIORIDAD: profilePhotoUrl primero (foto subida), luego avatarId (avatar predefinido)
     String? photoUrl;
-    if (_userData?['avatarId'] != null &&
-        _userData!['avatarId'].toString().isNotEmpty) {
-      photoUrl = '/avatars/${_userData!['avatarId']}.png';
-    } else if (_userData?['profilePhotoUrl'] != null &&
-        _userData!['profilePhotoUrl'].toString().isNotEmpty) {
+    if (_userData?['profilePhotoUrl'] != null &&
+        _userData!['profilePhotoUrl'].toString().isNotEmpty &&
+        _userData!['profilePhotoUrl'].toString() != 'null') {
       photoUrl = _userData!['profilePhotoUrl'];
+    } else if (_userData?['avatarId'] != null &&
+        _userData!['avatarId'].toString().isNotEmpty &&
+        _userData!['avatarId'].toString() != 'null') {
+      photoUrl = '/avatars/${_userData!['avatarId']}.png';
     }
 
     return Column(
@@ -212,14 +215,16 @@ class _ProfilePageState extends State<ProfilePage> {
   // HEADER COLAPSADO
   Widget _buildCollapsedHeader() {
     // Determinar la URL de la foto/avatar
-    // PRIORIDAD: avatarId primero (si existe), luego profilePhotoUrl
+    // PRIORIDAD: profilePhotoUrl primero (foto subida), luego avatarId (avatar predefinido)
     String? photoUrl;
-    if (_userData?['avatarId'] != null &&
-        _userData!['avatarId'].toString().isNotEmpty) {
-      photoUrl = '/avatars/${_userData!['avatarId']}.png';
-    } else if (_userData?['profilePhotoUrl'] != null &&
-        _userData!['profilePhotoUrl'].toString().isNotEmpty) {
+    if (_userData?['profilePhotoUrl'] != null &&
+        _userData!['profilePhotoUrl'].toString().isNotEmpty &&
+        _userData!['profilePhotoUrl'].toString() != 'null') {
       photoUrl = _userData!['profilePhotoUrl'];
+    } else if (_userData?['avatarId'] != null &&
+        _userData!['avatarId'].toString().isNotEmpty &&
+        _userData!['avatarId'].toString() != 'null') {
+      photoUrl = '/avatars/${_userData!['avatarId']}.png';
     }
 
     return Row(
@@ -426,6 +431,35 @@ class _ProfilePageState extends State<ProfilePage> {
                             icon: const Icon(Icons.favorite, size: 18),
                             label: Text(
                               'Mis Favoritos',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: greenDark,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const MyRepliesPage(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.comment, size: 18),
+                            label: Text(
+                              'Mis Respuestas',
                               style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.w600,
                               ),

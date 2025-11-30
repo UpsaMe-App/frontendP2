@@ -401,6 +401,8 @@ class MyReplyDto {
   // Subject
   final String? subjectId;
   final String? subjectName;
+  // Image
+  final String? imageUrl;
 
   MyReplyDto({
     required this.replyId,
@@ -419,6 +421,7 @@ class MyReplyDto {
     this.postAuthorProfilePhotoUrl,
     this.subjectId,
     this.subjectName,
+    this.imageUrl,
   });
 
   factory MyReplyDto.fromJson(Map<String, dynamic> json) {
@@ -448,6 +451,7 @@ class MyReplyDto {
       postAuthorProfilePhotoUrl: json['postAuthorProfilePhotoUrl'],
       subjectId: json['subjectId'],
       subjectName: json['subjectName'],
+      imageUrl: json['imageUrl'],
     );
   }
 
