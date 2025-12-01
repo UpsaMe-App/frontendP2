@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
@@ -15,7 +16,8 @@ class RegisterPage extends StatefulWidget {
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterPageState extends State<RegisterPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -39,10 +41,41 @@ class _RegisterPageState extends State<RegisterPage> {
   Uint8List? _profilePhotoBytes;
   String? _selectedAvatarId;
 
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  // UPSA Green Colors - igual que login
+  final Color _greenDark = const Color(0xFF1B5E20);
+  final Color _green = const Color(0xFF2E7D32);
+  final Color _greenMedium = const Color(0xFF388E3C);
+  final Color _greenLight = const Color(0xFF4CAF50);
+
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
+    _animationController.forward();
     _loadFaculties();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _phoneController.dispose();
+    _semesterController.dispose();
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFaculties() async {
@@ -56,9 +89,7 @@ class _RegisterPageState extends State<RegisterPage> {
     } catch (e) {
       setState(() => _loadingFaculties = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar facultades: $e')),
-        );
+        _showSnackBar('Error al cargar facultades: $e', isError: true);
       }
     }
   }
@@ -74,26 +105,33 @@ class _RegisterPageState extends State<RegisterPage> {
     } catch (e) {
       setState(() => _loadingCareers = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al cargar carreras: $e')));
+        _showSnackBar('Error al cargar carreras: $e', isError: true);
       }
     }
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red[600] : _green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCareer == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor selecciona una carrera')),
-      );
+      _showSnackBar('Por favor selecciona una carrera', isError: true);
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      // 1. Registrar usuario
       await ApiService.register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -111,7 +149,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (!mounted) return;
 
-      // 2. Iniciar sesión automáticamente
       await ApiService.login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -119,19 +156,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (!mounted) return;
 
-      // 3. Iniciar el refresh automático del token
       TokenManager.startTokenRefresh();
 
-      // 4. Mostrar mensaje de éxito
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Registro exitoso! Bienvenido a UpsaMe'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      _showSnackBar('¡Registro exitoso! Bienvenido a UpsaMe');
 
-      // 5. Navegar al MainLayout (home)
       Navigator.pushReplacementNamed(
         context,
         '/main',
@@ -139,11 +167,9 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Colors.red,
-          ),
+        _showSnackBar(
+          e.toString().replaceAll('Exception: ', ''),
+          isError: true,
         );
       }
     } finally {
@@ -153,358 +179,393 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isMobile = size.width < 600;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              _greenDark,
+              _green,
+              _greenMedium,
+              _greenLight,
+            ],
+            stops: const [0.0, 0.3, 0.7, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 16 : 40,
+                vertical: 20,
+              ),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: _buildRegisterCard(isMobile),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRegisterCard(bool isMobile) {
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: isMobile ? double.infinity : 460,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            padding: EdgeInsets.all(isMobile ? 20 : 32),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withOpacity(0.95),
+                  Colors.white.withOpacity(0.90),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.4),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _greenDark.withOpacity(0.3),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                  spreadRadius: 5,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header
-                  Text(
-                    'Crear Cuenta',
-                    style: GoogleFonts.poppins(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1E8449),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Únete a la comunidad universitaria',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Avatar Selector
-                  // Avatar Selector
-                  AvatarSelector(
-                    onAvatarSelected: (avatarUrl) {
-                      // Extraer el ID del avatar de la URL (formato: /avatars/panda-feliz.png)
-                      if (avatarUrl != null &&
-                          avatarUrl.contains('/avatars/')) {
-                        final avatarId = avatarUrl
-                            .replaceAll('/avatars/', '')
-                            .replaceAll('.png', '');
-                        setState(() {
-                          _selectedAvatarId = avatarId;
-                        });
-                      } else {
-                        setState(() {
-                          _selectedAvatarId = null;
-                        });
-                      }
-                    },
-                    onImageSelected: (file) {
-                      setState(() {
-                        _profilePhoto = file;
-                        _selectedAvatarId =
-                            null; // Limpiar avatar si se sube foto
-                      });
-                    },
-                    onImageBytesSelected: (bytes) {
-                      setState(() {
-                        _profilePhotoBytes = bytes;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Name Fields
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _firstNameController,
-                          label: 'Nombre',
-                          icon: Icons.person_outline,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Requerido';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _lastNameController,
-                          label: 'Apellido',
-                          icon: Icons.person_outline,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Requerido';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildHeader(isMobile),
+                  SizedBox(height: isMobile ? 24 : 28),
+                  _buildAvatarSection(),
+                  const SizedBox(height: 24),
+                  _buildSectionDivider('Información Personal'),
+                  const SizedBox(height: 16),
+                  _buildNameFields(),
+                  const SizedBox(height: 16),
+                  _buildEmailField(),
+                  const SizedBox(height: 16),
+                  _buildPasswordField(),
+                  const SizedBox(height: 16),
+                  _buildConfirmPasswordField(),
+                  const SizedBox(height: 24),
+                  _buildSectionDivider('Información Académica'),
+                  const SizedBox(height: 16),
+                  _buildFacultyDropdown(),
+                  const SizedBox(height: 16),
+                  _buildCareerDropdown(),
+                  const SizedBox(height: 16),
+                  _buildSemesterAndPhoneFields(),
+                  const SizedBox(height: 28),
+                  _buildRegisterButton(),
                   const SizedBox(height: 20),
-
-                  // Email
-                  _buildTextField(
-                    controller: _emailController,
-                    label: 'Correo electrónico universitario',
-                    icon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu correo';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Por favor ingresa un correo válido';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Password
-                  _buildTextField(
-                    controller: _passwordController,
-                    label: 'Contraseña',
-                    icon: Icons.lock_outlined,
-                    obscureText: _obscurePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        color: const Color(0xFF1E8449),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu contraseña';
-                      }
-                      if (value.length < 6) {
-                        return 'Mínimo 6 caracteres';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Confirm Password
-                  _buildTextField(
-                    controller: _confirmPasswordController,
-                    label: 'Confirmar contraseña',
-                    icon: Icons.lock_outlined,
-                    obscureText: _obscureConfirmPassword,
-                    onFieldSubmitted: (_) => _register(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirmPassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        color: const Color(0xFF1E8449),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscureConfirmPassword = !_obscureConfirmPassword;
-                        });
-                      },
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor confirma tu contraseña';
-                      }
-                      if (value != _passwordController.text) {
-                        return 'Las contraseñas no coinciden';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Faculty Dropdown
-                  _buildDropdown<Faculty>(
-                    label: 'Facultad',
-                    value: _selectedFaculty,
-                    items: _faculties,
-                    onChanged: (Faculty? faculty) {
-                      setState(() {
-                        _selectedFaculty = faculty;
-                        _selectedCareer = null;
-                        _careers = [];
-                      });
-                      if (faculty != null) {
-                        _loadCareers(faculty.id);
-                      }
-                    },
-                    itemLabel: (faculty) => faculty.name,
-                    isLoading: _loadingFaculties,
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Career Dropdown
-                  _buildDropdown<Career>(
-                    label: 'Carrera',
-                    value: _selectedCareer,
-                    items: _careers,
-                    onChanged: (Career? career) {
-                      setState(() {
-                        _selectedCareer = career;
-                      });
-                    },
-                    itemLabel: (career) => career.name,
-                    isLoading: _loadingCareers,
-                    enabled: _selectedFaculty != null,
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Semester and Phone in a row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _semesterController,
-                          label: 'Semestre',
-                          icon: Icons.school_outlined,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Requerido';
-                            }
-                            final semester = int.tryParse(value);
-                            if (semester == null ||
-                                semester < 1 ||
-                                semester > 12) {
-                              return 'Entre 1 y 12';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _phoneController,
-                          label: 'Teléfono (opcional)',
-                          icon: Icons.phone_outlined,
-                          keyboardType: TextInputType.phone,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 35),
-
-                  // Register button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _register,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE85D75),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        elevation: 8,
-                        shadowColor: const Color(0xFFE85D75).withOpacity(0.5),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : Text(
-                              'REGISTRARSE',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-
-                  // Login link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '¿Ya tienes cuenta? ',
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Inicia sesión',
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF1E8449),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Back to home
-                  const SizedBox(height: 15),
-                  Center(
-                    child: TextButton.icon(
-                      onPressed: () {
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/',
-                          (route) => false,
-                        );
-                      },
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Color(0xFF1E8449),
-                      ),
-                      label: Text(
-                        'Volver al inicio',
-                        style: GoogleFonts.poppins(
-                          color: const Color(0xFF1E8449),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildLoginLink(),
+                  const SizedBox(height: 12),
+                  _buildBackButton(),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader(bool isMobile) {
+    return Column(
+      children: [
+        ShaderMask(
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              colors: [_greenDark, _greenMedium, _greenLight],
+              stops: const [0.0, 0.5, 1.0],
+            ).createShader(bounds);
+          },
+          child: Text(
+            'Crear Cuenta',
+            style: GoogleFonts.poppins(
+              fontSize: isMobile ? 32 : 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Únete a la comunidad universitaria',
+          style: GoogleFonts.poppins(
+            fontSize: isMobile ? 14 : 15,
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAvatarSection() {
+    return AvatarSelector(
+      onAvatarSelected: (avatarUrl) {
+        if (avatarUrl != null && avatarUrl.contains('/avatars/')) {
+          final avatarId =
+              avatarUrl.replaceAll('/avatars/', '').replaceAll('.png', '');
+          setState(() => _selectedAvatarId = avatarId);
+        } else {
+          setState(() => _selectedAvatarId = null);
+        }
+      },
+      onImageSelected: (file) {
+        setState(() {
+          _profilePhoto = file;
+          _selectedAvatarId = null;
+        });
+      },
+      onImageBytesSelected: (bytes) {
+        setState(() => _profilePhotoBytes = bytes);
+      },
+    );
+  }
+
+  Widget _buildSectionDivider(String title) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  _green.withOpacity(0.3),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: _green,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  _green.withOpacity(0.3),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNameFields() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildTextField(
+            controller: _firstNameController,
+            label: 'Nombre',
+            icon: Icons.person_outline_rounded,
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Requerido';
+              return null;
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildTextField(
+            controller: _lastNameController,
+            label: 'Apellido',
+            icon: Icons.person_outline_rounded,
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Requerido';
+              return null;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailField() {
+    return _buildTextField(
+      controller: _emailController,
+      label: 'Correo universitario',
+      icon: Icons.email_outlined,
+      keyboardType: TextInputType.emailAddress,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Por favor ingresa tu correo';
+        }
+        if (!value.contains('@')) {
+          return 'Por favor ingresa un correo válido';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return _buildTextField(
+      controller: _passwordController,
+      label: 'Contraseña',
+      icon: Icons.lock_outline_rounded,
+      obscureText: _obscurePassword,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _obscurePassword
+              ? Icons.visibility_outlined
+              : Icons.visibility_off_outlined,
+          color: Colors.grey[600],
+          size: 20,
+        ),
+        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Por favor ingresa tu contraseña';
+        }
+        if (value.length < 6) return 'Mínimo 6 caracteres';
+        return null;
+      },
+    );
+  }
+
+  Widget _buildConfirmPasswordField() {
+    return _buildTextField(
+      controller: _confirmPasswordController,
+      label: 'Confirmar contraseña',
+      icon: Icons.lock_outline_rounded,
+      obscureText: _obscureConfirmPassword,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _obscureConfirmPassword
+              ? Icons.visibility_outlined
+              : Icons.visibility_off_outlined,
+          color: Colors.grey[600],
+          size: 20,
+        ),
+        onPressed: () =>
+            setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Por favor confirma tu contraseña';
+        }
+        if (value != _passwordController.text) {
+          return 'Las contraseñas no coinciden';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildFacultyDropdown() {
+    return _buildDropdown<Faculty>(
+      label: 'Facultad',
+      value: _selectedFaculty,
+      items: _faculties,
+      onChanged: (Faculty? faculty) {
+        setState(() {
+          _selectedFaculty = faculty;
+          _selectedCareer = null;
+          _careers = [];
+        });
+        if (faculty != null) _loadCareers(faculty.id);
+      },
+      itemLabel: (faculty) => faculty.name,
+      isLoading: _loadingFaculties,
+      icon: Icons.account_balance_rounded,
+    );
+  }
+
+  Widget _buildCareerDropdown() {
+    return _buildDropdown<Career>(
+      label: 'Carrera',
+      value: _selectedCareer,
+      items: _careers,
+      onChanged: (Career? career) {
+        setState(() => _selectedCareer = career);
+      },
+      itemLabel: (career) => career.name,
+      isLoading: _loadingCareers,
+      enabled: _selectedFaculty != null,
+      icon: Icons.school_rounded,
+    );
+  }
+
+  Widget _buildSemesterAndPhoneFields() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildTextField(
+            controller: _semesterController,
+            label: 'Semestre',
+            icon: Icons.calendar_today_rounded,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Requerido';
+              final semester = int.tryParse(value);
+              if (semester == null || semester < 1 || semester > 12) {
+                return '1-12';
+              }
+              return null;
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildTextField(
+            controller: _phoneController,
+            label: 'Teléfono (opcional)',
+            icon: Icons.phone_rounded,
+            keyboardType: TextInputType.phone,
+          ),
+        ),
+      ],
     );
   }
 
@@ -517,49 +578,58 @@ class _RegisterPageState extends State<RegisterPage> {
     String? Function(String?)? validator,
     Widget? suffixIcon,
     List<TextInputFormatter>? inputFormatters,
-    void Function(String)? onFieldSubmitted,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      onFieldSubmitted: onFieldSubmitted,
-      style: GoogleFonts.poppins(),
+      style: GoogleFonts.poppins(fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
-        prefixIcon: Icon(icon, color: Colors.grey[600]),
+        labelStyle: GoogleFonts.poppins(
+          color: Colors.grey[600],
+          fontSize: 13,
+        ),
+        prefixIcon: Container(
+          margin: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: _green.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: _green, size: 18),
+        ),
         suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: Colors.grey[50],
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(
-            color: Color.fromARGB(255, 20, 163, 79),
-            width: 2,
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: Colors.grey[200]!,
+            width: 1.5,
           ),
         ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: _green, width: 2),
+        ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.red[400]!, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.red[400]!, width: 2),
         ),
+        filled: true,
+        fillColor: Colors.grey[50],
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 18,
+          horizontal: 14,
+          vertical: 14,
         ),
+        errorStyle: GoogleFonts.poppins(fontSize: 11),
       ),
       validator: validator,
     );
@@ -571,77 +641,196 @@ class _RegisterPageState extends State<RegisterPage> {
     required List<T> items,
     required void Function(T?) onChanged,
     required String Function(T) itemLabel,
+    required IconData icon,
     bool isLoading = false,
     bool enabled = true,
   }) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.poppins(
+          color: Colors.grey[600],
+          fontSize: 13,
+        ),
+        prefixIcon: Container(
+          margin: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: _green.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: _green, size: 18),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: Colors.grey[200]!,
+            width: 1.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: _green, width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
+      ),
+      items: isLoading
+          ? null
+          : items.map((item) {
+              return DropdownMenuItem<T>(
+                value: item,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 250, // Limitar ancho para evitar overflow
+                  ),
+                  child: Text(
+                    itemLabel(item),
+                    style: GoogleFonts.poppins(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              );
+            }).toList(),
+      onChanged: enabled && !isLoading ? onChanged : null,
+      hint: Text(
+        isLoading ? 'Cargando...' : 'Selecciona $label',
+        style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[500]),
+      ),
+      dropdownColor: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      icon: Icon(
+        Icons.arrow_drop_down_rounded,
+        color: _green,
+        size: 24,
+      ),
+    );
+  }
+
+  Widget _buildRegisterButton() {
     return Container(
+      width: double.infinity,
+      height: 52,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: _green.withOpacity(0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 2,
+          ),
+          BoxShadow(
+            color: _greenLight.withOpacity(0.3),
+            blurRadius: 40,
+            offset: const Offset(0, 0),
+            spreadRadius: 4,
           ),
         ],
       ),
-      child: DropdownButtonFormField<T>(
-        value: value,
-        style: GoogleFonts.poppins(),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
-          prefixIcon: Icon(
-            Icons.arrow_drop_down_circle_outlined,
-            color: Colors.grey[600],
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _register,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _green,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          filled: true,
-          fillColor: Colors.grey[50],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          disabledBackgroundColor: _green.withOpacity(0.6),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'CREAR CUENTA',
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_rounded, size: 18),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildLoginLink() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          '¿Ya tienes cuenta? ',
+          style: GoogleFonts.poppins(
+            color: Colors.grey[700],
+            fontSize: 13,
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/login');
+          },
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(
-              color: Color.fromARGB(255, 30, 138, 52),
-              width: 2,
+          child: Text(
+            'Inicia sesión',
+            style: GoogleFonts.poppins(
+              color: _green,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
             ),
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 8,
-          ),
         ),
-        items: isLoading
-            ? null
-            : items.map((item) {
-                return DropdownMenuItem<T>(
-                  value: item,
-                  child: Text(itemLabel(item), style: GoogleFonts.poppins()),
-                );
-              }).toList(),
-        onChanged: enabled && !isLoading ? onChanged : null,
-        hint: Text(
-          isLoading ? 'Cargando...' : 'Selecciona $label',
-          style: GoogleFonts.poppins(),
+      ],
+    );
+  }
+
+  Widget _buildBackButton() {
+    return TextButton.icon(
+      onPressed: () {
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+      },
+      icon: Icon(
+        Icons.arrow_back_rounded,
+        color: Colors.grey[600],
+        size: 16,
+      ),
+      label: Text(
+        'Volver al inicio',
+        style: GoogleFonts.poppins(
+          color: Colors.grey[600],
+          fontWeight: FontWeight.w500,
+          fontSize: 13,
         ),
-        validator: (value) {
-          if (value == null) {
-            return 'Por favor selecciona una opción';
-          }
-          return null;
-        },
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        icon: const Icon(
-          Icons.arrow_drop_down,
-          color: Color.fromARGB(255, 9, 189, 84),
-        ),
+      ),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),
     );
   }

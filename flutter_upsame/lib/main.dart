@@ -46,7 +46,12 @@ class MainApp extends StatelessWidget {
               builder: (_) => MainLayout(userId: userId),
             );
           case '/create-post':
-            return MaterialPageRoute(builder: (_) => const CreatePostPage());
+            // Usar PostType.student como valor por defecto si no se especifica
+            final initialType =
+                settings.arguments as PostType? ?? PostType.student;
+            return MaterialPageRoute(
+              builder: (_) => CreatePostPage(initialPostType: initialType),
+            );
           case '/public-profile':
             final userId = settings.arguments as String;
             return MaterialPageRoute(
@@ -64,9 +69,7 @@ class MainApp extends StatelessWidget {
             );
           case '/edit-post':
             final post = settings.arguments as Post;
-            return MaterialPageRoute(
-              builder: (_) => EditPostPage(post: post),
-            );
+            return MaterialPageRoute(builder: (_) => EditPostPage(post: post));
           case '/favorites':
             return MaterialPageRoute(builder: (_) => const FavoritesPage());
           default:

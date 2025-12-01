@@ -3,10 +3,11 @@ import 'package:flutter_upsame/screens/post_detail_page.dart';
 import 'package:flutter_upsame/screens/user_replies_page.dart';
 import 'package:flutter_upsame/screens/user_favorites_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/models.dart';
 import '../services/api_service.dart';
-import '../widgets/calendly_inline_widget.dart';
 import '../widgets/favorite_button.dart';
 
 class PublicProfilePage extends StatefulWidget {
@@ -20,135 +21,115 @@ class PublicProfilePage extends StatefulWidget {
 
 class _PublicProfilePageState extends State<PublicProfilePage>
     with TickerProviderStateMixin {
+  late ScrollController _scrollController;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  late Animation<Offset> _slideAnimation;
-  late ScrollController _scrollController;
 
   User? _user;
   bool _isLoading = false;
-  final Map<int, AnimationController> _postAnimations = {};
-  bool _showTitle = false;
+  bool _showCollapsedTitle = false;
 
-  // Paleta de colores verde
+  // Paleta de colores
   final Color _primaryGreen = const Color(0xFF2E7D32);
   final Color _darkGreen = const Color(0xFF1B5E20);
-  final Color _lightGreen = const Color(0xFF4CAF50);
-  final Color _accentGreen = const Color(0xFF81C784);
-  final Color _backgroundGreen = const Color(0xFFE8F5E8);
+  final Color _softGreen = const Color(0xFFE8F5E9);
+  final Color _borderGreen = const Color(0xFFC8E6C9);
+
+  // Paleta Calendly (Lila Pastel)
+  final Color _calendlyBg = const Color(0xFFF5EDFF);
+  final Color _calendlyPurple = const Color(0xFF7B1FA2);
+  final Color _calendlyIconBg = const Color(0xFFD1C4E9);
 
   @override
   void initState() {
     super.initState();
-
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
 
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeInOut),
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-
-    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.2, 0.8, curve: Curves.easeOutBack),
-      ),
-    );
-
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
-          ),
-        );
 
     _loadUser();
   }
 
   void _onScroll() {
-    // Show title when scrolled past 150 pixels
-    final shouldShowTitle =
-        _scrollController.hasClients && _scrollController.offset > 150;
-    if (shouldShowTitle != _showTitle) {
+    final shouldShow =
+        _scrollController.hasClients && _scrollController.offset > 180;
+    if (shouldShow != _showCollapsedTitle) {
       setState(() {
-        _showTitle = shouldShowTitle;
+        _showCollapsedTitle = shouldShow;
       });
     }
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _animationController.dispose();
-    for (var controller in _postAnimations.values) {
-      controller.dispose();
-    }
     super.dispose();
   }
 
   Future<void> _loadUser() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final user = await ApiService.getPublicUser(widget.userId);
-      setState(() {
-        _user = user;
-        _isLoading = false;
-      });
-
-      // Inicializar animaciones para cada post del usuario
-      if (user.posts != null) {
-        for (int i = 0; i < user.posts!.length; i++) {
-          _postAnimations[i] = AnimationController(
-            vsync: this,
-            duration: Duration(milliseconds: 500 + (i * 150)),
-          )..forward();
-        }
-      }
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _animationController.forward();
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      print('========================================');
+      print('PUBLIC PROFILE - USER DATA');
+      print('========================================');
+      print('User ID: ${user.id}');
+      print('Display Name: ${user.displayName}');
+      print('Avatar ID: ${user.avatarId}');
+      print('Avatar URL: ${user.avatarUrl}');
+      print('Profile Photo URL: ${user.profilePhotoUrl}');
+      print('Computed photoUrl: ${user.photoUrl}');
+      print('========================================');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar usuario: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        setState(() {
+          _user = user;
+          _isLoading = false;
+        });
+        _animationController.forward();
       }
+    } catch (e) {
+      print('ERROR loading public user: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  void _launchPhone(String phone) async {
+    final Uri url = Uri(scheme: 'tel', path: phone);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    }
+  }
+
+  void _openCalendly() async {
+    if (_user?.calendlyUrl == null) return;
+    final url = _user!.calendlyUrl!;
+    if (await canLaunchUrlString(url)) {
+      await launchUrlString(url, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir Calendly')),
+      );
+    }
+  }
+
+  // --- Helpers de UI ---
   Color _getRoleColor(int role) {
     switch (role) {
       case 1:
-        return const Color(0xFFE53935); // Rojo para ofrecer ayuda
+        return const Color(0xFFE53935);
       case 2:
-        return const Color(0xFF1976D2); // Azul para buscar ayuda
+        return const Color(0xFF1976D2);
       case 3:
-        return const Color(0xFF7B1FA2); // Morado para recomendaciones
+        return const Color(0xFF8E24AA);
       default:
         return Colors.grey;
     }
@@ -170,293 +151,194 @@ class _PublicProfilePageState extends State<PublicProfilePage>
   IconData _getRoleIcon(int role) {
     switch (role) {
       case 1:
-        return Icons.school_outlined;
+        return Icons.volunteer_activism_outlined;
       case 2:
         return Icons.help_outline;
       case 3:
         return Icons.lightbulb_outline;
       default:
-        return Icons.post_add;
+        return Icons.article_outlined;
     }
   }
 
-  String _getStatusText(int status) {
-    switch (status) {
-      case 0:
-        return 'Activo';
-      case 1:
-        return 'En Progreso';
-      case 2:
-        return 'Completado';
-      default:
-        return 'Desconocido';
-    }
-  }
-
-  Color _getStatusColor(int status) {
-    switch (status) {
-      case 0:
-        return _lightGreen;
-      case 1:
-        return Colors.orange;
-      case 2:
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _formatPhoneNumber(String phone) {
-    final cleaned = phone.replaceAll(RegExp(r'[^\d+]'), '');
-
-    if (cleaned.length == 8) {
-      return '${cleaned.substring(0, 4)}-${cleaned.substring(4)}';
-    }
-
-    return phone;
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      final now = DateTime.now();
-      final difference = now.difference(date);
-
-      if (difference.inDays == 0) {
-        return 'Hoy a las ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-      } else if (difference.inDays == 1) {
-        return 'Ayer a las ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-      } else if (difference.inDays < 7) {
-        return 'Hace ${difference.inDays} días';
-      } else {
-        return '${date.day}/${date.month}/${date.year}';
-      }
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  void _navigateToPostDetail(Post post) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            PostDetailPage(post: post),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-      ),
-    );
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    if (difference.inDays == 0) return 'Hoy';
+    if (difference.inDays == 1) return 'Ayer';
+    if (difference.inDays < 7) return 'Hace ${difference.inDays} días';
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _backgroundGreen,
+      backgroundColor: _primaryGreen,
       body: _isLoading
-          ? _buildLoadingScreen()
+          ? Center(child: CircularProgressIndicator(color: Colors.white))
           : _user == null
-          ? _buildErrorScreen()
-          : _buildProfileScreen(),
+          ? _buildErrorState()
+          : _buildContent(),
     );
   }
 
-  // ===================== PANTALLAS AUXILIARES =====================
-
-  Widget _buildLoadingScreen() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 1000),
-            curve: Curves.easeInOut,
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [_primaryGreen, _lightGreen],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: _primaryGreen.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+  Widget _buildErrorState() {
+    return Container(
+      color: Colors.white,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              "No se pudo cargar el perfil",
+              style: GoogleFonts.poppins(color: Colors.grey[600]),
             ),
-            child: const Icon(Icons.person, color: Colors.white, size: 40),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Cargando perfil...',
-            style: GoogleFonts.poppins(
-              color: _primaryGreen,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+            TextButton(
+              onPressed: _loadUser,
+              child: Text("Reintentar", style: TextStyle(color: _primaryGreen)),
             ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(_primaryGreen),
-              strokeWidth: 3,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildErrorScreen() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.person_off_rounded,
-            size: 100,
-            color: _primaryGreen.withOpacity(0.5),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Usuario no encontrado',
-            style: GoogleFonts.poppins(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              color: _primaryGreen,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'El perfil que buscas no está disponible',
-            style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _loadUser,
-            icon: const Icon(Icons.refresh_rounded),
-            label: Text(
-              'Reintentar',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _primaryGreen,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+  Widget _buildContent() {
+    return CustomScrollView(
+      controller: _scrollController,
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        _buildSliverAppBar(),
+        SliverToBoxAdapter(
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              // 1. Contenedor Blanco (Sheet)
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                ),
+                padding: const EdgeInsets.only(
+                  top: 65, // Espacio para la mitad inferior del avatar + margen
+                  left: 16,
+                  right: 16,
+                  bottom: 40,
+                ),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    children: [
+                      _buildUserInfo(),
+                      const SizedBox(height: 24),
+                      _buildUnifiedInfoCard(),
+                      const SizedBox(height: 16),
+                      _buildQuickActions(),
+                      const SizedBox(height: 24),
+                      if (_user!.calendlyUrl != null &&
+                          _user!.calendlyUrl!.isNotEmpty &&
+                          _user!.calendlyUrl!.length > 5)
+                        _buildCalendlyCard(),
+                      const SizedBox(height: 24),
+                      _buildPostsList(),
+                      const SizedBox(height: 60),
+                    ],
+                  ),
+                ),
               ),
-              elevation: 2,
-            ),
+              // 2. Avatar Flotante (Superpuesto)
+              Positioned(
+                top: -45, // Avatar centrado entre verde y blanco
+                child: _buildBigAvatar(),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  // ===================== PERFIL =====================
-
-  Widget _buildProfileScreen() {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: CustomScrollView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverAppBar(
-                expandedHeight: 280,
-                backgroundColor: _primaryGreen,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                pinned: true,
-                actions: [
-                  FavoriteButton(userId: widget.userId),
-                  const SizedBox(width: 8),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  background: _buildProfileHeader(),
-                  centerTitle: true,
-                  title: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: _showTitle ? 1.0 : 0.0,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: ClipOval(
-                            child: _user!.photoUrl.isNotEmpty
-                                ? Image.network(
-                                    ApiService.getFullImageUrl(_user!.photoUrl),
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(
-                                        Icons.person,
-                                        size: 16,
-                                        color: Colors.white,
-                                      );
-                                    },
-                                  )
-                                : Icon(
-                                    Icons.person,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            _user!.displayName,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 140,
+      pinned: true,
+      backgroundColor: _primaryGreen,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      clipBehavior: Clip.none,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: FavoriteButton(userId: widget.userId),
+        ),
+      ],
+      title: AnimatedOpacity(
+        opacity: _showCollapsedTitle ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 200),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.white,
+              backgroundImage: _user!.photoUrl.isNotEmpty
+                  ? NetworkImage(ApiService.getFullImageUrl(_user!.photoUrl))
+                  : null,
+              child: _user!.photoUrl.isEmpty
+                  ? Icon(Icons.person, size: 16, color: _primaryGreen)
+                  : null,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _user!.displayName,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
                 ),
-                shape: const ContinuousRectangleBorder(
-                  borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(40),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+      centerTitle: false,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          color: _primaryGreen,
+          child: Stack(
+            children: [
+              Positioned(
+                top: -60,
+                right: -40,
+                child: Container(
+                  width: 250,
+                  height: 250,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    shape: BoxShape.circle,
                   ),
                 ),
               ),
-              SliverList(
-                delegate: SliverChildListDelegate([
-                  _buildUserInfoSection(),
-                  if (_user!.posts != null && _user!.posts!.isNotEmpty)
-                    _buildPostsSection(),
-                  if (_user!.calendlyUrl != null &&
-                      _user!.calendlyUrl!.isNotEmpty &&
-                      _user!.calendlyUrl != ".")
-                    _buildCalendlySection(),
-                  const SizedBox(height: 40),
-                ]),
+              Positioned(
+                bottom: -20,
+                left: -20,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    shape: BoxShape.circle,
+                  ),
+                ),
               ),
             ],
           ),
@@ -465,768 +347,478 @@ class _PublicProfilePageState extends State<PublicProfilePage>
     );
   }
 
-  Widget _buildProfileHeader() {
+  Widget _buildBigAvatar() {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [_darkGreen, _primaryGreen],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -50,
-            top: -50,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            left: -30,
-            bottom: -30,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(flex: 2),
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 4),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                      BoxShadow(
-                        color: _lightGreen.withOpacity(0.4),
-                        blurRadius: 30,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: _user!.photoUrl.isNotEmpty
-                        ? Image.network(
-                            ApiService.getFullImageUrl(_user!.photoUrl),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.white,
-                                child: Icon(
-                                  Icons.person,
-                                  size: 50,
-                                  color: _primaryGreen,
-                                ),
-                              );
-                            },
-                          )
-                        : Container(
-                            color: Colors.white,
-                            child: Icon(
-                              Icons.person,
-                              size: 50,
-                              color: _primaryGreen,
-                            ),
-                          ),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  _user!.displayName,
-                  style: GoogleFonts.poppins(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _user!.email,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const Spacer(flex: 2),
-              ],
-            ),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
+      ),
+      child: CircleAvatar(
+        radius: 65,
+        backgroundColor: _softGreen,
+        backgroundImage: _user!.photoUrl.isNotEmpty
+            ? NetworkImage(ApiService.getFullImageUrl(_user!.photoUrl))
+            : null,
+        child: _user!.photoUrl.isEmpty
+            ? Icon(Icons.person, size: 65, color: _primaryGreen)
+            : null,
       ),
     );
   }
 
-  Widget _buildUserInfoSection() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
+  Widget _buildUserInfo() {
+    return Column(
+      children: [
+        Text(
+          _user!.displayName,
+          style: GoogleFonts.poppins(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+            height: 1.2,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _user!.email,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w400,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUnifiedInfoCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _softGreen,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryGreen.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeOutBack,
-            child: Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+          Row(
+            children: [
+              Expanded(
+                child: _buildCompactInfoItem(
+                  icon: Icons.school_rounded,
+                  label: "Semestre",
+                  value: "${_user!.semester}º",
+                  color: Colors.blue,
+                ),
               ),
-              shadowColor: _primaryGreen.withOpacity(0.2),
+              Container(
+                width: 1,
+                height: 40,
+                color: _primaryGreen.withOpacity(0.1),
+              ),
+              Expanded(
+                child: _buildCompactInfoItem(
+                  icon: Icons.work_rounded,
+                  label: "Carrera",
+                  value: _user!.career ?? "N/A",
+                  color: Colors.purple,
+                ),
+              ),
+            ],
+          ),
+          if (_user!.phone != null && _user!.phone!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Divider(height: 1, color: _primaryGreen.withOpacity(0.1)),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () => _launchPhone(_user!.phone!),
+              borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    _buildInfoRow(
-                      icon: Icons.school_rounded,
-                      title: 'Semestre Actual',
-                      value: '${_user!.semester}º Semestre',
-                      color: Colors.blue,
-                    ),
-                    const SizedBox(height: 16),
-                    if (_user!.career != null && _user!.career!.isNotEmpty)
-                      _buildInfoRow(
-                        icon: Icons.work_rounded,
-                        title: 'Carrera',
-                        value: _user!.career!,
-                        color: Colors.purple,
-                      ),
-                    if (_user!.career != null && _user!.career!.isNotEmpty)
-                      const SizedBox(height: 16),
-                    _buildPhoneRow(),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Botón Ver Respuestas
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserRepliesPage(
-                      userId: widget.userId,
-                      userName: _user!.displayName.split(' ').first,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.comment, size: 18),
-              label: Text(
-                'Ver Respuestas',
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryGreen,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-                shadowColor: _primaryGreen.withOpacity(0.3),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Botón Ver Favoritos
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserFavoritesPage(
-                      userId: widget.userId,
-                      userName: _user!.displayName.split(' ').first,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.favorite, size: 18),
-              label: Text(
-                'Ver Favoritos',
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: _primaryGreen,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: _primaryGreen, width: 2),
-                ),
-                elevation: 2,
-                shadowColor: _primaryGreen.withOpacity(0.3),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [color.withOpacity(0.8), color],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: GoogleFonts.poppins(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPhoneRow() {
-    final hasPhone = _user!.phone != null && _user!.phone!.isNotEmpty;
-    final phoneText = hasPhone
-        ? _formatPhoneNumber(_user!.phone!)
-        : 'No disponible';
-
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: hasPhone
-                  ? [Colors.green.withOpacity(0.8), Colors.green]
-                  : [Colors.grey.withOpacity(0.8), Colors.grey],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: (hasPhone ? Colors.green : Colors.grey).withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.phone_rounded, color: Colors.white, size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Teléfono de Contacto',
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                phoneText,
-                style: GoogleFonts.poppins(
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                  color: hasPhone ? Colors.grey[800] : Colors.grey[500],
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (hasPhone)
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: IconButton(
-              icon: Icon(Icons.phone_outlined, color: Colors.green[700]),
-              onPressed: () {
-                // aquí podrías integrar url_launcher si quieres llamar directo
-              },
-            ),
-          ),
-      ],
-    );
-  }
-
-  // ===================== POSTS DEL USUARIO =====================
-
-  Widget _buildPostsSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _primaryGreen,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.dynamic_feed_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Publicaciones',
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: _darkGreen,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _accentGreen,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${_user!.posts!.length}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: _darkGreen,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ..._user!.posts!.asMap().entries.map((entry) {
-            final index = entry.key;
-            final post = entry.value;
-            return _buildAnimatedPostCard(post, index);
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnimatedPostCard(Post post, int index) {
-    final animationController = _postAnimations[index];
-
-    if (animationController == null) {
-      return _buildPostCard(post);
-    }
-
-    return AnimatedBuilder(
-      animation: animationController,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, (1 - animationController.value) * 20),
-          child: Opacity(opacity: animationController.value, child: child),
-        );
-      },
-      child: _buildPostCard(post),
-    );
-  }
-
-  Widget _buildPostCard(Post post) {
-    final hasCalendly =
-        post.calendlyUrl != null &&
-        post.calendlyUrl!.isNotEmpty &&
-        post.calendlyUrl != '.' &&
-        post.calendlyUrl != 'string';
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: GestureDetector(
-        onTap: () => _navigateToPostDetail(post),
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              shadowColor: _primaryGreen.withOpacity(0.1),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white,
-                      _getRoleColor(post.role).withOpacity(0.03),
-                    ],
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header rol
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getRoleColor(post.role).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: _getRoleColor(post.role),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _getRoleIcon(post.role),
-                                  size: 14,
-                                  color: _getRoleColor(post.role),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  _getRoleText(post.role),
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: _getRoleColor(post.role),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (post.status != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getStatusColor(
-                                  post.status!,
-                                ).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                _getStatusText(post.status!),
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: _getStatusColor(post.status!),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Título
-                      Text(
-                        post.title,
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: _darkGreen,
-                          height: 1.3,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      // Contenido
-                      Text(
-                        post.contentPreview ?? post.content,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                          height: 1.5,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 16),
-                      // Footer
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          if (post.subjectName != null &&
-                              post.subjectName!.isNotEmpty)
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.book_outlined,
-                                    size: 16,
-                                    color: _primaryGreen,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      post.subjectName!,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 13,
-                                        color: _primaryGreen,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _formatDate(post.createdAt.toIso8601String()),
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.grey[500],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (hasCalendly) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          height: 1,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.transparent,
-                                _accentGreen.withOpacity(0.3),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => Scaffold(
-                                    appBar: AppBar(
-                                      title: Text(
-                                        'Agendar cita - ${post.title}',
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      backgroundColor: _primaryGreen,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                    body: CalendlyInlineWidget(
-                                      calendlyUrl: post.calendlyUrl!,
-                                      height:
-                                          MediaQuery.of(context).size.height *
-                                          0.8,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.calendar_today_rounded,
-                              size: 18,
-                            ),
-                            label: Text(
-                              'Agendar cita',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _primaryGreen,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 2,
-                              shadowColor: _primaryGreen.withOpacity(0.3),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ===================== CALENDLY =====================
-
-  Widget _buildCalendlySection() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeOutBack,
-        child: Card(
-          elevation: 8,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          shadowColor: _primaryGreen.withOpacity(0.2),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: _primaryGreen,
-                        borderRadius: BorderRadius.circular(12),
+                        color: _primaryGreen.withOpacity(0.1),
+                        shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.calendar_month_rounded,
-                        color: Colors.white,
-                        size: 24,
+                      child: Icon(
+                        Icons.phone_rounded,
+                        size: 20,
+                        color: _primaryGreen,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Agenda una cita',
+                      _user!.phone!,
                       style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: _darkGreen,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Coordina una reunión directamente con ${_user!.displayName.split(' ').first}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    color: Colors.grey[700],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactInfoItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 20, color: color),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        Text(
+          label,
+          style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: _primaryGreen,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: _borderGreen, width: 1.2),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildActionButton(
+            icon: Icons.chat_bubble_outline_rounded,
+            label: "Respuestas",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserRepliesPage(
+                    userId: widget.userId,
+                    userName: _user!.displayName.split(' ').first,
                   ),
                 ),
-                const SizedBox(height: 20),
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildActionButton(
+            icon: Icons.favorite_border_rounded,
+            label: "Favoritos",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserFavoritesPage(
+                    userId: widget.userId,
+                    userName: _user!.displayName.split(' ').first,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCalendlyCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _calendlyBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _calendlyPurple.withOpacity(0.1)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: _openCalendly,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
                 Container(
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _primaryGreen.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                    color: _calendlyIconBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.calendar_month_rounded,
+                    color: _calendlyPurple,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Agenda una cita",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: _calendlyPurple,
+                        ),
+                      ),
+                      Text(
+                        "Conecta vía Calendly",
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: CalendlyInlineWidget(
-                      calendlyUrl: _user!.calendlyUrl!,
-                      height: 650,
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _calendlyPurple.withOpacity(0.5)),
+                  ),
+                  child: Text(
+                    "Agendar",
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _calendlyPurple,
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPostsList() {
+    if (_user!.posts == null || _user!.posts!.isEmpty) return const SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 16),
+          child: Text(
+            "Publicaciones recientes",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        ListView.separated(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _user!.posts!.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            final post = _user!.posts![index];
+            return _buildPostCard(post);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPostCard(Post post) {
+    final roleColor = _getRoleColor(post.role);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: _borderGreen),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => PostDetailPage(post: post)),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: roleColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getRoleIcon(post.role),
+                            size: 14,
+                            color: roleColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _getRoleText(post.role),
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: roleColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      _formatDate(post.createdAt),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  post.title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  post.content,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: Colors.grey[600],
+                    height: 1.5,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                if (post.subjectName != null && post.subjectName!.isNotEmpty)
+                  Row(
+                    children: [
+                      Icon(Icons.book_outlined, size: 16, color: _primaryGreen),
+                      const SizedBox(width: 6),
+                      Text(
+                        post.subjectName!,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: _primaryGreen,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),

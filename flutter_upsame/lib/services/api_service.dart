@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:5034';
+  static const String baseUrl = 'https://upsameapi.azurewebsites.net';
   static String? _accessToken;
   static String? _refreshToken;
 
@@ -13,11 +13,17 @@ class ApiService {
   // Si la URL ya es completa (Azure Blob), la devuelve tal cual
   // Si es relativa, la concatena con baseUrl
   static String getFullImageUrl(String? imageUrl) {
-    if (imageUrl == null || imageUrl.isEmpty) return '';
+    if (imageUrl == null || imageUrl.isEmpty) {
+      print('getFullImageUrl: imageUrl is null or empty');
+      return '';
+    }
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      print('getFullImageUrl: $imageUrl (already complete)');
       return imageUrl; // URL completa de Azure Blob
     }
-    return '$baseUrl$imageUrl'; // URL relativa
+    final fullUrl = '$baseUrl$imageUrl';
+    print('getFullImageUrl: $imageUrl -> $fullUrl');
+    return fullUrl; // URL relativa
   }
 
   // --------------------------
@@ -130,6 +136,14 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
+      print('========================================');
+      print('GET AVATARS - RESPONSE');
+      print('Received ${data.length} avatars');
+      if (data.isNotEmpty) {
+        print('First avatar example:');
+        print(json.encode(data[0]));
+      }
+      print('========================================');
       return data.map((json) => Avatar.fromJson(json)).toList();
     } else {
       throw Exception('Error al cargar avatares');
