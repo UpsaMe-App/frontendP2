@@ -29,14 +29,23 @@ class _PublicProfilePageState extends State<PublicProfilePage>
   bool _isLoading = false;
   bool _showCollapsedTitle = false;
 
-  // Paleta de colores
-  final Color _primaryGreen = const Color(0xFF2E7D32);
+  // Paleta de colores - Premium Edition
   final Color _darkGreen = const Color(0xFF1B5E20);
+  final Color _primaryGreen = const Color(0xFF2E7D32);
+  final Color _mediumGreen = const Color(0xFF43A047);
+  final Color _lightGreen = const Color(0xFF66BB6A);
   final Color _softGreen = const Color(0xFFE8F5E9);
   final Color _borderGreen = const Color(0xFFC8E6C9);
+  final Color _accentGreen = const Color(0xFF00C853);
 
-  // Paleta Calendly (Lila Pastel)
-  final Color _calendlyBg = const Color(0xFFF5EDFF);
+  // Grises cálidos
+  final Color _warmGray600 = const Color(0xFF757575);
+  final Color _warmGray800 = const Color(0xFF424242);
+
+  // Paleta Calendly (Lila Pastel) - Enhanced
+  final Color _calendlyBg = const Color(0xFFF8F0FF);
+  final Color _calendlyBgGradient = const Color(0xFFF5EDFF);
+  final Color _calendlyBgEnd = const Color(0xFFEDE7F6);
   final Color _calendlyPurple = const Color(0xFF7B1FA2);
   final Color _calendlyIconBg = const Color(0xFFD1C4E9);
 
@@ -173,9 +182,9 @@ class _PublicProfilePageState extends State<PublicProfilePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _primaryGreen,
+      backgroundColor: Colors.white,
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: Colors.white))
+          ? Center(child: CircularProgressIndicator(color: _primaryGreen))
           : _user == null
           ? _buildErrorState()
           : _buildContent(),
@@ -206,169 +215,180 @@ class _PublicProfilePageState extends State<PublicProfilePage>
   }
 
   Widget _buildContent() {
-    return CustomScrollView(
-      controller: _scrollController,
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        _buildSliverAppBar(),
-        SliverToBoxAdapter(
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.topCenter,
-            children: [
-              // 1. Contenedor Blanco (Sheet)
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-                ),
-                padding: const EdgeInsets.only(
-                  top: 65, // Espacio para la mitad inferior del avatar + margen
-                  left: 16,
-                  right: 16,
-                  bottom: 40,
-                ),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Column(
-                    children: [
-                      _buildUserInfo(),
-                      const SizedBox(height: 24),
-                      _buildUnifiedInfoCard(),
-                      const SizedBox(height: 16),
-                      _buildQuickActions(),
-                      const SizedBox(height: 24),
-                      if (_user!.calendlyUrl != null &&
-                          _user!.calendlyUrl!.isNotEmpty &&
-                          _user!.calendlyUrl!.length > 5)
-                        _buildCalendlyCard(),
-                      const SizedBox(height: 24),
-                      _buildPostsList(),
-                      const SizedBox(height: 60),
-                    ],
-                  ),
-                ),
-              ),
-              // 2. Avatar Flotante (Superpuesto)
-              Positioned(
-                top: -45, // Avatar centrado entre verde y blanco
-                child: _buildBigAvatar(),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: CustomScrollView(
+        controller: _scrollController,
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // SliverAppBar verde profesional
+          SliverAppBar(
+            expandedHeight: 60, // Barra mínima
+            pinned: true,
+            backgroundColor: _primaryGreen,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: FavoriteButton(userId: widget.userId),
               ),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSliverAppBar() {
-    return SliverAppBar(
-      expandedHeight: 140,
-      pinned: true,
-      backgroundColor: _primaryGreen,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      clipBehavior: Clip.none,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: FavoriteButton(userId: widget.userId),
-        ),
-      ],
-      title: AnimatedOpacity(
-        opacity: _showCollapsedTitle ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 200),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.white,
-              backgroundImage: _user!.photoUrl.isNotEmpty
-                  ? NetworkImage(ApiService.getFullImageUrl(_user!.photoUrl))
-                  : null,
-              child: _user!.photoUrl.isEmpty
-                  ? Icon(Icons.person, size: 16, color: _primaryGreen)
-                  : null,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                _user!.displayName,
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            title: AnimatedOpacity(
+              opacity: _showCollapsedTitle ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Colors.white,
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundImage: _user!.photoUrl.isNotEmpty
+                          ? NetworkImage(ApiService.getFullImageUrl(_user!.photoUrl))
+                          : null,
+                      backgroundColor: _softGreen,
+                      child: _user!.photoUrl.isEmpty
+                          ? Icon(Icons.person, size: 16, color: _primaryGreen)
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _user!.displayName,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-      centerTitle: false,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          color: _primaryGreen,
-          child: Stack(
-            children: [
-              Positioned(
-                top: -60,
-                right: -40,
-                child: Container(
-                  width: 250,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    shape: BoxShape.circle,
+            centerTitle: false,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [_darkGreen, _primaryGreen, _mediumGreen],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
               ),
-              Positioned(
-                bottom: -20,
-                left: -20,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          // Contenido sin superposición - limpio y profesional
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  const SizedBox(height: 24), // Espacio limpio después del header
+                  // Avatar grande centrado
+                  _buildBigAvatar(),
+                  const SizedBox(height: 16),
+                  _buildUserInfo(),
+                  const SizedBox(height: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        _buildUnifiedInfoCard(),
+                        const SizedBox(height: 16),
+                        _buildQuickActions(),
+                        const SizedBox(height: 24),
+                        if (_user!.calendlyUrl != null &&
+                            _user!.calendlyUrl!.isNotEmpty &&
+                            _user!.calendlyUrl!.length > 5)
+                          _buildCalendlyCard(),
+                        const SizedBox(height: 24),
+                        _buildPostsList(),
+                        const SizedBox(height: 60),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBigAvatar() {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 600),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.elasticOut,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: child,
+        );
+      },
+      child: Container(
+        width: 150,
+        height: 150,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [_accentGreen, _primaryGreen],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: CircleAvatar(
-        radius: 65,
-        backgroundColor: _softGreen,
-        backgroundImage: _user!.photoUrl.isNotEmpty
-            ? NetworkImage(ApiService.getFullImageUrl(_user!.photoUrl))
-            : null,
-        child: _user!.photoUrl.isEmpty
-            ? Icon(Icons.person, size: 65, color: _primaryGreen)
-            : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 30,
+              offset: const Offset(0, 12),
+            ),
+            BoxShadow(
+              color: _primaryGreen.withOpacity(0.4),
+              blurRadius: 40,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(5),
+        child: Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          ),
+          padding: const EdgeInsets.all(5),
+          child: ClipOval(
+            child: _user!.photoUrl.isNotEmpty
+                ? Image.network(
+                    ApiService.getFullImageUrl(_user!.photoUrl),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: _softGreen,
+                      child: Icon(
+                        Icons.person,
+                        size: 70,
+                        color: _primaryGreen,
+                      ),
+                    ),
+                  )
+                : Container(
+                    color: _softGreen,
+                    child: Icon(
+                      Icons.person,
+                      size: 70,
+                      color: _primaryGreen,
+                    ),
+                  ),
+          ),
+        ),
       ),
     );
   }
@@ -379,8 +399,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
         Text(
           _user!.displayName,
           style: GoogleFonts.poppins(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
             color: Colors.black87,
             height: 1.2,
           ),
@@ -390,8 +410,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
         Text(
           _user!.email,
           style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: Colors.grey[600],
+            fontSize: 15,
+            color: _warmGray600,
             fontWeight: FontWeight.w400,
           ),
           textAlign: TextAlign.center,
@@ -405,13 +425,29 @@ class _PublicProfilePageState extends State<PublicProfilePage>
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _softGreen,
-        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            _softGreen,
+            _softGreen.withOpacity(0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: _primaryGreen.withOpacity(0.15),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: _primaryGreen.withOpacity(0.05),
+            color: _primaryGreen.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.white.withOpacity(0.8),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(-2, -2),
           ),
         ],
       ),
@@ -430,7 +466,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
               Container(
                 width: 1,
                 height: 40,
-                color: _primaryGreen.withOpacity(0.1),
+                color: _primaryGreen.withOpacity(0.15),
               ),
               Expanded(
                 child: _buildCompactInfoItem(
@@ -444,38 +480,63 @@ class _PublicProfilePageState extends State<PublicProfilePage>
           ),
           if (_user!.phone != null && _user!.phone!.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Divider(height: 1, color: _primaryGreen.withOpacity(0.1)),
+            Divider(height: 1, color: _primaryGreen.withOpacity(0.15)),
             const SizedBox(height: 16),
-            InkWell(
-              onTap: () => _launchPhone(_user!.phone!),
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: _primaryGreen.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.phone_rounded,
-                        size: 20,
-                        color: _primaryGreen,
-                      ),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _launchPhone(_user!.phone!),
+                borderRadius: BorderRadius.circular(16),
+                splashColor: _primaryGreen.withOpacity(0.2),
+                highlightColor: _primaryGreen.withOpacity(0.1),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.6),
+                        Colors.white.withOpacity(0.3),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      _user!.phone!,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _primaryGreen.withOpacity(0.2),
+                      width: 1,
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              _primaryGreen.withOpacity(0.15),
+                              _accentGreen.withOpacity(0.1),
+                            ],
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.phone_rounded,
+                          size: 22,
+                          color: _primaryGreen,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        _user!.phone!,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -526,31 +587,59 @@ class _PublicProfilePageState extends State<PublicProfilePage>
     required String label,
     required VoidCallback onTap,
   }) {
-    return ElevatedButton(
-      onPressed: onTap,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: _primaryGreen,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: _borderGreen, width: 1.2),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 18),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryGreen.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          splashColor: _primaryGreen.withOpacity(0.2),
+          highlightColor: _primaryGreen.withOpacity(0.1),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white,
+                  _softGreen.withOpacity(0.3),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _primaryGreen.withOpacity(0.25),
+                width: 2,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 20, color: _primaryGreen),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _primaryGreen,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -600,30 +689,64 @@ class _PublicProfilePageState extends State<PublicProfilePage>
   Widget _buildCalendlyCard() {
     return Container(
       decoration: BoxDecoration(
-        color: _calendlyBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _calendlyPurple.withOpacity(0.1)),
+        gradient: LinearGradient(
+          colors: [
+            _calendlyBg,
+            _calendlyBgGradient,
+            _calendlyBgEnd,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: _calendlyPurple.withOpacity(0.2),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _calendlyPurple.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: InkWell(
           onTap: _openCalendly,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
+          splashColor: _calendlyPurple.withOpacity(0.1),
+          highlightColor: _calendlyPurple.withOpacity(0.05),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: _calendlyIconBg,
+                    gradient: LinearGradient(
+                      colors: [
+                        _calendlyIconBg,
+                        _calendlyIconBg.withOpacity(0.7),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: _calendlyPurple.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Icon(
                     Icons.calendar_month_rounded,
                     color: _calendlyPurple,
-                    size: 24,
+                    size: 26,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -634,16 +757,17 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                       Text(
                         "Agenda una cita",
                         style: GoogleFonts.poppins(
-                          fontSize: 16,
+                          fontSize: 17,
                           fontWeight: FontWeight.bold,
                           color: _calendlyPurple,
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         "Conecta vía Calendly",
                         style: GoogleFonts.poppins(
                           fontSize: 13,
-                          color: Colors.grey[600],
+                          color: _warmGray600,
                         ),
                       ),
                     ],
@@ -651,19 +775,36 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                    horizontal: 18,
+                    vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white,
+                        Colors.white.withOpacity(0.9),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _calendlyPurple.withOpacity(0.5)),
+                    border: Border.all(
+                      color: _calendlyPurple.withOpacity(0.5),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _calendlyPurple.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Text(
                     "Agendar",
                     style: GoogleFonts.poppins(
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: _calendlyPurple,
                     ),
                   ),
@@ -713,20 +854,35 @@ class _PublicProfilePageState extends State<PublicProfilePage>
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            roleColor.withOpacity(0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: roleColor.withOpacity(0.15),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: roleColor.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: _borderGreen),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: InkWell(
           onTap: () {
             Navigator.push(
@@ -734,9 +890,11 @@ class _PublicProfilePageState extends State<PublicProfilePage>
               MaterialPageRoute(builder: (_) => PostDetailPage(post: post)),
             );
           },
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
+          splashColor: roleColor.withOpacity(0.1),
+          highlightColor: roleColor.withOpacity(0.05),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -745,26 +903,37 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: 12,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: roleColor.withOpacity(0.1),
+                        gradient: LinearGradient(
+                          colors: [
+                            roleColor.withOpacity(0.12),
+                            roleColor.withOpacity(0.08),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: roleColor.withOpacity(0.2),
+                          width: 1,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             _getRoleIcon(post.role),
-                            size: 14,
+                            size: 16,
                             color: roleColor,
                           ),
                           const SizedBox(width: 6),
                           Text(
                             _getRoleText(post.role),
                             style: GoogleFonts.poppins(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: roleColor,
                             ),
@@ -776,18 +945,19 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                       _formatDate(post.createdAt),
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Colors.grey[400],
+                        color: _warmGray600.withOpacity(0.7),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 Text(
                   post.title,
                   style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
                     color: Colors.black87,
+                    height: 1.3,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -796,8 +966,8 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 Text(
                   post.content,
                   style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    color: Colors.grey[600],
+                    fontSize: 14,
+                    color: _warmGray600,
                     height: 1.5,
                   ),
                   maxLines: 2,
@@ -805,19 +975,39 @@ class _PublicProfilePageState extends State<PublicProfilePage>
                 ),
                 const SizedBox(height: 12),
                 if (post.subjectName != null && post.subjectName!.isNotEmpty)
-                  Row(
-                    children: [
-                      Icon(Icons.book_outlined, size: 16, color: _primaryGreen),
-                      const SizedBox(width: 6),
-                      Text(
-                        post.subjectName!,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: _primaryGreen,
-                          fontWeight: FontWeight.w500,
-                        ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          _primaryGreen.withOpacity(0.08),
+                          _accentGreen.withOpacity(0.05),
+                        ],
                       ),
-                    ],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _primaryGreen.withOpacity(0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.book_outlined, size: 14, color: _primaryGreen),
+                        const SizedBox(width: 6),
+                        Text(
+                          post.subjectName!,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: _primaryGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
