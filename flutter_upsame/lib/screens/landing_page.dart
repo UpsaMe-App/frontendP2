@@ -73,7 +73,6 @@ class _LandingPageState extends State<LandingPage>
       vsync: this,
     )..repeat();
 
-    // Dejo un valor grande para que cubra pantallas altas; visualmente funciona bien en todos
     _fallingAnimation = Tween<double>(begin: -100, end: 1200).animate(
       CurvedAnimation(parent: _fallingLeavesController, curve: Curves.linear),
     );
@@ -208,9 +207,8 @@ class _LandingPageState extends State<LandingPage>
   }
 
   Widget _buildHeroSection() {
-    // ✅ Hero adaptado: llena pantalla en iPhone 14 Pro y otros móviles altos
     final double heroHeight = _isMobile
-        ? max(620, _screenHeight) // en iPhone 14 Pro ≈ 844, queda full-screen
+        ? max(620, _screenHeight)
         : max(750, _screenHeight * 0.9);
 
     return SizedBox(
@@ -293,7 +291,6 @@ class _LandingPageState extends State<LandingPage>
 
           // Header with navigation
           Positioned(
-            // ✅ Respeta notch / dynamic island
             top: _viewPadding.top + (_isMobile ? 12 : 24),
             left: 0,
             right: 0,
@@ -460,48 +457,62 @@ class _LandingPageState extends State<LandingPage>
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(30),
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: Column(
             children: [
               Container(
                 width: 60,
                 height: 4,
+                margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 30),
-              _buildMobileNavItem(
-                '¿QUIÉNES SOMOS?',
-                Icons.people_alt_rounded,
-                _showAboutUsPage,
-              ),
-              const SizedBox(height: 20),
-              _buildMobileNavItem(
-                '¿QUÉ HACEMOS?',
-                Icons.help_rounded,
-                _scrollToTutorial,
-              ),
-              const SizedBox(height: 20),
-              _buildMobileNavItem(
-                'UNITE',
-                Icons.rocket_launch_rounded,
-                _navigateToLogin,
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(15),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    _buildMobileNavItem(
+                      '¿QUIÉNES SOMOS?',
+                      Icons.people_alt_rounded,
+                      _showAboutUsPage,
+                    ),
+                    const SizedBox(height: 15),
+                    _buildMobileNavItem(
+                      '¿QUÉ HACEMOS?',
+                      Icons.help_rounded,
+                      _scrollToTutorial,
+                    ),
+                    const SizedBox(height: 15),
+                    _buildMobileNavItem(
+                      'UNITE',
+                      Icons.rocket_launch_rounded,
+                      _navigateToLogin,
+                    ),
+                  ],
                 ),
-                child: Text(
-                  'UpsaMe - Conectando la comunidad académica',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 12,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    'UpsaMe - Conectando la comunidad académica',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
@@ -566,7 +577,6 @@ class _LandingPageState extends State<LandingPage>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Left side - Text content
           Expanded(
             flex: 3,
             child: Column(
@@ -634,8 +644,6 @@ class _LandingPageState extends State<LandingPage>
             ),
           ),
           SizedBox(width: _isTablet ? 40 : 80),
-
-          // Right side - Owl animation
           if (!_isTablet)
             Expanded(
               flex: 2,
@@ -713,7 +721,6 @@ class _LandingPageState extends State<LandingPage>
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           20,
-          // ✅ Baja un poco respetando notch / status bar
           80 + _viewPadding.top * 0.4,
           20,
           20,
@@ -728,7 +735,7 @@ class _LandingPageState extends State<LandingPage>
                 'UN ESPACIO DISEÑADO PARA VINCULAR AYUDANTES Y ESTUDIANTES. FACILITAR LA COORDINACIÓN ACADÉMICA Y UNIFICAR TODA LA INFORMACIÓN EN UN SOLO LUGAR',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                  fontSize: 24, // Aumentado de 20
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   height: 1.4,
@@ -742,11 +749,11 @@ class _LandingPageState extends State<LandingPage>
                 ),
               ),
             ),
-            const SizedBox(height: 50), // Aumentado de 40
+            const SizedBox(height: 50),
             Column(
               children: [
                 Container(
-                  height: 280, // Aumentado de 200
+                  height: 280,
                   margin: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
@@ -775,7 +782,7 @@ class _LandingPageState extends State<LandingPage>
                           ),
                           child: const Icon(
                             Icons.flutter_dash,
-                            size: 100, // Aumentado de 80
+                            size: 100,
                             color: Colors.white,
                           ),
                         );
@@ -783,11 +790,11 @@ class _LandingPageState extends State<LandingPage>
                     ),
                   ),
                 ),
-                const SizedBox(height: 20), // Aumentado de 15
+                const SizedBox(height: 20),
                 Text(
                   '¡VOS PODÉS!',
                   style: GoogleFonts.pacifico(
-                    fontSize: 42, // Aumentado de 36
+                    fontSize: 42,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     shadows: [
@@ -806,7 +813,7 @@ class _LandingPageState extends State<LandingPage>
                 ),
               ],
             ),
-            const SizedBox(height: 50), // Aumentado de 40
+            const SizedBox(height: 50),
             ScaleTransition(
               scale: _pulseAnimation,
               child: MouseRegion(
@@ -817,8 +824,8 @@ class _LandingPageState extends State<LandingPage>
                     backgroundColor: const Color(0xFFFF6B6B),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 40, // Aumentado de 30
-                      vertical: 20, // Aumentado de 16
+                      horizontal: 40,
+                      vertical: 20,
                     ),
                     elevation: 6,
                     shadowColor: const Color(0xFFFF6B6B).withOpacity(0.3),
@@ -826,7 +833,7 @@ class _LandingPageState extends State<LandingPage>
                       borderRadius: BorderRadius.circular(10),
                     ),
                     textStyle: GoogleFonts.poppins(
-                      fontSize: 20, // Aumentado de 16
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -834,11 +841,11 @@ class _LandingPageState extends State<LandingPage>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('UNITE'),
-                      SizedBox(width: 12), // Aumentado de 10
+                      SizedBox(width: 12),
                       Icon(
                         Icons.rocket_launch_rounded,
                         size: 24,
-                      ), // Aumentado de 18
+                      ),
                     ],
                   ),
                 ),
@@ -1153,11 +1160,9 @@ class _LandingPageState extends State<LandingPage>
   }
 
   Widget _buildMobileSteps() {
-    return ListView(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+    return Column(
       children: [
-        _buildMobileStepCard(
+        _buildStepCard(
           step: 1,
           title: 'REGÍSTRATE',
           description:
@@ -1165,22 +1170,22 @@ class _LandingPageState extends State<LandingPage>
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 20),
-        _buildMobileStepCard(
+        _buildStepCard(
           step: 2,
           title: 'EXPLORA EL HOME',
           description: 'Accede a todos los posts publicados.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 20),
-        _buildMobileStepCard(
+        _buildStepCard(
           step: 3,
           title: 'CREA O SOLICITA AYUDANTÍAS',
           description:
-              'Los ayudantes publican horarios y materias con Calendly integrado. Los estudiantes envían solicitudes directamente desde el post.',
+              'Los ayudantes publican horarios y materias con Calendly integrado.\nLos estudiantes envían solicitudes directamente desde el post.',
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 20),
-        _buildMobileStepCard(
+        _buildStepCard(
           step: 4,
           title: 'INTERACTÚA EN LOS POSTS',
           description:
@@ -1188,7 +1193,7 @@ class _LandingPageState extends State<LandingPage>
           isVisible: _hasAnimatedTutorial,
         ),
         const SizedBox(height: 20),
-        _buildMobileStepCard(
+        _buildStepCard(
           step: 5,
           title: 'ADMINISTRA TU PERFIL',
           description:
@@ -1308,20 +1313,6 @@ class _LandingPageState extends State<LandingPage>
     );
   }
 
-  Widget _buildMobileStepCard({
-    required int step,
-    required String title,
-    required String description,
-    required bool isVisible,
-  }) {
-    return _buildStepCard(
-      step: step,
-      title: title,
-      description: description,
-      isVisible: isVisible,
-    );
-  }
-
   Widget _buildFooter() {
     return Container(
       padding: EdgeInsets.symmetric(
@@ -1431,7 +1422,6 @@ class AboutUsPage extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              // Header
               Container(
                 padding: EdgeInsets.all(isMobile ? 15 : 20),
                 decoration: BoxDecoration(
@@ -1490,8 +1480,6 @@ class AboutUsPage extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Content
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
