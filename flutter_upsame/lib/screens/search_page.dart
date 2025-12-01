@@ -92,12 +92,15 @@ class _SearchPageState extends State<SearchPage> {
       backgroundColor: greenLight.withOpacity(0.1),
       appBar: AppBar(
         backgroundColor: greenDark,
-        elevation: 2,
+        elevation: 0, // Flat for modern look
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white), // White icons
         title: Text(
           "Buscar Materias",
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
-            fontSize: 22,
+            fontSize: 20,
+            color: Colors.white, // White text
           ),
         ),
       ),
@@ -110,6 +113,7 @@ class _SearchPageState extends State<SearchPage> {
               Expanded(child: _buildPostsList()),
             ],
           ),
+          // Gradient fade at top of content
           Positioned(
             top: 0,
             left: 0,
@@ -138,51 +142,64 @@ class _SearchPageState extends State<SearchPage> {
   // SEARCH BAR
   Widget _buildSearchBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: greenDark.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: greenDark.withOpacity(0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: TextField(
-            controller: _searchController,
-            onChanged: _searchSubjects,
-            decoration: InputDecoration(
-              hintText: 'Buscar materia...',
-              hintStyle: GoogleFonts.poppins(color: Colors.grey[500]),
-              prefixIcon: Icon(Icons.search, color: greenDark),
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.75),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _searchSubjects,
+                decoration: InputDecoration(
+                  hintText: 'Buscar materia...',
+                  hintStyle: GoogleFonts.poppins(color: Colors.grey[400]),
+                  prefixIcon: Icon(Icons.search_rounded, color: green),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: green.withOpacity(0.5), width: 1.5),
+                  ),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear_rounded, color: Colors.grey[600]),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _subjects = [];
+                              _selectedSubject = null;
+                              _posts = [];
+                            });
+                          },
+                        )
+                      : null,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                ),
+                style: GoogleFonts.poppins(fontSize: 15),
               ),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(Icons.clear, color: greenDark),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _subjects = [];
-                          _selectedSubject = null;
-                          _posts = [];
-                        });
-                      },
-                    )
-                  : null,
             ),
-            style: GoogleFonts.poppins(),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -190,7 +207,10 @@ class _SearchPageState extends State<SearchPage> {
   // SUBJECT LIST
   Widget _buildSubjectsList() {
     if (_isLoadingSubjects) {
-      return const LinearProgressIndicator();
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Center(child: CircularProgressIndicator(color: green, strokeWidth: 2)),
+      );
     }
 
     if (_subjects.isEmpty) {
@@ -199,44 +219,59 @@ class _SearchPageState extends State<SearchPage> {
         padding: const EdgeInsets.all(16),
         child: Text(
           'No se encontraron materias',
-          style: GoogleFonts.poppins(fontSize: 15, color: Colors.grey[700]),
+          style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
         ),
       );
     }
 
     return Container(
-      constraints: const BoxConstraints(maxHeight: 210),
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      constraints: const BoxConstraints(maxHeight: 220),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: greenLight.withOpacity(0.4)),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: green.withOpacity(0.15),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: _subjects.length,
-        itemBuilder: (context, index) {
-          final subject = _subjects[index];
-          return ListTile(
-            leading: Icon(Icons.book, color: greenDark),
-            title: Text(
-              subject.name,
-              style: GoogleFonts.poppins(fontSize: 15),
-            ),
-            onTap: () {
-              _searchController.text = subject.name;
-              setState(() => _subjects = []);
-              _loadPostsBySubject(subject);
-            },
-          );
-        },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
+          itemCount: _subjects.length,
+          separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[100]),
+          itemBuilder: (context, index) {
+            final subject = _subjects[index];
+            return Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: greenLight.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.book_rounded, color: green, size: 20),
+                ),
+                title: Text(
+                  subject.name,
+                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+                ),
+                trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey[400]),
+                onTap: () {
+                  _searchController.text = subject.name;
+                  setState(() => _subjects = []);
+                  _loadPostsBySubject(subject);
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -245,43 +280,79 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildPostsList() {
     if (_selectedSubject == null) {
       return Center(
-        child: Text(
-          "Busca una materia",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Opacity(
+              opacity: 0.08,
+              child: Icon(
+                Icons.search_rounded,
+                size: 200,
+                color: greenDark,
+              ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 120), // Push text below icon center
+                Text(
+                  "Busca una materia",
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: greenDark.withOpacity(0.6),
+                  ),
+                ),
+                Text(
+                  "para ver publicaciones",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: greenDark.withOpacity(0.4),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     }
 
     if (_isLoadingPosts) {
-      return Center(child: CircularProgressIndicator(color: greenDark));
+      return Center(child: CircularProgressIndicator(color: green));
     }
 
     if (_posts.isEmpty) {
       return Center(
-        child: Text(
-          "No hay publicaciones",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_rounded, size: 60, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              "No hay publicaciones aún",
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       itemCount: _posts.length,
       itemBuilder: (context, index) {
-        return PostCard(
-          post: _posts[index],
-          currentUserId: widget.userId,
-          onDeleted: () => _loadPostsBySubject(_selectedSubject!),
-          onUpdated: () => _loadPostsBySubject(_selectedSubject!),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: PostCard(
+            post: _posts[index],
+            currentUserId: widget.userId,
+            onDeleted: () => _loadPostsBySubject(_selectedSubject!),
+            onUpdated: () => _loadPostsBySubject(_selectedSubject!),
+          ),
         );
       },
     );

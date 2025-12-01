@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../models/models.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://upsameapi.azurewebsites.net';
+  static const String baseUrl = 'http://localhost:5034';
   static String? _accessToken;
   static String? _refreshToken;
 

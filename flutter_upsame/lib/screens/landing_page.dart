@@ -698,141 +698,143 @@ class _LandingPageState extends State<LandingPage>
   }
 
   Widget _buildMobileContent() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        // ✅ Baja un poco respetando notch / status bar
-        80 + _viewPadding.top * 0.4,
-        20,
-        20,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: Text(
-              'UN ESPACIO DISEÑADO PARA VINCULAR AYUDANTES Y ESTUDIANTES. FACILITAR LA COORDINACIÓN ACADÉMICA Y UNIFICAR TODA LA INFORMACIÓN EN UN SOLO LUGAR',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                height: 1.4,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.3),
-                    offset: const Offset(2, 2),
-                    blurRadius: 6,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 40),
-          Column(
-            children: [
-              Container(
-                height: 200,
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: Lottie.network(
-                    'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
-                    fit: BoxFit.contain,
-                    repeat: true,
-                    animate: true,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF1A8E6B),
-                              Color(0xFF2BB673),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: const Icon(
-                          Icons.flutter_dash,
-                          size: 80,
-                          color: Colors.white,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 15),
-              Text(
-                '¡VOS PODÉS!',
-                style: GoogleFonts.pacifico(
-                  fontSize: 36,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          // ✅ Baja un poco respetando notch / status bar
+          80 + _viewPadding.top * 0.4,
+          20,
+          20,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: Text(
+                'UN ESPACIO DISEÑADO PARA VINCULAR AYUDANTES Y ESTUDIANTES. FACILITAR LA COORDINACIÓN ACADÉMICA Y UNIFICAR TODA LA INFORMACIÓN EN UN SOLO LUGAR',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 24, // Aumentado de 20
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
+                  height: 1.4,
                   shadows: [
                     Shadow(
-                      color: Colors.black.withOpacity(0.5),
-                      offset: const Offset(3, 3),
-                      blurRadius: 8,
+                      color: Colors.black.withOpacity(0.3),
+                      offset: const Offset(2, 2),
+                      blurRadius: 6,
                     ),
-                    Shadow(
-                      color: const Color(0xFF0D5C63).withOpacity(0.3),
-                      offset: const Offset(-1, -1),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-          ScaleTransition(
-            scale: _pulseAnimation,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: ElevatedButton(
-                onPressed: _navigateToLogin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF6B6B),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 16,
-                  ),
-                  elevation: 6,
-                  shadowColor: const Color(0xFFFF6B6B).withOpacity(0.3),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  textStyle: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('UNITE'),
-                    SizedBox(width: 10),
-                    Icon(Icons.rocket_launch_rounded, size: 18),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 50), // Aumentado de 40
+            Column(
+              children: [
+                Container(
+                  height: 280, // Aumentado de 200
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: Lottie.network(
+                      'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
+                      fit: BoxFit.contain,
+                      repeat: true,
+                      animate: true,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF1A8E6B),
+                                Color(0xFF2BB673),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Icon(
+                            Icons.flutter_dash,
+                            size: 100, // Aumentado de 80
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20), // Aumentado de 15
+                Text(
+                  '¡VOS PODÉS!',
+                  style: GoogleFonts.pacifico(
+                    fontSize: 42, // Aumentado de 36
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.5),
+                        offset: const Offset(3, 3),
+                        blurRadius: 8,
+                      ),
+                      Shadow(
+                        color: const Color(0xFF0D5C63).withOpacity(0.3),
+                        offset: const Offset(-1, -1),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 50), // Aumentado de 40
+            ScaleTransition(
+              scale: _pulseAnimation,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: ElevatedButton(
+                  onPressed: _navigateToLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF6B6B),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40, // Aumentado de 30
+                      vertical: 20, // Aumentado de 16
+                    ),
+                    elevation: 6,
+                    shadowColor: const Color(0xFFFF6B6B).withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: GoogleFonts.poppins(
+                      fontSize: 20, // Aumentado de 16
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('UNITE'),
+                      SizedBox(width: 12), // Aumentado de 10
+                      Icon(Icons.rocket_launch_rounded, size: 24), // Aumentado de 18
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1234,77 +1236,71 @@ class _LandingPageState extends State<LandingPage>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    color.withOpacity(0.05),
-                    Colors.white.withOpacity(0.8),
+                    color.withOpacity(0.2),
+                    Colors.white.withOpacity(0.1),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(
-                  color: color.withOpacity(0.1),
+                  color: Colors.white.withOpacity(0.2),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withOpacity(0.1),
                     blurRadius: 10,
-                    offset: const Offset(0, 3),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withOpacity(0.3),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: color.withOpacity(0.5),
+                              width: 1,
+                            ),
                           ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          step.toString(),
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
+                          child: Text(
+                            '$step',
                             style: GoogleFonts.poppins(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            description,
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Text(
+                            title,
                             style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
-                              height: 1.4,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      description,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.8),
+                        height: 1.5,
                       ),
                     ),
                   ],
@@ -1323,119 +1319,16 @@ class _LandingPageState extends State<LandingPage>
     required String description,
     required bool isVisible,
   }) {
-    final colors = [
-      const Color(0xFFFF6B6B),
-      const Color(0xFF4ECDC4),
-      const Color(0xFF45B7D1),
-      const Color(0xFF96CEB4),
-      const Color(0xFFFFE66D),
-      const Color(0xFFC44569),
-    ];
-
-    final color = colors[(step - 1) % colors.length];
-
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 600 + (step * 100)),
-      curve: Curves.easeOut,
-      transform: Matrix4.translationValues(0, isVisible ? 0 : 30, 0),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(15),
-            child: Ink(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    color.withOpacity(0.05),
-                    Colors.white.withOpacity(0.8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: color.withOpacity(0.1),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          step.toString(),
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            description,
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color: Colors.white.withOpacity(0.9),
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return _buildStepCard(
+      step: step,
+      title: title,
+      description: description,
+      isVisible: isVisible,
     );
   }
 
   Widget _buildFooter() {
     return Container(
-      width: double.infinity,
       padding: EdgeInsets.symmetric(
         vertical: _isMobile ? 30 : 50,
         horizontal: _isMobile ? 20 : 40,
@@ -1773,32 +1666,36 @@ class AboutUsPage extends StatelessWidget {
         Center(
           child: Container(
             padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 20 : 30,
-              vertical: isMobile ? 12 : 15,
+              horizontal: isMobile ? 24 : 40,
+              vertical: isMobile ? 12 : 16,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D5C63),
-              borderRadius:
-                  BorderRadius.circular(isMobile ? 20 : 25),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0D5C63), Color(0xFF1A8E6B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+                  color: const Color(0xFF1A8E6B).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
             child: Text(
               'NUESTRO EQUIPO',
               style: GoogleFonts.poppins(
-                fontSize: isMobile ? 20 : 24,
+                fontSize: isMobile ? 18 : 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
+                letterSpacing: 1.2,
               ),
             ),
           ),
         ),
-        SizedBox(height: isMobile ? 20 : 30),
+        SizedBox(height: isMobile ? 40 : 60),
         if (isMobile)
           _buildMobileTeamGrid()
         else if (isTablet)
@@ -1814,10 +1711,10 @@ class AboutUsPage extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 4,
-      crossAxisSpacing: 20,
-      mainAxisSpacing: 20,
-      childAspectRatio: 0.8,
-      children: _buildTeamMembers(false),
+      mainAxisSpacing: 30,
+      crossAxisSpacing: 30,
+      childAspectRatio: 0.75,
+      children: _buildTeamMembers(isMobile: false),
     );
   }
 
@@ -1826,72 +1723,59 @@ class AboutUsPage extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      crossAxisSpacing: 20,
-      mainAxisSpacing: 20,
-      childAspectRatio: 1.1,
-      children: _buildTeamMembers(false),
+      mainAxisSpacing: 30,
+      crossAxisSpacing: 30,
+      childAspectRatio: 0.8,
+      children: _buildTeamMembers(isMobile: false),
     );
   }
 
   Widget _buildMobileTeamGrid() {
-    return ListView(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: [
-        Column(
-          children: _buildTeamMembers(true),
-        ),
-      ],
+    return Column(
+      children: _buildTeamMembers(isMobile: true)
+          .map((widget) => Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: widget,
+              ))
+          .toList(),
     );
   }
 
-  List<Widget> _buildTeamMembers(bool isMobile) {
-    final members = [
+  List<Widget> _buildTeamMembers({required bool isMobile}) {
+    return [
       _buildTeamMemberCard(
         name: 'Maria Flavia Lozada Rueda',
-        role: 'Full Stack Developer',
-        career: 'Ingeniería de Sistemas, Cuarto semestre',
-        isFemale: true,
-        color: const Color(0xFFFF6B6B),
-        isMobile: isMobile,
-      ),
-      _buildTeamMemberCard(
-        name: 'Maria Fernanda Sanchez Arauz',
-        role: 'Full Stack Developer',
-        career: 'Ingeniería de Sistemas, Cuarto semestre',
+        role: 'Líder / Backend',
+        career: 'Ing. Sistemas',
         isFemale: true,
         color: const Color(0xFF4ECDC4),
         isMobile: isMobile,
       ),
       _buildTeamMemberCard(
-        name: 'Jose Mario Nuñez Justiniano',
-        role: 'Full Stack Developer',
-        career: 'Ingeniería de Sistemas, Cuarto semestre',
-        isFemale: false,
-        color: const Color(0xFF45B7D1),
+        name: 'Maria Fernanda Sánchez Arauz',
+        role: 'Líder / Frontend',
+        career: 'Ing. Sistemas',
+        isFemale: true,
+        color: const Color(0xFFFF6B6B),
         isMobile: isMobile,
       ),
       _buildTeamMemberCard(
-        name: 'Eiver David Romero Justiniano',
-        role: 'Full Stack Developer',
-        career: 'Ingeniería de Sistemas, Cuarto semestre',
+        name: 'José Mario Núñez Justiniano',
+        role: 'Frontend / Diseño',
+        career: 'Ing. Sistemas',
         isFemale: false,
-        color: const Color(0xFF96CEB4),
+        color: const Color(0xFFFFE66D),
+        isMobile: isMobile,
+      ),
+      _buildTeamMemberCard(
+        name: 'Eiver David Romero',
+        role: 'Backend / DB',
+        career: 'Ing. Sistemas',
+        isFemale: false,
+        color: const Color(0xFFC44569),
         isMobile: isMobile,
       ),
     ];
-
-    if (isMobile) {
-      final mobileMembers = <Widget>[];
-      for (var member in members) {
-        mobileMembers.add(member);
-        mobileMembers.add(const SizedBox(height: 15));
-      }
-      if (mobileMembers.isNotEmpty) mobileMembers.removeLast();
-      return mobileMembers;
-    }
-
-    return members;
   }
 
   Widget _buildTeamMemberCard({
@@ -1904,43 +1788,33 @@ class AboutUsPage extends StatelessWidget {
   }) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(isMobile ? 15 : 20),
-          child: Ink(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  color.withOpacity(0.08),
-                  color.withOpacity(0.02),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius:
-                  BorderRadius.circular(isMobile ? 15 : 20),
-              border: Border.all(
-                color: color.withOpacity(0.15),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
             ),
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {},
+            borderRadius: BorderRadius.circular(24),
             child: Padding(
-              padding:
-                  EdgeInsets.all(isMobile ? 15 : 20),
+              padding: EdgeInsets.all(isMobile ? 20 : 24),
               child: isMobile
-                  ? _buildMobileTeamMemberContent(
-                      name, role, career, isFemale, color)
-                  : _buildDesktopTeamMemberContent(
-                      name, role, career, isFemale, color),
+                  ? _buildMobileTeamMemberContent(name, role, career, isFemale, color)
+                  : _buildDesktopTeamMemberContent(name, role, career, isFemale, color),
             ),
           ),
         ),
@@ -1949,61 +1823,63 @@ class AboutUsPage extends StatelessWidget {
   }
 
   Widget _buildDesktopTeamMemberContent(
-      String name,
-      String role,
-      String career,
-      bool isFemale,
-      Color color) {
+    String name,
+    String role,
+    String career,
+    bool isFemale,
+    Color color,
+  ) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 70,
-          height: 70,
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color,
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: color.withOpacity(0.3), width: 2),
           ),
-          child: Icon(
-            isFemale ? Icons.person_2_rounded : Icons.person_rounded,
-            size: 35,
-            color: Colors.white,
+          child: CircleAvatar(
+            radius: 45,
+            backgroundColor: color.withOpacity(0.1),
+            child: Icon(
+              isFemale ? Icons.face_3_rounded : Icons.face_rounded,
+              size: 50,
+              color: color,
+            ),
           ),
         ),
-        const SizedBox(height: 15),
+        const SizedBox(height: 20),
         Text(
           name,
           textAlign: TextAlign.center,
           style: GoogleFonts.poppins(
-            fontSize: 14,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF0D5C63),
+            color: const Color(0xFF2D3436),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            role,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color.withOpacity(0.8),
+            ),
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          role,
-          textAlign: TextAlign.center,
+          career,
           style: GoogleFonts.poppins(
             fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          career,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            color: const Color(0xFF0D5C63).withOpacity(0.7),
+            color: Colors.grey[600],
           ),
         ),
       ],
@@ -2011,62 +1887,69 @@ class AboutUsPage extends StatelessWidget {
   }
 
   Widget _buildMobileTeamMemberContent(
-      String name,
-      String role,
-      String career,
-      bool isFemale,
-      Color color) {
+    String name,
+    String role,
+    String career,
+    bool isFemale,
+    Color color,
+  ) {
     return Row(
       children: [
         Container(
-          width: 60,
-          height: 60,
+          padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color,
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
+            border: Border.all(color: color.withOpacity(0.3), width: 2),
           ),
-          child: Icon(
-            isFemale ? Icons.person_2_rounded : Icons.person_rounded,
-            size: 30,
-            color: Colors.white,
+          child: CircleAvatar(
+            radius: 30,
+            backgroundColor: color.withOpacity(0.1),
+            child: Icon(
+              isFemale ? Icons.face_3_rounded : Icons.face_rounded,
+              size: 32,
+              color: color,
+            ),
           ),
         ),
-        const SizedBox(width: 15),
+        const SizedBox(width: 20),
         Expanded(
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 name,
                 style: GoogleFonts.poppins(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0D5C63),
+                  color: const Color(0xFF2D3436),
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                role,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Text(
+                      role,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: color.withOpacity(0.8),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 career,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
-                  color: const Color(0xFF0D5C63).withOpacity(0.7),
+                  color: Colors.grey[600],
                 ),
               ),
             ],
@@ -2080,7 +1963,7 @@ class AboutUsPage extends StatelessWidget {
 class LeafPainter extends CustomPainter {
   final Color color;
 
-  const LeafPainter({required this.color});
+  LeafPainter({required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2089,33 +1972,12 @@ class LeafPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final path = Path();
-
     path.moveTo(size.width * 0.5, 0);
-    path.quadraticBezierTo(
-      size.width * 0.8,
-      size.height * 0.3,
-      size.width * 0.5,
-      size.height,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.2,
-      size.height * 0.3,
-      size.width * 0.5,
-      0,
-    );
+    path.quadraticBezierTo(size.width, size.height * 0.2, size.width * 0.5, size.height);
+    path.quadraticBezierTo(0, size.height * 0.2, size.width * 0.5, 0);
+    path.close();
 
     canvas.drawPath(path, paint);
-
-    final veinPaint = Paint()
-      ..color = color.withOpacity(0.8)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    final veinPath = Path()
-      ..moveTo(size.width * 0.5, 0)
-      ..lineTo(size.width * 0.5, size.height);
-
-    canvas.drawPath(veinPath, veinPaint);
   }
 
   @override
