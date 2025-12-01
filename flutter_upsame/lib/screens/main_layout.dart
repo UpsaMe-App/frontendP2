@@ -40,17 +40,19 @@ class _MainLayoutState extends State<MainLayout> {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: _buildGlassmorphismBottomNav(),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 24), // FAB más arriba
-        child: CustomFabMenu(
-          onPostCreated: () {
-            // Refrescar la HomePage si está activa
-            if (_currentIndex == 0) {
-              // Trigger refresh for HomePage
-            }
-          },
-        ),
-      ),
+      floatingActionButton: _currentIndex == 0
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 24), // FAB más arriba
+              child: CustomFabMenu(
+                onPostCreated: () {
+                  // Refrescar la HomePage si está activa
+                  if (_currentIndex == 0) {
+                    // Trigger refresh for HomePage
+                  }
+                },
+              ),
+            )
+          : null,
     );
   }
 

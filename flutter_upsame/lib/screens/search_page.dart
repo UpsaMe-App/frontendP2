@@ -98,8 +98,10 @@ class _SearchPageState extends State<SearchPage> {
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
             fontSize: 22,
+            color: Colors.white,
           ),
         ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Stack(
         children: [
@@ -245,13 +247,26 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildPostsList() {
     if (_selectedSubject == null) {
       return Center(
-        child: Text(
-          "Busca una materia",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Opacity(
+              opacity: 0.1,
+              child: Icon(
+                Icons.search_rounded,
+                size: 250,
+                color: greenDark,
+              ),
+            ),
+            Text(
+              "Busca una materia",
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+          ],
         ),
       );
     }

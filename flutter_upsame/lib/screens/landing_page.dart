@@ -698,141 +698,143 @@ class _LandingPageState extends State<LandingPage>
   }
 
   Widget _buildMobileContent() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        // ✅ Baja un poco respetando notch / status bar
-        80 + _viewPadding.top * 0.4,
-        20,
-        20,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: Text(
-              'UN ESPACIO DISEÑADO PARA VINCULAR AYUDANTES Y ESTUDIANTES. FACILITAR LA COORDINACIÓN ACADÉMICA Y UNIFICAR TODA LA INFORMACIÓN EN UN SOLO LUGAR',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                height: 1.4,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.3),
-                    offset: const Offset(2, 2),
-                    blurRadius: 6,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 40),
-          Column(
-            children: [
-              Container(
-                height: 200,
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: Lottie.network(
-                    'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
-                    fit: BoxFit.contain,
-                    repeat: true,
-                    animate: true,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF1A8E6B),
-                              Color(0xFF2BB673),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: const Icon(
-                          Icons.flutter_dash,
-                          size: 80,
-                          color: Colors.white,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 15),
-              Text(
-                '¡VOS PODÉS!',
-                style: GoogleFonts.pacifico(
-                  fontSize: 36,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          // ✅ Baja un poco respetando notch / status bar
+          80 + _viewPadding.top * 0.4,
+          20,
+          20,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: Text(
+                'UN ESPACIO DISEÑADO PARA VINCULAR AYUDANTES Y ESTUDIANTES. FACILITAR LA COORDINACIÓN ACADÉMICA Y UNIFICAR TODA LA INFORMACIÓN EN UN SOLO LUGAR',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 24, // Aumentado de 20
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
+                  height: 1.4,
                   shadows: [
                     Shadow(
-                      color: Colors.black.withOpacity(0.5),
-                      offset: const Offset(3, 3),
-                      blurRadius: 8,
+                      color: Colors.black.withOpacity(0.3),
+                      offset: const Offset(2, 2),
+                      blurRadius: 6,
                     ),
-                    Shadow(
-                      color: const Color(0xFF0D5C63).withOpacity(0.3),
-                      offset: const Offset(-1, -1),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-          ScaleTransition(
-            scale: _pulseAnimation,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: ElevatedButton(
-                onPressed: _navigateToLogin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF6B6B),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 16,
-                  ),
-                  elevation: 6,
-                  shadowColor: const Color(0xFFFF6B6B).withOpacity(0.3),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  textStyle: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('UNITE'),
-                    SizedBox(width: 10),
-                    Icon(Icons.rocket_launch_rounded, size: 18),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 50), // Aumentado de 40
+            Column(
+              children: [
+                Container(
+                  height: 280, // Aumentado de 200
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: Lottie.network(
+                      'https://lottie.host/6a879b42-118e-489a-972a-935c4262ccb9/UDCc6lYM4m.json',
+                      fit: BoxFit.contain,
+                      repeat: true,
+                      animate: true,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF1A8E6B),
+                                Color(0xFF2BB673),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Icon(
+                            Icons.flutter_dash,
+                            size: 100, // Aumentado de 80
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20), // Aumentado de 15
+                Text(
+                  '¡VOS PODÉS!',
+                  style: GoogleFonts.pacifico(
+                    fontSize: 42, // Aumentado de 36
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.5),
+                        offset: const Offset(3, 3),
+                        blurRadius: 8,
+                      ),
+                      Shadow(
+                        color: const Color(0xFF0D5C63).withOpacity(0.3),
+                        offset: const Offset(-1, -1),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 50), // Aumentado de 40
+            ScaleTransition(
+              scale: _pulseAnimation,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: ElevatedButton(
+                  onPressed: _navigateToLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF6B6B),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40, // Aumentado de 30
+                      vertical: 20, // Aumentado de 16
+                    ),
+                    elevation: 6,
+                    shadowColor: const Color(0xFFFF6B6B).withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: GoogleFonts.poppins(
+                      fontSize: 20, // Aumentado de 16
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('UNITE'),
+                      SizedBox(width: 12), // Aumentado de 10
+                      Icon(Icons.rocket_launch_rounded, size: 24), // Aumentado de 18
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

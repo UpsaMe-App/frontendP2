@@ -388,93 +388,50 @@ class _ProfilePageState extends State<ProfilePage> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () async {
-                              final result = await Navigator.pushNamed(
-                                context,
-                                '/edit-profile',
-                                arguments: _userData,
-                              );
+                          // Botones de acción - Solo íconos en horizontal
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              // Editar perfil
+                              _buildIconButton(
+                                icon: Icons.edit,
+                                onPressed: () async {
+                                  final result = await Navigator.pushNamed(
+                                    context,
+                                    '/edit-profile',
+                                    arguments: _userData,
+                                  );
 
-                              // Reload user data after returning from edit profile
-                              if (result == true) {
-                                print(
-                                  'Recargando perfil despues de edicion...',
-                                );
-                                await _loadUserData();
-                                print('Perfil recargado');
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: greenDark,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 12,
+                                  // Reload user data after returning from edit profile
+                                  if (result == true) {
+                                    print(
+                                      'Recargando perfil despues de edicion...',
+                                    );
+                                    await _loadUserData();
+                                    print('Perfil recargado');
+                                  }
+                                },
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                              // Favoritos
+                              _buildIconButton(
+                                icon: Icons.favorite,
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/favorites');
+                                },
                               ),
-                            ),
-                            child: Text(
-                              'Editar perfil',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
+                              // Respuestas
+                              _buildIconButton(
+                                icon: Icons.chat_bubble,
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const MyRepliesPage(),
+                                    ),
+                                  );
+                                },
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/favorites');
-                            },
-                            icon: const Icon(Icons.favorite, size: 18),
-                            label: Text(
-                              'Mis Favoritos',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: greenDark,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const MyRepliesPage(),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.comment, size: 18),
-                            label: Text(
-                              'Mis Respuestas',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: greenDark,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
+                            ],
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -518,6 +475,41 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                 ],
               ),
+      ),
+    );
+  }
+
+  // Botón circular con ícono
+  Widget _buildIconButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: green.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Icon(
+              icon,
+              color: greenDark,
+              size: 24,
+            ),
+          ),
+        ),
       ),
     );
   }
