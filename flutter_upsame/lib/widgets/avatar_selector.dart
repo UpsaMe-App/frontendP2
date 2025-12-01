@@ -215,51 +215,58 @@ class _AvatarSelectorState extends State<AvatarSelector> {
             ),
           )
         else
-          Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F5F3),
-              borderRadius: BorderRadius.circular(12),
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxHeight: 160,
             ),
-            padding: const EdgeInsets.all(10),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5F3),
+                borderRadius: BorderRadius.circular(12),
               ),
-              itemCount: _avatars.length,
-              itemBuilder: (context, index) {
-                final avatar = _avatars[index];
-                final isSelected = _selectedAvatarId == avatar.id;
+              padding: const EdgeInsets.all(10),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const BouncingScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 1,
+                ),
+                itemCount: _avatars.length,
+                itemBuilder: (context, index) {
+                  final avatar = _avatars[index];
+                  final isSelected = _selectedAvatarId == avatar.id;
 
-                return GestureDetector(
-                  onTap: () => _selectAvatar(avatar),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFFE85D75)
-                            : Colors.transparent,
-                        width: 3,
+                  return GestureDetector(
+                    onTap: () => _selectAvatar(avatar),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFFE85D75)
+                              : Colors.transparent,
+                          width: 3,
+                        ),
+                      ),
+                      child: ClipOval(
+                        child: Image.network(
+                          ApiService.getFullImageUrl(avatar.url),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.person, size: 20),
+                            );
+                          },
+                        ),
                       ),
                     ),
-                    child: ClipOval(
-                      child: Image.network(
-                        ApiService.getFullImageUrl(avatar.url),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.person),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
       ],

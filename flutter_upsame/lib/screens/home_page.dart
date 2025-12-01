@@ -168,32 +168,34 @@ class _HomePageState extends State<HomePage> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        margin: const EdgeInsets.only(right: 10),
+        // Padding reducido
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        margin: const EdgeInsets.only(right: 8),
         decoration: BoxDecoration(
-          color: isSelected ? _greenDark : Colors.white.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(24),
+          color: isSelected ? _greenDark : Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? _greenDark : _greenLight,
-            width: 1.4,
+            color: isSelected ? _greenDark : _greenLight.withOpacity(0.6),
+            width: 1.0, // Borde más fino
           ),
           boxShadow: [
             BoxShadow(
-              color: _green.withOpacity(isSelected ? 0.30 : 0.10),
-              blurRadius: isSelected ? 12 : 8,
-              offset: const Offset(0, 4),
+              color: _green.withOpacity(isSelected ? 0.25 : 0.05),
+              blurRadius: isSelected ? 8 : 4,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: isSelected ? Colors.white : _greenDark),
-            const SizedBox(width: 6),
+            Icon(icon, size: 16, color: isSelected ? Colors.white : _greenDark),
+            const SizedBox(width: 5),
             Text(
               label,
               style: GoogleFonts.poppins(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                fontSize: 12, // Fuente más pequeña
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected ? Colors.white : _greenDark,
               ),
             ),
@@ -205,27 +207,27 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildFiltersBarFloating() {
     return Positioned(
-      top: 12,
+      top: 10, // Ajustado ligeramente
       left: 16,
       right: 16,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.55),
-              borderRadius: BorderRadius.circular(22),
+              color: Colors.white.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: _greenLight.withOpacity(0.5),
-                width: 1.4,
+                color: _greenLight.withOpacity(0.4),
+                width: 1.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _green.withOpacity(0.20),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
+                  color: _green.withOpacity(0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -266,13 +268,16 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _greenLight.withOpacity(0.14),
+      backgroundColor: _greenLight.withOpacity(0.12),
       appBar: AppBar(
+        toolbarHeight: 50, // Altura compacta
         title: Text(
           'UpsaMe',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 24),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 22),
         ),
         elevation: 0,
+        scrolledUnderElevation: 4, // Sombra al hacer scroll
+        shadowColor: Colors.black.withOpacity(0.2),
         backgroundColor: _greenDark,
         foregroundColor: Colors.white,
       ),
@@ -282,7 +287,7 @@ class _HomePageState extends State<HomePage> {
             color: _greenDark,
             onRefresh: _loadPosts,
             child: Padding(
-              padding: const EdgeInsets.only(top: 80),
+              padding: const EdgeInsets.only(top: 70), // Ajustado por la barra de filtros más compacta
               child: _isLoading
                   ? Center(child: CircularProgressIndicator(color: _greenDark))
                   : _posts.isEmpty
@@ -308,7 +313,7 @@ class _HomePageState extends State<HomePage> {
                     )
                   : ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.only(bottom: 90),
+                      padding: const EdgeInsets.only(bottom: 100),
                       itemCount: _posts.length + (_hasMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index == _posts.length) {
@@ -338,16 +343,16 @@ class _HomePageState extends State<HomePage> {
                           },
                           child: Container(
                             margin: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
+                              horizontal: 20, // Más padding lateral
+                              vertical: 14, // Más separación vertical
                             ),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: _green.withOpacity(0.16),
-                                  blurRadius: 14,
-                                  offset: const Offset(0, 6),
+                                  color: _green.withOpacity(0.12),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
@@ -366,19 +371,6 @@ class _HomePageState extends State<HomePage> {
 
           _buildFiltersBarFloating(),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: _greenDark,
-        elevation: 4,
-        icon: const Icon(Icons.add),
-        label: Text(
-          "Publicar",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        onPressed: () async {
-          final result = await Navigator.pushNamed(context, '/create-post');
-          if (result == true) _loadPosts();
-        },
       ),
     );
   }

@@ -1,3 +1,5 @@
+export 'post_type.dart';
+
 class Career {
   final String id;
   final String name;

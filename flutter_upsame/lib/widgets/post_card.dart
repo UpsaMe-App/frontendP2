@@ -19,8 +19,6 @@ class PostCard extends StatelessWidget {
 
   bool get isOwner {
     final result = currentUserId != null && post.userId == currentUserId;
-    // Debug: imprimir para ver qué está pasando
-    print('PostCard: currentUserId=$currentUserId, post.userId=${post.userId}, isOwner=$result');
     return result;
   }
 
@@ -63,6 +61,8 @@ class PostCard extends StatelessWidget {
           Navigator.pushNamed(context, '/post-detail', arguments: post);
         },
         borderRadius: BorderRadius.circular(18),
+        splashColor: roleColor.withOpacity(0.1), // Splash sutil
+        highlightColor: roleColor.withOpacity(0.05),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -118,7 +118,7 @@ class PostCard extends StatelessWidget {
                             post.user?.displayName ?? 'Usuario',
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.w600,
-                              fontSize: 15.5,
+                              fontSize: 14.5, // Reducido ligeramente
                               color: _greenDark,
                             ),
                             maxLines: 1,
@@ -135,7 +135,7 @@ class PostCard extends StatelessWidget {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: roleColor,
+                                color: roleColor.withOpacity(0.85), // Opacidad suave
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
@@ -335,13 +335,9 @@ class PostCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              print('============ DELETE POST ============');
-              print('Confirmando eliminación del post: ${post.id}');
               Navigator.pop(context);
               try {
-                print('Llamando a ApiService.deletePost...');
                 await ApiService.deletePost(post.id);
-                print('Post eliminado con éxito');
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -349,16 +345,11 @@ class PostCard extends StatelessWidget {
                       backgroundColor: _greenDark,
                     ),
                   );
-                  print('Llamando a onDeleted callback...');
                   if (onDeleted != null) {
                     onDeleted!();
-                    print('onDeleted callback ejecutado');
-                  } else {
-                    print('WARNING: onDeleted callback es null');
                   }
                 }
               } catch (e) {
-                print('ERROR al eliminar post: $e');
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -368,7 +359,6 @@ class PostCard extends StatelessWidget {
                   );
                 }
               }
-              print('=====================================');
             },
             child: Text(
               'Eliminar',
