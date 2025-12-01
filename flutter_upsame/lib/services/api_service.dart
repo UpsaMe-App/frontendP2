@@ -445,6 +445,21 @@ class ApiService {
     }
   }
 
+  // 🔥 Nuevo método para obtener un post completo por ID
+  static Future<Post> getPostById(String postId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/posts/$postId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      return Post.fromJson(data);
+    } else {
+      throw Exception('Error al cargar post: ${response.statusCode}');
+    }
+  }
+
   // --------------------------
   // SEARCH POSTS
   // --------------------------

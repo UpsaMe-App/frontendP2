@@ -67,23 +67,60 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<void> _loadPostsBySubject(Subject subject) async {
+    print('🚨🚨🚨 INICIANDO _loadPostsBySubject 🚨🚨🚨');
+    print('📚 Subject: ${subject.name}');
+    print('📚 Subject ID: ${subject.id}');
+    print('⏰ Timestamp: ${DateTime.now()}');
+    print('🎯 Current _posts length: ${_posts.length}');
+
+    // LIMPIAR POSTS INMEDIATAMENTE
     setState(() {
       _selectedSubject = subject;
       _isLoadingPosts = true;
-      _posts = [];
+      _posts = []; // ⚠️ LIMPIADO FORZOSO
     });
 
+    print('🧹 Posts limpiados, lista actual: ${_posts.length}');
+
     try {
-      // 🔥 IMPORTANTÍSIMO: el backend espera q = nombre de la materia
+      print('🔥 LLAMANDO ApiService.searchPostsBySubject(${subject.name})');
+      print('🔥 ESTA FUNCIÓN DEBERÍA LANZAR ERROR SI ESTÁ MODIFICADA');
+
       final results = await ApiService.searchPostsBySubject(subject.name);
+
+      print('✅ RESPUESTA RECIBIDA SIN ERROR - ESTO ES SOSPECHOSO');
+      print('📊 Posts recibidos para ${subject.name}: ${results.length}');
+
+      if (results.isEmpty) {
+        print('📭 No se recibieron posts');
+      } else {
+        print('📋 Primeros 5 posts recibidos:');
+        for (int i = 0; i < results.length && i < 5; i++) {
+          print(
+            '  $i. "${results[i].title}" (ID: ${results[i].id}, UserID: ${results[i].userId})',
+          );
+        }
+      }
 
       setState(() {
         _posts = results;
         _isLoadingPosts = false;
       });
+
+      print('🎯 Posts asignados al widget: ${_posts.length}');
     } catch (e) {
-      setState(() => _isLoadingPosts = false);
+      print('🚨 ERROR CAPTURADO EN _loadPostsBySubject: $e');
+      print('🚨 TIPO DE ERROR: ${e.runtimeType}');
+      print('🚨 ERROR STRING: ${e.toString()}');
+
+      setState(() {
+        _posts = []; // Asegurar que no hay posts en caso de error
+        _isLoadingPosts = false;
+      });
     }
+
+    print('🏁 FIN DE _loadPostsBySubject - Posts finales: ${_posts.length}');
+    print('🚨🚨🚨 FIN _loadPostsBySubject 🚨🚨🚨\n');
   }
 
   @override
@@ -133,7 +170,7 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -178,22 +215,51 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: green.withOpacity(0.5), width: 1.5),
+                    borderSide: BorderSide(
+                      color: green.withOpacity(0.5),
+                      width: 1.5,
+                    ),
                   ),
                   suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear_rounded, color: Colors.grey[600]),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _subjects = [];
-                              _selectedSubject = null;
-                              _posts = [];
-                            });
-                          },
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_selectedSubject != null)
+                              IconButton(
+                                icon: Icon(Icons.refresh_rounded, color: green),
+                                onPressed: () async {
+                                  print(
+                                    '🔄 FORZANDO ACTUALIZACIÓN COMPLETA...',
+                                  );
+                                  // Limpiar cualquier caché local
+                                  setState(() {
+                                    _posts.clear();
+                                  });
+                                  await _loadPostsBySubject(_selectedSubject!);
+                                },
+                                tooltip: 'Forzar actualización completa',
+                              ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.clear_rounded,
+                                color: Colors.grey[600],
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _subjects = [];
+                                  _selectedSubject = null;
+                                  _posts = [];
+                                });
+                              },
+                            ),
+                          ],
                         )
                       : null,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 20,
+                  ),
                 ),
                 style: GoogleFonts.poppins(fontSize: 15),
               ),
@@ -209,7 +275,9 @@ class _SearchPageState extends State<SearchPage> {
     if (_isLoadingSubjects) {
       return Padding(
         padding: const EdgeInsets.all(20),
-        child: Center(child: CircularProgressIndicator(color: green, strokeWidth: 2)),
+        child: Center(
+          child: CircularProgressIndicator(color: green, strokeWidth: 2),
+        ),
       );
     }
 
@@ -244,7 +312,8 @@ class _SearchPageState extends State<SearchPage> {
           shrinkWrap: true,
           padding: EdgeInsets.zero,
           itemCount: _subjects.length,
-          separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[100]),
+          separatorBuilder: (context, index) =>
+              Divider(height: 1, color: Colors.grey[100]),
           itemBuilder: (context, index) {
             final subject = _subjects[index];
             return Material(
@@ -260,9 +329,16 @@ class _SearchPageState extends State<SearchPage> {
                 ),
                 title: Text(
                   subject.name,
-                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-                trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey[400]),
+                trailing: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: Colors.grey[400],
+                ),
                 onTap: () {
                   _searchController.text = subject.name;
                   setState(() => _subjects = []);
@@ -285,11 +361,7 @@ class _SearchPageState extends State<SearchPage> {
           children: [
             Opacity(
               opacity: 0.08,
-              child: Icon(
-                Icons.search_rounded,
-                size: 200,
-                color: greenDark,
-              ),
+              child: Icon(Icons.search_rounded, size: 200, color: greenDark),
             ),
             Column(
               mainAxisSize: MainAxisSize.min,
@@ -341,20 +413,61 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      itemCount: _posts.length,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: PostCard(
-            post: _posts[index],
-            currentUserId: widget.userId,
-            onDeleted: () => _loadPostsBySubject(_selectedSubject!),
-            onUpdated: () => _loadPostsBySubject(_selectedSubject!),
+    // Filtrar posts ocultos localmente
+    final visiblePosts = _posts;
+
+    return Column(
+      children: [
+        // Lista de posts
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            itemCount: visiblePosts.length,
+            itemBuilder: (context, index) {
+              final post = visiblePosts[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Stack(
+                  children: [
+                    PostCard(
+                      post: post,
+                      currentUserId: widget.userId,
+                      onDeleted: () {
+                        print('🗑️ Post eliminado, refrescando búsqueda...');
+                        _loadPostsBySubject(_selectedSubject!);
+                      },
+                      onUpdated: () {
+                        print('✏️ Post actualizado, refrescando búsqueda...');
+                        _loadPostsBySubject(_selectedSubject!);
+                      },
+                    ),
+
+                    // Botón para ocultar post problemático
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const SizedBox.shrink(), // Menú eliminado
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }
