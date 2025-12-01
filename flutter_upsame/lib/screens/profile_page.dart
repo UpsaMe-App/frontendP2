@@ -22,11 +22,16 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isLoading = false;
   bool _isLoadingProfile = true;
 
-  final double _expandedHeight = 260;
+  final double _expandedHeight = 260; // Reduced to avoid overflow
 
-  final Color greenDark = const Color(0xFF2E7D32);
-  final Color green = const Color(0xFF388E3C);
-  final Color greenLight = const Color(0xFFA5D6A7);
+  // ✨ Premium Color System - Verde Exacto del Usuario
+  final Color greenPrimary = const Color(0xFF43A047);      // Verde base (el que mostraste)
+  final Color greenSecondary = const Color(0xFF388E3C);    // Verde un poco más oscuro
+  final Color greenDark = const Color(0xFF2E7D32);         // Verde oscuro para contraste
+  final Color greenAccent = const Color(0xFF66BB6A);       // Verde claro para highlights
+  final Color backgroundLight = const Color(0xFFF1F8E4);   // Fondo verdoso muy claro
+  final Color textDark = const Color(0xFF1B5E20);          // Verde muy oscuro para texto
+  final Color textMuted = const Color(0xFF757575);         // Gris medio
 
   @override
   void initState() {
@@ -113,52 +118,88 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // CARD INFO ESTILO ELEGANTE
+  // ✨ CARD INFO CON GLASSMORPHISM PREMIUM
   Widget _buildInfoCard({
     required IconData icon,
     required String label,
     required String value,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.25), width: 1.3),
+        // Glassmorphism gradient
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.25),
+            Colors.white.withOpacity(0.10),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1.5,
+        ),
         boxShadow: [
+          // Sombra principal
           BoxShadow(
-            color: green.withOpacity(0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+          // Highlight sutil arriba
+          BoxShadow(
+            color: Colors.white.withOpacity(0.5),
+            blurRadius: 5,
+            offset: const Offset(-2, -2),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    color: Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  maxLines: 1,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+          // Icono con gradiente circular
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [greenPrimary, greenSecondary],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: greenPrimary.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
+            ),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+          const SizedBox(height: 12),
+          // Label
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.white70,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Value
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
             ),
           ),
         ],
@@ -166,10 +207,226 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // HEADER EXPANDIDO
+  // TARJETA PREMIUM DE ACCIONES - Diseño Ultra Premium
+  Widget _buildProfileActionsCard() {
+    const Color softGreen = Color(0xFFE8F5E9);
+    final Color primaryGreen = greenDark; // Color(0xFF2E7D32)
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      height: 110, // Aumentado para evitar overflow
+      decoration: BoxDecoration(
+        // Gradiente sofisticado con múltiples tonos
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFFFAFDFA), // Blanco verdoso muy claro
+            softGreen,
+            const Color(0xFFE0F2E1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        // Sombras múltiples para profundidad 3D real
+        boxShadow: [
+          // Sombra principal
+          BoxShadow(
+            color: primaryGreen.withOpacity(0.15),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
+          ),
+          // Sombra de destaque sutil arriba
+          BoxShadow(
+            color: Colors.white.withOpacity(0.8),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+            spreadRadius: -2,
+          ),
+          // Sombra ambiente suave
+          BoxShadow(
+            color: primaryGreen.withOpacity(0.08),
+            blurRadius: 40,
+            offset: const Offset(0, 16),
+            spreadRadius: -8,
+          ),
+        ],
+      ),
+      child: Container(
+        // Borde con gradiente interno premium
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.transparent,
+            width: 0,
+          ),
+          gradient: LinearGradient(
+            colors: [
+              Colors.white.withOpacity(0.8),
+              primaryGreen.withOpacity(0.2),
+              Colors.white.withOpacity(0.6),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Container(
+          margin: const EdgeInsets.all(1.5), // Espacio para el borde gradiente
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22.5),
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFFFAFDFA),
+                softGreen,
+                const Color(0xFFE0F2E1),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22.5),
+            child: Row(
+              children: [
+                // COLUMNA IZQUIERDA - Mis Respuestas
+                Expanded(
+                  child: _buildPremiumAction(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    label: 'Mis Respuestas',
+                    primaryGreen: primaryGreen,
+                    isLeft: true,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyRepliesPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // DIVIDER VERTICAL ULTRA PREMIUM
+                Container(
+                  width: 1,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        primaryGreen.withOpacity(0.12),
+                        primaryGreen.withOpacity(0.25),
+                        primaryGreen.withOpacity(0.12),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+
+                // COLUMNA DERECHA - Mis Favoritos
+                Expanded(
+                  child: _buildPremiumAction(
+                    icon: Icons.favorite_border_rounded,
+                    label: 'Mis Favoritos',
+                    primaryGreen: primaryGreen,
+                    isLeft: false,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/favorites');
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Widget auxiliar premium con animación
+  Widget _buildPremiumAction({
+    required IconData icon,
+    required String label,
+    required Color primaryGreen,
+    required bool isLeft,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: primaryGreen.withOpacity(0.1),
+        highlightColor: primaryGreen.withOpacity(0.05),
+        borderRadius: BorderRadius.only(
+          topLeft: isLeft ? const Radius.circular(22.5) : Radius.zero,
+          bottomLeft: isLeft ? const Radius.circular(22.5) : Radius.zero,
+          topRight: !isLeft ? const Radius.circular(22.5) : Radius.zero,
+          bottomRight: !isLeft ? const Radius.circular(22.5) : Radius.zero,
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Contenedor del ícono con gradiente premium
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  // Gradiente sutil en el fondo del círculo
+                  gradient: LinearGradient(
+                    colors: [
+                      primaryGreen.withOpacity(0.08),
+                      primaryGreen.withOpacity(0.15),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  // Sombra interna simulada con borde
+                  border: Border.all(
+                    color: primaryGreen.withOpacity(0.08),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryGreen.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  icon,
+                  color: primaryGreen,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(height: 6),
+              // Texto con mejor tipografía
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: primaryGreen,
+                  height: 1.1,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ✨ HEADER EXPANDIDO CON AVATAR PREMIUM
   Widget _buildExpandedHeader() {
     // Determinar la URL de la foto/avatar
-    // PRIORIDAD: profilePhotoUrl primero (foto subida), luego avatarId (avatar predefinido)
     String? photoUrl;
     if (_userData?['profilePhotoUrl'] != null &&
         _userData!['profilePhotoUrl'].toString().isNotEmpty &&
@@ -184,29 +441,80 @@ class _ProfilePageState extends State<ProfilePage> {
     return Column(
       children: [
         const SizedBox(height: 12),
-        CircleAvatar(
-          radius: 50,
-          backgroundColor: Colors.white70,
-          backgroundImage: photoUrl != null
-              ? NetworkImage(ApiService.getFullImageUrl(photoUrl))
-              : null,
-          child: photoUrl == null
-              ? Icon(Icons.person, size: 52, color: greenDark)
-              : null,
+        // Avatar con anillo gradiente premium
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [greenPrimary, greenSecondary, greenAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: greenPrimary.withOpacity(0.4),
+                blurRadius: 30,
+                spreadRadius: 5,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: greenSecondary.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(4),
+          child: Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+            padding: const EdgeInsets.all(4),
+            child: CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.grey[200],
+              backgroundImage: photoUrl != null
+                  ? NetworkImage(ApiService.getFullImageUrl(photoUrl))
+                  : null,
+              child: photoUrl == null
+                  ? Icon(Icons.person, size: 50, color: greenDark)
+                  : null,
+            ),
+          ),
         ),
         const SizedBox(height: 12),
+        // Nombre con mejor tipografía
         Text(
           _userData?['fullName'] ?? 'Usuario',
           style: GoogleFonts.poppins(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             color: Colors.white,
+            letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          _userData?['email'] ?? '',
-          style: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
+        // Email con estilo mejorado
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            _userData?['email'] ?? '',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: Colors.white.withOpacity(0.9),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
       ],
     );
@@ -249,7 +557,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ANIMACIÓN PARA POSTS
+  // ✨ ANIMACIÓN PARA POSTS
   Widget _animatedPostCard(Post post, int index) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -267,19 +575,18 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: green.withOpacity(0.22),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
+              color: greenPrimary.withOpacity(0.15),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: PostCard(
           post: post,
-          currentUserId:
-              _userData?['id'], // FIX: usar el ID del usuario actual desde _userData
+          currentUserId: _userData?['id'],
           onDeleted: _loadMyPosts,
           onUpdated: _loadMyPosts,
         ),
@@ -290,7 +597,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: greenLight.withOpacity(0.20),
+      backgroundColor: backgroundLight, // Premium light background
       body: RefreshIndicator(
         onRefresh: _refreshData,
         color: greenDark,
@@ -322,9 +629,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           duration: const Duration(milliseconds: 200),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [greenDark, green],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
+                              colors: [greenPrimary, greenSecondary, greenDark],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              stops: const [0.0, 0.5, 1.0],
                             ),
                           ),
                           child: SafeArea(
@@ -351,7 +659,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [green, greenDark],
+                          colors: [greenSecondary, greenDark],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -387,95 +695,70 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () async {
-                              final result = await Navigator.pushNamed(
-                                context,
-                                '/edit-profile',
-                                arguments: _userData,
-                              );
-
-                              // Reload user data after returning from edit profile
-                              if (result == true) {
-                                print(
-                                  'Recargando perfil despues de edicion...',
-                                );
-                                await _loadUserData();
-                                print('Perfil recargado');
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: greenDark,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 12,
+                          const SizedBox(height: 20),
+                          // ✨ Botón Editar Perfil Premium
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [greenPrimary, greenSecondary],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                            child: Text(
-                              'Editar perfil',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/favorites');
-                            },
-                            icon: const Icon(Icons.favorite, size: 18),
-                            label: Text(
-                              'Mis Favoritos',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: greenDark,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const MyRepliesPage(),
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: greenPrimary.withOpacity(0.5),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                  spreadRadius: 0,
                                 ),
-                              );
-                            },
-                            icon: const Icon(Icons.comment, size: 18),
-                            label: Text(
-                              'Mis Respuestas',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              ],
                             ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: greenDark,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 12,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                final result = await Navigator.pushNamed(
+                                  context,
+                                  '/edit-profile',
+                                  arguments: _userData,
+                                );
+
+                                // Reload user data after returning from edit profile
+                                if (result == true) {
+                                  print('Recargando perfil despues de edicion...');
+                                  await _loadUserData();
+                                  print('Perfil recargado');
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 40,
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.edit_rounded, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Editar Perfil',
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          _buildProfileActionsCard(),
                           const SizedBox(height: 12),
                           Text(
                             '${_myPosts.length} publicación${_myPosts.length != 1 ? "es" : ""}',

@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import '../services/api_service.dart';
 import '../models/models.dart';
 
@@ -37,6 +36,23 @@ class _AvatarSelectorState extends State<AvatarSelector> {
   void initState() {
     super.initState();
     _loadAvatars();
+
+    // Si hay un initialAvatarUrl, establecer el ID correspondiente
+    if (widget.initialAvatarUrl != null) {
+      final avatarId = widget.initialAvatarUrl!
+          .replaceAll('/avatars/', '')
+          .replaceAll('.png', '');
+      _selectedAvatarId = avatarId;
+      print('🔸 Avatar inicial establecido: $avatarId');
+
+      // Notificar inmediatamente al padre
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onAvatarSelected(avatarId);
+          print('🔸 Callback inicial ejecutado para: $avatarId');
+        }
+      });
+    }
   }
 
   Future<void> _loadAvatars() async {
@@ -46,11 +62,43 @@ class _AvatarSelectorState extends State<AvatarSelector> {
 
     try {
       final avatars = await ApiService.getAvatarOptions();
+      print('🔸 Avatares cargados: ${avatars.length}');
+      for (final avatar in avatars) {
+        print(
+          '  - ID: ${avatar.id}, Label: ${avatar.label}, URL: ${avatar.url}',
+        );
+      }
+
+      // Variables para determinar si debemos preseleccionar
+      // Solo preseleccionar si no hay avatar inicial y no hay nada seleccionado
+      final shouldPreselect =
+          widget.initialAvatarUrl == null &&
+          _selectedAvatarId == null &&
+          _selectedImageBytes == null &&
+          avatars.isNotEmpty;
+
       setState(() {
         _avatars = avatars;
         _isLoading = false;
+
+        // Preseleccionar el primer avatar por defecto si no hay selección previa
+        if (shouldPreselect) {
+          _selectedAvatarId = avatars[0].id;
+          print('🔸 Avatar preseleccionado por defecto: ${avatars[0].id}');
+        }
       });
+
+      // Ejecutar callback fuera del setState para evitar problemas
+      if (shouldPreselect && mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            widget.onAvatarSelected(avatars[0].id);
+            print('🔸 Callback de preselección ejecutado: ${avatars[0].id}');
+          }
+        });
+      }
     } catch (e) {
+      print('❌ Error al cargar avatares: $e');
       setState(() {
         _isLoading = false;
       });
@@ -81,11 +129,13 @@ class _AvatarSelectorState extends State<AvatarSelector> {
             _selectedImage = File(image.path);
           }
           _selectedImageBytes = bytes;
-          _selectedAvatarId = null;
+          _selectedAvatarId = null; // Limpiar avatar seleccionado
         });
+
+        // Notificar que se seleccionó una imagen personalizada
         widget.onImageSelected(kIsWeb ? null : File(image.path));
         widget.onImageBytesSelected?.call(bytes);
-        widget.onAvatarSelected(null);
+        widget.onAvatarSelected(null); // Limpiar avatar ID
       }
     } catch (e) {
       if (mounted) {
@@ -100,14 +150,23 @@ class _AvatarSelectorState extends State<AvatarSelector> {
   }
 
   void _selectAvatar(Avatar avatar) {
+    print(
+      '🔸 Avatar seleccionado manualmente: ID=${avatar.id}, Label=${avatar.label}',
+    );
     setState(() {
       _selectedAvatarId = avatar.id;
       _selectedImage = null;
       _selectedImageBytes = null;
     });
-    widget.onAvatarSelected(avatar.url);
+    print(
+      '🔸 Estado interno actualizado, _selectedAvatarId: $_selectedAvatarId',
+    );
+
+    // Enviar el ID del avatar, no la URL
+    widget.onAvatarSelected(avatar.id);
     widget.onImageSelected(null);
     widget.onImageBytesSelected?.call(null);
+    print('🔸 Callbacks ejecutados para avatar: ${avatar.id}');
   }
 
   @override
@@ -216,9 +275,7 @@ class _AvatarSelectorState extends State<AvatarSelector> {
           )
         else
           ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxHeight: 160,
-            ),
+            constraints: const BoxConstraints(maxHeight: 160),
             child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xFFE8F5F3),

@@ -17,9 +17,7 @@ class _MyRepliesPageState extends State<MyRepliesPage> {
 
   // Paleta de colores verde
   final Color _primaryGreen = const Color(0xFF2E7D32);
-  final Color _darkGreen = const Color(0xFF1B5E20);
   final Color _lightGreen = const Color(0xFF4CAF50);
-  final Color _accentGreen = const Color(0xFF81C784);
   final Color _backgroundGreen = const Color(0xFFE8F5E8);
 
   @override
@@ -70,29 +68,52 @@ class _MyRepliesPageState extends State<MyRepliesPage> {
     }
   }
 
-  void _navigateToPost(MyReplyDto reply) {
-    // Crear un objeto Post temporal para navegar a la pantalla de detalle
-    final post = Post(
-      id: reply.postId,
-      title: reply.postTitle ?? 'Post',
-      content: reply.postContentPreview ?? '',
-      role: 2, // Asumimos que es un post de estudiante
-      createdAt: reply.createdAt,
-      user: User(
-        id: reply.postAuthorId ?? '',
-        email: '',
-        fullName: reply.postAuthorFullName,
-        avatarId: reply.postAuthorAvatarId,
-        profilePhotoUrl: reply.postAuthorProfilePhotoUrl,
-        semester: 1,
-      ),
-      subjectName: reply.subjectName,
-    );
+  Future<void> _navigateToPost(MyReplyDto reply) async {
+    try {
+      // 🔥 Obtener el post completo del API
+      final fullPost = await ApiService.getPostById(reply.postId);
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => PostDetailPage(post: post)),
-    );
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PostDetailPage(post: fullPost)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      // Si falla, usar datos básicos como fallback
+      final post = Post(
+        id: reply.postId,
+        title: reply.postTitle ?? 'Post',
+        content: reply.postContentPreview ?? '',
+        role: 2,
+        createdAt: reply.createdAt,
+        user: User(
+          id: reply.postAuthorId ?? '',
+          email: '',
+          fullName: reply.postAuthorFullName,
+          avatarId: reply.postAuthorAvatarId,
+          profilePhotoUrl: reply.postAuthorProfilePhotoUrl,
+          semester: 1,
+        ),
+        subjectName: reply.subjectName,
+        imageUrl: reply.imageUrl,
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PostDetailPage(post: post)),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar post completo: $e'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _showDeleteDialog(MyReplyDto reply) {
@@ -141,7 +162,7 @@ class _MyRepliesPageState extends State<MyRepliesPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Respuesta eliminada'),
+          content: const Text('Respuesta eliminada'),
           backgroundColor: _primaryGreen,
           behavior: SnackBarBehavior.floating,
         ),
@@ -273,20 +294,26 @@ class _MyRepliesPageState extends State<MyRepliesPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar del autor del POST + Nombre + Tiempo
+                // ===== HEADER CON AUTOR DEL POST =====
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Avatar del AUTOR DEL POST (no mío)
+                    // Avatar del autor del POST
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: _primaryGreen.withOpacity(0.3),
+                          color: _primaryGreen.withOpacity(0.2),
                           width: 2,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _primaryGreen.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: ClipOval(
                         child: reply.postAuthorPhotoUrl.isNotEmpty
@@ -297,174 +324,349 @@ class _MyRepliesPageState extends State<MyRepliesPage> {
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
-                                    color: _lightGreen.withOpacity(0.2),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          _primaryGreen.withOpacity(0.1),
+                                          _lightGreen.withOpacity(0.2),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                    ),
                                     child: Icon(
-                                      Icons.person,
+                                      Icons.person_rounded,
                                       color: _primaryGreen,
-                                      size: 20,
+                                      size: 22,
                                     ),
                                   );
                                 },
                               )
                             : Container(
-                                color: _lightGreen.withOpacity(0.2),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      _primaryGreen.withOpacity(0.1),
+                                      _lightGreen.withOpacity(0.2),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
                                 child: Icon(
-                                  Icons.person,
+                                  Icons.person_rounded,
                                   color: _primaryGreen,
-                                  size: 20,
+                                  size: 22,
                                 ),
                               ),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Nombre del autor del POST
+
+                    // Info del autor (nombre + tiempo)
                     Expanded(
-                      child: Text(
-                        reply.postAuthorFullName ?? 'Usuario',
-                        style: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            reply.postAuthorFullName ?? 'Usuario',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time_rounded,
+                                size: 14,
+                                color: Colors.grey[500],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _formatDate(reply.createdAt),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    // Tiempo
-                    Text(
-                      _formatDate(reply.createdAt),
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Botón eliminar
-                    InkWell(
-                      onTap: () => _showDeleteDialog(reply),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
+
+                    // Botón eliminar premium
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.red.withOpacity(0.2),
+                          width: 1,
                         ),
-                        child: Icon(
-                          Icons.delete_outline,
-                          size: 18,
-                          color: Colors.red[700],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _showDeleteDialog(reply),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.delete_outline_rounded,
+                              size: 18,
+                              color: Colors.red[700],
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                // Título del post
-                Padding(
-                  padding: const EdgeInsets.only(left: 52),
+
+                const SizedBox(height: 12),
+
+                // ===== CONTENIDO DEL POST =====
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!, width: 1),
+                  ),
                   child: Text(
                     reply.postTitle ?? 'Sin título',
                     style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.normal,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                       color: Colors.grey[700],
+                      height: 1.4,
                     ),
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(height: 12),
-                // Flecha + MI avatar + MI respuesta
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Icon(
-                        Icons.subdirectory_arrow_right,
-                        color: _primaryGreen,
-                        size: 18,
-                      ),
+
+                // ===== TU RESPUESTA (PREMIUM STYLE) =====
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        _primaryGreen.withOpacity(0.05),
+                        _lightGreen.withOpacity(0.08),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(width: 8),
-                    // MI Avatar
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: _primaryGreen.withOpacity(0.3),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: ClipOval(
-                        child: reply.replyAuthorPhotoUrl.isNotEmpty
-                            ? Image.network(
-                                ApiService.getFullImageUrl(
-                                  reply.replyAuthorPhotoUrl,
-                                ),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: _lightGreen.withOpacity(0.2),
-                                    child: Icon(
-                                      Icons.person,
-                                      color: _primaryGreen,
-                                      size: 16,
-                                    ),
-                                  );
-                                },
-                              )
-                            : Container(
-                                color: _lightGreen.withOpacity(0.2),
-                                child: Icon(
-                                  Icons.person,
-                                  color: _primaryGreen,
-                                  size: 16,
-                                ),
-                              ),
-                      ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _primaryGreen.withOpacity(0.2),
+                      width: 1,
                     ),
-                    const SizedBox(width: 8),
-                    // MI respuesta
-                    Expanded(
-                      child: Text(
-                        reply.content,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.grey[800],
-                          height: 1.3,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                // Materia si existe
-                if (reply.subjectName != null &&
-                    reply.subjectName!.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Row(
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.book_outlined, size: 14, color: _primaryGreen),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          reply.subjectName!,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: _primaryGreen,
-                            fontWeight: FontWeight.w500,
+                      // Header con "Tu respuesta"
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _primaryGreen,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.reply_rounded,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Tu respuesta',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Tu respuesta con avatar
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Tu avatar pequeño
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: _primaryGreen.withOpacity(0.4),
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _primaryGreen.withOpacity(0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: reply.replyAuthorPhotoUrl.isNotEmpty
+                                  ? Image.network(
+                                      ApiService.getFullImageUrl(
+                                        reply.replyAuthorPhotoUrl,
+                                      ),
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Container(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    _primaryGreen.withOpacity(
+                                                      0.2,
+                                                    ),
+                                                    _lightGreen.withOpacity(
+                                                      0.3,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                Icons.person_rounded,
+                                                color: _primaryGreen,
+                                                size: 18,
+                                              ),
+                                            );
+                                          },
+                                    )
+                                  : Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            _primaryGreen.withOpacity(0.2),
+                                            _lightGreen.withOpacity(0.3),
+                                          ],
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.person_rounded,
+                                        color: _primaryGreen,
+                                        size: 18,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+
+                          // Contenido de tu respuesta
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                reply.content,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: Colors.grey[800],
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 4,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
+                  ),
+                ),
+
+                // ===== MATERIA (PREMIUM BADGE) =====
+                if (reply.subjectName != null &&
+                    reply.subjectName!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [_primaryGreen.withOpacity(0.9), _lightGreen],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _primaryGreen.withOpacity(0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.school_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            reply.subjectName!,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ],

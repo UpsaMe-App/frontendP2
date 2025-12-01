@@ -39,7 +39,7 @@ class _RegisterPageState extends State<RegisterPage>
   bool _loadingCareers = false;
   File? _profilePhoto;
   Uint8List? _profilePhotoBytes;
-  String? _selectedAvatarId;
+  String? _selectedAvatarId = 'baby'; // Preseleccionar avatar por defecto
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -129,9 +129,39 @@ class _RegisterPageState extends State<RegisterPage>
       return;
     }
 
+    // Debug: Verificar estado antes de validación
+    print('🔍 VALIDACIÓN AVATAR:');
+    print('  _selectedAvatarId: $_selectedAvatarId');
+    print('  _profilePhoto: $_profilePhoto');
+    print('  _profilePhotoBytes: $_profilePhotoBytes');
+
+    // Validar que se haya seleccionado un avatar o una foto
+    // Si no hay avatar seleccionado, usar 'baby' por defecto
+    if (_selectedAvatarId == null &&
+        _profilePhoto == null &&
+        _profilePhotoBytes == null) {
+      setState(() {
+        _selectedAvatarId = 'baby';
+      });
+      print('📱 REGISTER: Usando avatar por defecto: baby');
+    }
+
     setState(() => _isLoading = true);
 
     try {
+      // Debug logs para verificar qué se está enviando
+      print('========================================');
+      print('REGISTRO - DATOS DE AVATAR');
+      print('========================================');
+      print('AvatarId seleccionado: $_selectedAvatarId');
+      print('AvatarId es null: ${_selectedAvatarId == null}');
+      print('AvatarId es vacío: ${_selectedAvatarId?.isEmpty ?? true}');
+      print('Archivo de foto: $_profilePhoto');
+      print(
+        'Bytes de foto: ${_profilePhotoBytes != null ? '${_profilePhotoBytes!.length} bytes' : 'null'}',
+      );
+      print('========================================');
+
       await ApiService.register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -190,12 +220,7 @@ class _RegisterPageState extends State<RegisterPage>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              _greenDark,
-              _green,
-              _greenMedium,
-              _greenLight,
-            ],
+            colors: [_greenDark, _green, _greenMedium, _greenLight],
             stops: const [0.0, 0.3, 0.7, 1.0],
           ),
         ),
@@ -220,9 +245,7 @@ class _RegisterPageState extends State<RegisterPage>
 
   Widget _buildRegisterCard(bool isMobile) {
     return Container(
-      constraints: BoxConstraints(
-        maxWidth: isMobile ? double.infinity : 460,
-      ),
+      constraints: BoxConstraints(maxWidth: isMobile ? double.infinity : 460),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: BackdropFilter(
@@ -265,6 +288,23 @@ class _RegisterPageState extends State<RegisterPage>
                   _buildHeader(isMobile),
                   SizedBox(height: isMobile ? 24 : 28),
                   _buildAvatarSection(),
+                  // Debug info para mostrar qué avatar está seleccionado
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Avatar seleccionado: ${_selectedAvatarId ?? 'baby'}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   _buildSectionDivider('Información Personal'),
                   const SizedBox(height: 16),
@@ -333,23 +373,34 @@ class _RegisterPageState extends State<RegisterPage>
 
   Widget _buildAvatarSection() {
     return AvatarSelector(
-      onAvatarSelected: (avatarUrl) {
-        if (avatarUrl != null && avatarUrl.contains('/avatars/')) {
-          final avatarId =
-              avatarUrl.replaceAll('/avatars/', '').replaceAll('.png', '');
-          setState(() => _selectedAvatarId = avatarId);
-        } else {
-          setState(() => _selectedAvatarId = null);
-        }
+      initialAvatarUrl: '/avatars/baby.png', // URL del avatar preseleccionado
+      onAvatarSelected: (avatarId) {
+        // Ahora recibimos directamente el ID del avatar
+        print('📱 REGISTER: Avatar seleccionado: $avatarId');
+        setState(() {
+          _selectedAvatarId = avatarId ?? 'baby'; // Fallback a baby si es null
+          _profilePhoto = null;
+          _profilePhotoBytes = null;
+        });
+        print(
+          '📱 REGISTER: _selectedAvatarId actualizado a: $_selectedAvatarId',
+        );
       },
       onImageSelected: (file) {
         setState(() {
           _profilePhoto = file;
           _selectedAvatarId = null;
+          _profilePhotoBytes = null;
         });
       },
       onImageBytesSelected: (bytes) {
-        setState(() => _profilePhotoBytes = bytes);
+        setState(() {
+          _profilePhotoBytes = bytes;
+          if (bytes != null) {
+            _selectedAvatarId =
+                null; // Solo limpiar avatar si se seleccionó una imagen
+          }
+        });
       },
     );
   }
@@ -362,10 +413,7 @@ class _RegisterPageState extends State<RegisterPage>
             height: 1,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  _green.withOpacity(0.3),
-                ],
+                colors: [Colors.transparent, _green.withOpacity(0.3)],
               ),
             ),
           ),
@@ -387,10 +435,7 @@ class _RegisterPageState extends State<RegisterPage>
             height: 1,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  _green.withOpacity(0.3),
-                  Colors.transparent,
-                ],
+                colors: [_green.withOpacity(0.3), Colors.transparent],
               ),
             ),
           ),
@@ -587,10 +632,7 @@ class _RegisterPageState extends State<RegisterPage>
       style: GoogleFonts.poppins(fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.poppins(
-          color: Colors.grey[600],
-          fontSize: 13,
-        ),
+        labelStyle: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 13),
         prefixIcon: Container(
           margin: const EdgeInsets.all(10),
           decoration: BoxDecoration(
@@ -606,10 +648,7 @@ class _RegisterPageState extends State<RegisterPage>
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: Colors.grey[200]!,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: Colors.grey[200]!, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -646,14 +685,11 @@ class _RegisterPageState extends State<RegisterPage>
     bool enabled = true,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.poppins(
-          color: Colors.grey[600],
-          fontSize: 13,
-        ),
+        labelStyle: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 13),
         prefixIcon: Container(
           margin: const EdgeInsets.all(10),
           decoration: BoxDecoration(
@@ -668,10 +704,7 @@ class _RegisterPageState extends State<RegisterPage>
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: Colors.grey[200]!,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: Colors.grey[200]!, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -709,11 +742,7 @@ class _RegisterPageState extends State<RegisterPage>
       ),
       dropdownColor: Colors.white,
       borderRadius: BorderRadius.circular(14),
-      icon: Icon(
-        Icons.arrow_drop_down_rounded,
-        color: _green,
-        size: 24,
-      ),
+      icon: Icon(Icons.arrow_drop_down_rounded, color: _green, size: 24),
     );
   }
 
@@ -784,10 +813,7 @@ class _RegisterPageState extends State<RegisterPage>
       children: [
         Text(
           '¿Ya tienes cuenta? ',
-          style: GoogleFonts.poppins(
-            color: Colors.grey[700],
-            fontSize: 13,
-          ),
+          style: GoogleFonts.poppins(color: Colors.grey[700], fontSize: 13),
         ),
         TextButton(
           onPressed: () {
@@ -816,11 +842,7 @@ class _RegisterPageState extends State<RegisterPage>
       onPressed: () {
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       },
-      icon: Icon(
-        Icons.arrow_back_rounded,
-        color: Colors.grey[600],
-        size: 16,
-      ),
+      icon: Icon(Icons.arrow_back_rounded, color: Colors.grey[600], size: 16),
       label: Text(
         'Volver al inicio',
         style: GoogleFonts.poppins(
