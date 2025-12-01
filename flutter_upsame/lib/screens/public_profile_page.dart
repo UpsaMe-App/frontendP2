@@ -79,6 +79,16 @@ class _PublicProfilePageState extends State<PublicProfilePage>
     setState(() => _isLoading = true);
     try {
       final user = await ApiService.getPublicUser(widget.userId);
+      print('========================================');
+      print('PUBLIC PROFILE - USER DATA');
+      print('========================================');
+      print('User ID: ${user.id}');
+      print('Display Name: ${user.displayName}');
+      print('Avatar ID: ${user.avatarId}');
+      print('Avatar URL: ${user.avatarUrl}');
+      print('Profile Photo URL: ${user.profilePhotoUrl}');
+      print('Computed photoUrl: ${user.photoUrl}');
+      print('========================================');
       if (mounted) {
         setState(() {
           _user = user;
@@ -87,6 +97,7 @@ class _PublicProfilePageState extends State<PublicProfilePage>
         _animationController.forward();
       }
     } catch (e) {
+      print('ERROR loading public user: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }

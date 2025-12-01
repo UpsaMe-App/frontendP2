@@ -137,7 +137,7 @@ class User {
       return avatarUrl!;
     }
     if (avatarId != null && avatarId!.isNotEmpty) {
-      return '/avatars/$avatarId'; // Path para avatares predefinidos
+      return '/avatars/$avatarId.png'; // Path para avatares predefinidos
     }
     return '';
   }
